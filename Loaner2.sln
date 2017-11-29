@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2010
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Loaner2", "Loaner2\Loaner2.csproj", "{2A6A3B37-3FB9-4D0D-8D2E-4DAE76605BBC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2A6A3B37-3FB9-4D0D-8D2E-4DAE76605BBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A6A3B37-3FB9-4D0D-8D2E-4DAE76605BBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A6A3B37-3FB9-4D0D-8D2E-4DAE76605BBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A6A3B37-3FB9-4D0D-8D2E-4DAE76605BBC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {61F95DEB-5FD3-4E35-BBD6-C5A0A6A280A0}
+	EndGlobalSection
+EndGlobal
