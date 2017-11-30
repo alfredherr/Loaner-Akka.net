@@ -43,7 +43,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<RegisterMyAccountBilling>(cmd => RegisterBillingStatus(cmd));
             
             /** Special handlers below; we can decide how to handle snapshot processin outcomes. */
-            Command<SaveSnapshotSuccess>(success => /* DeleteMessages(success.Metadata.SequenceNr) //Turns out to be a bad idea */ { } );
+            Command<SaveSnapshotSuccess>(success => PurgeOldSnapShots(success));
             Command<SaveSnapshotFailure>(
                 failure => _log.Error(
                     $"Actor {Self.Path.Name} was unable to save a snapshot. {failure.Cause.Message}"));
@@ -51,7 +51,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 msg => _log.Info($"Successfully cleared log after snapshot ({msg.ToString()})"));
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
-
+        private void PurgeOldSnapShots(SaveSnapshotSuccess success)
+        {
+            var snapshotSeqNr = success.Metadata.SequenceNr;
+            // delete all messages from journal and snapshot store before latests confirmed
+            // snapshot, we won't need them anymore
+            DeleteMessages(snapshotSeqNr);
+            DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
+        }
         private void RegisterBillingStatus(RegisterMyAccountBilling cmd)
         {
            _billings.AddOrSet(cmd.AccountNumber,Tuple.Create(cmd.AmountBilled, cmd.AccountBalanceAfterBilling));
