@@ -177,12 +177,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         /*Example of how snapshotting can be custom to the actor, in this case per 'Account' events*/
         public void ApplySnapShotStrategy()
         {
-            if (LastSequenceNr != 0 && LastSequenceNr % 1000 == 0)
-            {
+            //if (LastSequenceNr != 0 && LastSequenceNr % 1000 == 0)
+            //{
                 SaveSnapshot(_accountState);
-                _log.Debug($"Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
-               
-            }
+               // _log.Debug($"Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
+                Context.IncrementCounter("SnapShotTaken");
+            //}
         }
 
         private void Monitor()
@@ -203,6 +203,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void RecoveryCounter()
         {
             Context.IncrementCounter("AccountRecovery");
+        }
+        private void IncrementCounter(string counterName){
+            Context.IncrementCounter(counterName);
         }
     }
 }

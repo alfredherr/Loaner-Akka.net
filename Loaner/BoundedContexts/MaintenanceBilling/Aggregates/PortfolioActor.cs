@@ -203,16 +203,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         }
         public void ApplySnapShotStrategy()
         {
-            if (LastSequenceNr != 0 && LastSequenceNr % 10000 == 0)
-            {
+            //if (LastSequenceNr != 0 && LastSequenceNr % 10000 == 0)
+            //{
                 var state = new List<string>(); // Just need the name to kick it off?
                 foreach (var record in _accounts.Keys)
                     state.Add(record);
                 SaveSnapshot(state.ToArray());
-                _log.Info($"Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
+                //_log.Debug($"Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
                 Context.IncrementCounter("SnapShotTaken");
-                Console.WriteLine($"PortfolioActor: {DateTime.Now}\t{LastSequenceNr}\tProcessed another snapshot");
-            }
+                //Console.WriteLine($"PortfolioActor: {DateTime.Now}\t{LastSequenceNr}\tProcessed another snapshot");
+            //}
         }
     }
 
