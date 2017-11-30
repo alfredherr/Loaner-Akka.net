@@ -12,7 +12,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
     using System.Collections.Generic;
     using System.IO;
     using System.Text;
- 
+    using static ActorManagement.LoanerActors;
     using Messages;
 
     /**
@@ -43,7 +43,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                                     ,string obligationsFilePath)
         {
             Monitor();
-            var supervisor = Context.ActorSelection("/user/demoSupervisor").ResolveOne(TimeSpan.FromSeconds(1)).Result;
+            var supervisor = DemoSystemSupervisor;
             var counter = 0;
 
             _log.Info($"Procesing boarding command... ");
@@ -57,7 +57,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             {
                 var portfolio = portfolioDic.Key;
                 Dictionary<string, double> accounts  = portfolioDic.Value;
-                var porfolioActor  = supervisor.Ask<IActorRef>(new SuperviseThisPortfolio(portfolio),TimeSpan.FromSeconds(1)).Result;
+                var porfolioActor  = supervisor.Ask<IActorRef>(new SuperviseThisPortfolio(portfolio),TimeSpan.FromSeconds(3)).Result;
                
                 foreach (var account in accounts)
                 {
@@ -110,8 +110,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 if (File.Exists(obligationsFilePath))
                 {
                     var readText = File.ReadAllLines(obligationsFilePath, Encoding.UTF8);
+                    _log.Info($"There are {readText.Length} obligations in {obligationsFilePath}");
                     foreach (var row in readText)
                     {
+                        
                         if (row.Length > 11)
                         {
                             var line = row.Split('\t');
@@ -135,9 +137,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                                 obligations.Add(o);
                                 _obligationsInFile[accountNumber] = obligations;     
                             }
-                           
                             
-                        }
+                           }
                     }
                 }
                 _log.Info($"Successfully processing file {obligationsFilePath}");
@@ -158,6 +159,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 if (File.Exists(clientsFilePath))
                 {
                     var readText = File.ReadAllLines(clientsFilePath, Encoding.UTF8);
+                    _log.Info($"There are {readText.Length} accounts in {clientsFilePath}");
                     foreach (var row in readText)
                     {
                         if (row.Length > 11)

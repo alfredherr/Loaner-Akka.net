@@ -115,7 +115,7 @@
                 akka.actor.debug.unhandled = on
                 
 
-                akka.loglevel = INFO
+                akka.loglevel = DEBUG
                 
                 akka.loggers=[""Akka.Logger.NLog.NLogLogger, Akka.Logger.NLog""]
                      
@@ -139,12 +139,12 @@
                 #akka.persistence.snapshot-store.sqlite.table-name = snapshot_store
                 #akka.persistence.snapshot-store.sqlite.auto-initialize = on
 
-                #akka.actor.provider = ""Akka.Cluster.ClusterActorRefProvider, Akka.Cluster""
-                #akka.remote.log-remote-lifecycle-events = DEBUG
-                #akka.remote.dot-netty.tcp.hostname = ""127.0.0.1""
-                #akka.remote.dot-netty.tcp.port = 0
-                #akka.cluster.seed-nodes = [""akka.tcp://demoSystem@127.0.0.1:4053""] 
-                #akka.cluster.roles = [concord]
+                akka.actor.provider = ""Akka.Cluster.ClusterActorRefProvider, Akka.Cluster""
+                akka.remote.log-remote-lifecycle-events = DEBUG
+                akka.remote.dot-netty.tcp.hostname = ""127.0.0.1""
+                akka.remote.dot-netty.tcp.port = 0
+                akka.cluster.seed-nodes = [""akka.tcp://demoSystem@127.0.0.1:4053""] 
+                akka.cluster.roles = [concord]
 
            ";
             return ConfigurationFactory.ParseString(hocon);

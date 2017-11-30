@@ -1,0 +1,22 @@
+﻿<!DOCTYPE html>
+<html>
+<body>
+    <h1>Available routes:</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Method</th>
+                <th>URL</th>
+            </tr>
+        </thead>
+        <tbody>
+            @Each.Routes
+            <tr>
+                <td>@Current.Method</td>
+                <td>@Current.Path</td>
+            </tr>
+            @EndEach
+        </tbody>
+    </table>
+</body>
+</html>

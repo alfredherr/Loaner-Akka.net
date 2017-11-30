@@ -1,6 +1,4 @@
-﻿
-
-namespace Loaner.api.Controllers
+﻿namespace Loaner.api.Controllers
 {
     using System;
     using System.Threading.Tasks;
@@ -11,6 +9,7 @@ namespace Loaner.api.Controllers
     using BoundedContexts.MaintenanceBilling.Events;
     using Nancy;
     using Nancy.ModelBinding;
+
     public class PortfolioModule : NancyModule
     {
         public PortfolioModule() : base("/api/portfolio")

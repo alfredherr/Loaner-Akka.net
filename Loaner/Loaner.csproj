@@ -8,11 +8,15 @@
   <ItemGroup>
     <None Remove="appsettings.Development.json" />
     <None Remove="appsettings.json" />
+    <None Remove="views\Home\index.sshtml" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="appsettings.Development.json" />
     <Content Include="appsettings.json" />
+    <Content Include="views\Home\index.sshtml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -36,6 +40,12 @@
     <Folder Include="BoundedContexts\MaintenanceBilling\Aggregates\Messages\" />
     <Folder Include="ActorManagement\" />
     <Folder Include="API\" />
+    <Folder Include="wwwroot\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

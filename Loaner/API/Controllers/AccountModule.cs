@@ -1,19 +1,14 @@
-﻿
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Akka.Util.Internal;
-using Newtonsoft.Json;
-
-namespace Loaner.api.Controllers
+﻿namespace Loaner.api.Controllers
 {
+    using System.Collections.Generic;
+    using System.IO;
+    using Newtonsoft.Json;
     using Akka.Actor;
     using Models;
     using BoundedContexts.MaintenanceBilling.Commands;
     using BoundedContexts.MaintenanceBilling.Events;
     using BoundedContexts.MaintenanceBilling.Models;
     using Nancy;
-    using Nancy.ModelBinding;
     using System;
     using System.Threading.Tasks;
     using static ActorManagement.LoanerActors;

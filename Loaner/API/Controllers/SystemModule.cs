@@ -1,15 +1,11 @@
-﻿
-using System.Collections.Generic;
-using System.Linq;
-using Akka.Util.Internal;
-using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
-using Loaner.BoundedContexts.MaintenanceBilling.Models;
-
-namespace Loaner.api.Controllers
+﻿namespace Loaner.api.Controllers
 {
+    using System.Linq;
+    using Akka.Util.Internal;
+    using BoundedContexts.MaintenanceBilling.Aggregates.Messages;
+    using BoundedContexts.MaintenanceBilling.Models;
     using static ActorManagement.LoanerActors;
     using Akka.Actor;
-    using BoundedContexts.MaintenanceBilling.Aggregates;
     using BoundedContexts.MaintenanceBilling.Commands;
     using BoundedContexts.MaintenanceBilling.Events;
     using Models;
