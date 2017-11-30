@@ -1,0 +1,23 @@
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:8082/",
+      "sslPort": 0
+    }
+  },
+  "profiles": {     
+    "Loaner": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "StatsDServer": "docker04",
+        "StatsDPort": 8125,
+        "StatsDPrefix": "akka-demo"
+      },
+      "applicationUrl": "http://localhost:5000/"
+    }
+  }
+}

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Loaner2", "Loaner2\Loaner2.csproj", "{2A6A3B37-3FB9-4D0D-8D2E-4DAE76605BBC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Loaner", "Loaner\Loaner.csproj", "{2A6A3B37-3FB9-4D0D-8D2E-4DAE76605BBC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
