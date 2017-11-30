@@ -1,6 +1,6 @@
 !**/packages/build/
 !*.[Cc]ache/
-
+publish/
 $tf/
 **/*.DesktopClient/GeneratedArtifacts
 **/*.DesktopClient/ModelManifest.xml
