@@ -44,11 +44,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             
             /** Special handlers below; we can decide how to handle snapshot processin outcomes. */
             Command<SaveSnapshotSuccess>(success => PurgeOldSnapShots(success));
+            Command<DeleteSnapshotsSuccess>(msg => { });
             Command<SaveSnapshotFailure>(
                 failure => _log.Error(
                     $"Actor {Self.Path.Name} was unable to save a snapshot. {failure.Cause.Message}"));
             Command<DeleteMessagesSuccess>(
-                msg => _log.Info($"Successfully cleared log after snapshot ({msg.ToString()})"));
+                msg => _log.Debug($"Successfully cleared log after snapshot ({msg.ToString()})"));
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
         private void PurgeOldSnapShots(SaveSnapshotSuccess success)

@@ -11,16 +11,30 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>out\</OutputPath>
   </PropertyGroup>
-
   <ItemGroup>
-    <None Remove="appsettings.Development.json" />
-    <None Remove="appsettings.json" />
-    <None Remove="views\Home\index.sshtml" />
+    <None Remove="hosting.json" />
   </ItemGroup>
 
+  <!--ItemGroup>
+    <None Remove="appsettings.Development.json" />
+    <None Remove="appsettings.json" />
+    <None Remove="nlog.config" />
+    <None Remove="views\Home\index.sshtml" />
+  </ItemGroup-->
+
   <ItemGroup>
-    <Content Include="appsettings.Development.json" />
-    <Content Include="appsettings.json" />
+    <Content Include="appsettings.Development.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="hosting.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="nlog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="views\Home\index.sshtml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
