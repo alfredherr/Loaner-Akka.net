@@ -45,7 +45,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                                     ,string obligationsFilePath)
         {
             Monitor();
-            var supervisor = DemoSystemSupervisor;
+            var supervisor = Context.Parent;
             var counter = 0;
 
             _log.Info($"Procesing boarding command... ");
@@ -220,6 +220,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Instance = name;
         }
         public string Instance { get; }
+        public override int GetHashCode()
+        {
+            return Instance.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            PortfolioName test = obj as PortfolioName;
+            return test.Instance == this.Instance;
+        }
     }
 
     internal class AccountNumber
@@ -229,6 +239,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Instance = accountNumber;
         }
         public string Instance { get; }
+        public override int GetHashCode()
+        {
+            return Instance.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            AccountNumber test = obj as AccountNumber;
+            return test.Instance == this.Instance;
+        }
     }
 
     internal class Balance
@@ -238,6 +258,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Instance = amount;
         }
         public double Instance { get; }
+        public override int GetHashCode()
+        {
+            return Instance.GetHashCode();
+        }
+    
+        public override bool Equals(object obj)
+        {
+            Balance test = obj as Balance;
+            return test.Instance == this.Instance;
+        }
     }
 
 

@@ -1,3 +1,5 @@
+
+
 !**/packages/build/
 !*.[Cc]ache/
 publish/
@@ -198,6 +200,7 @@ __pycache__/
 _pkginfo.txt
 aclocal.m4
 akka_demo.db
+akka_demo.db*
 
 artifacts/
 autom4te.cache/
