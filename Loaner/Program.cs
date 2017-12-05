@@ -12,6 +12,7 @@
             Console.WriteLine($"*****************************");
             Console.WriteLine($"**** Akka & DotNet Core  ****");
             Console.WriteLine($"*****************************");
+            
             var host = new WebHostBuilder()
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseKestrel()

@@ -1,4 +1,6 @@
 
+using System.Diagnostics;
+
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {
     using Akka.Actor;
@@ -23,8 +25,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
         private static int _accounSpunUp;
-        private readonly Dictionary<string, Dictionary<string, double>> _accountsInPortfolio = new Dictionary<string, Dictionary<string, double>>();
-        private readonly Dictionary<string, List<MaintenanceFee>> _obligationsInFile = new Dictionary<string, List<MaintenanceFee>>();
+        private readonly Dictionary<PortfolioName, Dictionary<AccountNumber, Balance>> _accountsInPortfolio = new Dictionary<PortfolioName, Dictionary<AccountNumber, Balance>>();
+        private readonly Dictionary<AccountNumber, List<MaintenanceFee>> _obligationsInFile = new Dictionary<AccountNumber, List<MaintenanceFee>>();
 
         public BoardAccountActor()
         {
@@ -53,31 +55,29 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             var props = new RoundRobinPool(72).Props(Props.Create<BoardAccountActor>());
             var router = Context.ActorOf(props, $"Client{client.ClientName}Router");
 
-            foreach (KeyValuePair<string, Dictionary<string, double>> portfolioDic in _accountsInPortfolio)
+            foreach (var portfolioDic in _accountsInPortfolio)
             {
-                var portfolio = portfolioDic.Key;
-                Dictionary<string, double> accounts  = portfolioDic.Value;
+                string portfolio = portfolioDic.Key.Instance;
+                var accounts  = portfolioDic.Value;
                 var porfolioActor  = supervisor.Ask<IActorRef>(new SuperviseThisPortfolio(portfolio),TimeSpan.FromSeconds(3)).Result;
                
                 foreach (var account in accounts)
                 {
-                     //Pluck out all the obligations for this account, LINQ anyone?
-                    List<MaintenanceFee> obligations =   new List<MaintenanceFee>();
-
                     if (_obligationsInFile.ContainsKey(account.Key) )
                     {
-                        obligations = _obligationsInFile[account.Key];
+                        //Pluck out all the obligations for this account, LINQ anyone?
+                        var obligations = _obligationsInFile[account.Key];
                         if (++counter % 1000 == 0)
                         {
                             _log.Info(
-                                $"({counter}) Telling router {router.Path.Name} to spin up account {account.Key} with initial balance of {account.Value}... ");
+                                $"({counter}) Telling router {router.Path.Name} to spin up account {account.Key.Instance} with initial balance of {account.Value}... ");
                         }
-                        router.Tell(new SpinUpAccountActor(portfolio, account.Key, obligations, porfolioActor));
+                        router.Tell(new SpinUpAccountActor(portfolio, account.Key.Instance, obligations, porfolioActor));
                     }
                     else
                     {
-                        _log.Error($"WTF {account.Key} doesn't exist in my obligations list");
-                        throw new Exception($"WTF {account.Key} doesn't exist in my obligations list");
+                        _log.Error($"WTF {account.Key.Instance} doesn't exist in my obligations list");
+                        throw new Exception($"WTF {account.Key.Instance} doesn't exist in my obligations list");
                     }
                 }
             }
@@ -118,7 +118,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                         {
                             var line = row.Split('\t');
                             string obligationNumber = line[0];
-                            string accountNumber = line[1];
+                            var accountNumber = new AccountNumber(line[1]);
                             string typeOfObligation = line[2];
                             double openningBalance;
                             Double.TryParse( line[3],out openningBalance);
@@ -165,21 +165,21 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                         if (row.Length > 11)
                         {
                             var line = row.Split('\t');
-                            string portfolioName = line[0];
-                            string accountNumber = line[1];
+                            var portfolioName = new PortfolioName( line[0] );
+                            var accountNumber = new AccountNumber( line[1] );
                             //string accountInfo   = line[2];
-                            double accountbalance;
-                            Double.TryParse(line[3],out accountbalance);
-                            
+                            double balance;
+                            Double.TryParse(line[3],out balance);
+                            var accountbalance = new Balance(balance);
                             if (_accountsInPortfolio.ContainsKey(portfolioName))
                             {
-                                Dictionary<string,double> existingAccounts = _accountsInPortfolio[portfolioName];
+                                var existingAccounts = _accountsInPortfolio[portfolioName];
                                 existingAccounts.Add(accountNumber, accountbalance);
                                 _accountsInPortfolio[portfolioName] = existingAccounts;
                             }
                             else
                             {
-                                Dictionary<string,double> accounts = new Dictionary<string,double>();
+                                var accounts = new Dictionary<AccountNumber,Balance>();
                                 accounts.Add(accountNumber, accountbalance);
                                 _accountsInPortfolio.Add(portfolioName, accounts);
                             }
@@ -211,6 +211,33 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             Context.IncrementActorCreated();
         }
+    }
+
+    internal class PortfolioName
+    {
+        public PortfolioName(string name)
+        {
+            Instance = name;
+        }
+        public string Instance { get; }
+    }
+
+    internal class AccountNumber
+    {
+        public AccountNumber(string accountNumber)
+        {
+            Instance = accountNumber;
+        }
+        public string Instance { get; }
+    }
+
+    internal class Balance
+    {
+        public Balance(double amount)
+        {
+            Instance = amount;
+        }
+        public double Instance { get; }
     }
 
 

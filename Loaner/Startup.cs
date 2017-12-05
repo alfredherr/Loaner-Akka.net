@@ -121,15 +121,15 @@
                      
             
                 ## SqLite
-                #akka.persistence.journal.plugin = ""akka.persistence.journal.sqlite""
-                #akka.persistence.journal.sqlite.class = ""Akka.Persistence.Sqlite.Journal.SqliteJournal, Akka.Persistence.Sqlite""
-                #akka.persistence.journal.sqlite.plugin-dispatcher = ""akka.actor.default-dispatcher""
-                #akka.persistence.journal.sqlite.connection-timeout = 30s
-                #akka.persistence.journal.sqlite.table-name = event_journal
-                #akka.persistence.journal.sqlite.metadata-table-name = journal_metadata
-                #akka.persistence.journal.sqlite.auto-initialize = on
-                #akka.persistence.journal.sqlite.timestamp-provider = ""Akka.Persistence.Sql.Common.Journal.DefaultTimestampProvider, Akka.Persistence.Sql.Common""
-                #akka.persistence.journal.sqlite.connection-string = ""Data Source=../../../akka_demo.db""
+                akka.persistence.journal.plugin = ""akka.persistence.journal.sqlite""
+                akka.persistence.journal.sqlite.class = ""Akka.Persistence.Sqlite.Journal.SqliteJournal, Akka.Persistence.Sqlite""
+                akka.persistence.journal.sqlite.plugin-dispatcher = ""akka.actor.default-dispatcher""
+                akka.persistence.journal.sqlite.connection-timeout = 30s
+                akka.persistence.journal.sqlite.table-name = event_journal
+                akka.persistence.journal.sqlite.metadata-table-name = journal_metadata
+                akka.persistence.journal.sqlite.auto-initialize = on
+                akka.persistence.journal.sqlite.timestamp-provider = ""Akka.Persistence.Sql.Common.Journal.DefaultTimestampProvider, Akka.Persistence.Sql.Common""
+                akka.persistence.journal.sqlite.connection-string = ""Data Source=../../../akka_demo.db""
                 
                 #akka.persistence.snapshot-store.plugin = ""akka.persistence.snapshot-store.sqlite""
                 #akka.persistence.snapshot-store.sqlite.class = ""Akka.Persistence.Sqlite.Snapshot.SqliteSnapshotStore, Akka.Persistence.Sqlite""
@@ -140,7 +140,7 @@
                 #akka.persistence.snapshot-store.sqlite.connection-string = ""Data Source=../../../akka_demo.db""
 
                 akka.actor.provider = ""Akka.Cluster.ClusterActorRefProvider, Akka.Cluster""
-                akka.remote.log-remote-lifecycle-events = DEBUG
+                akka.remote.log-remote-lifecycle-events = INFO
                 akka.remote.dot-netty.tcp.hostname = ""127.0.0.1""
                 akka.remote.dot-netty.tcp.port = 0
                 akka.cluster.seed-nodes = [""akka.tcp://demoSystem@127.0.0.1:4053""] 

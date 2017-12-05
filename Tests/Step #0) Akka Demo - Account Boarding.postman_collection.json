@@ -1,0 +1,41 @@
+{
+	"info": {
+		"name": "Step #0) Akka Demo - Account Boarding",
+		"_postman_id": "d0621fee-e600-218e-f25b-f0d66b76e26d",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Run Simulation of Client Boarding {Raintree} MAC",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"ClientName\": \"Raintree\",\n  \"ClientAccountsFilePath\": \"./SampleData/Raintree.txt\",\n  \"ObligationsFilePath\":\"./SampleData/Obligations/Raintree.txt\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:50325/api/system/simulation",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "50325",
+					"path": [
+						"api",
+						"system",
+						"simulation"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}

@@ -1,0 +1,80 @@
+{
+	"info": {
+		"name": "Demo",
+		"_postman_id": "8459b4ef-01d4-c4dd-ccba-6b396c6e07c5",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Bill All Accounts",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n\t{\n\t    \"lineItems\": [\n\t        {\n\t            \"item\": {\n\t                \"name\": \"Tax\",\n\t                \"amount\": 10\n\t            },\n\t            \"units\": 1,\n\t            \"unitAmount\": 10,\n\t            \"totalAmount\": 10\n\t        },\n\t        {\n\t            \"item\": {\n\t                \"name\": \"Dues\",\n\t                \"amount\": 1000\n\t            },\n\t            \"units\": 1,\n\t            \"unitAmount\": 1000,\n\t            \"totalAmount\": 1000\n\t        },\n\t        {\n\t            \"item\": {\n\t                \"name\": \"Reserve\",\n\t                \"amount\": 20\n\t            },\n\t            \"units\": 1,\n\t            \"unitAmount\": 20,\n\t            \"totalAmount\": 20\n\t        }\n\t    ]\n\t}\n]"
+				},
+				"url": {
+					"raw": "http://localhost:50325/api/system/billall",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "50325",
+					"path": [
+						"api",
+						"system",
+						"billall"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "BillingStatus",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:50325/api/system/BillingStatus",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "50325",
+					"path": [
+						"api",
+						"system",
+						"BillingStatus"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
