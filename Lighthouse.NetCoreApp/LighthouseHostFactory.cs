@@ -82,7 +82,7 @@ akka.remote.dot-netty.tcp.port = {1}", ipAddress, port))
                 
 						
 	                    remote {
-		                    log-remote-lifecycle-events = DEBUG
+		                    log-remote-lifecycle-events = INFO
 		                    dot-netty.tcp {
 			                    transport-class = ""Akka.Remote.Transport.DotNetty.TcpTransport, Akka.Remote""
 			                    applied-adapters = []
