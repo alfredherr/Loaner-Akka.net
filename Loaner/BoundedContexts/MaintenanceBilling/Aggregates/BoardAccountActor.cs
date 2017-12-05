@@ -60,7 +60,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 string portfolio = portfolioDic.Key.Instance;
                 var accounts  = portfolioDic.Value;
                 var porfolioActor  = supervisor.Ask<IActorRef>(new SuperviseThisPortfolio(portfolio),TimeSpan.FromSeconds(3)).Result;
-               
+                _log.Info($"The portfolio name is: {porfolioActor.Path.Name}");
+
                 foreach (var account in accounts)
                 {
                     if (_obligationsInFile.ContainsKey(account.Key) )
