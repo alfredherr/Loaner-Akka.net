@@ -53,16 +53,7 @@ namespace Loaner.api.Controllers
             Get("/businessrules", async args =>
             {
                  
-                 return AppDomain
-                .CurrentDomain
-                .GetAssemblies()
-                .SelectMany(x => x.GetTypes())
-                .Where(x => typeof(IAccountBusinessRule).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
-                .Select(x => x.Name).ToList();
-                
-                //var rules = BusinessRulesMap.ListAllAccountBusinessRules();
-                //var model = new BusinessRulesMapModel() { Message = $"Info as of: {DateTime.Now}", RulesMap = rules };
-                //return rules;
+               return BusinessRulesMap.GetCommandsToBusinesRules();
 
             });
 

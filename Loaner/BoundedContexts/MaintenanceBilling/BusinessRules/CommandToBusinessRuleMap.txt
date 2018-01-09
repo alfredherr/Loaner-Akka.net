@@ -1,0 +1,2 @@
+﻿BillingAssessment|AnObligationMustBeActiveForBilling
+BillingAssessment|AccountBalanceMustNotBeNegative

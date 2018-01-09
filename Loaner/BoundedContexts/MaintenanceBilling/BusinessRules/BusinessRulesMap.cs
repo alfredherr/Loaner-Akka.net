@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Principal;
 using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 using Newtonsoft.Json;
 
@@ -9,9 +10,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
 {
     public class BusinessRulesMap
     {
+
         private static BusinessRulesMap _rulesMapInstance;
 
-        public static List<IAccountBusinessRule> GetAccountBusinessRules(string client, string porfolio, string accountNumber)
+        public static List<IAccountBusinessRule> GetAccountBusinessRulesForCommand(string client, string porfolio, string accountNumber,IDomainCommand command)
         {
             if (BusinessRulesMap._rulesMapInstance == null)
             {
@@ -19,9 +21,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
             }
 
             return (_rulesMapInstance.RulesInFile
-                .Where(ruleMap => ruleMap.AccountNumber.Equals(accountNumber) ||
-                                  ruleMap.Portfolio.Equals(porfolio) && ruleMap.ForAllAccounts ||
-                                  ruleMap.Client.Equals(client) && ruleMap.Portfolio.Equals("*") && ruleMap.ForAllAccounts)
+                .Where(ruleMap => 
+                    // Look for rules associated to this command              
+                    ruleMap.Command.GetType().Name.Equals(command.GetType().Name) &&
+                                    // which also either match this account
+                                    ( ruleMap.AccountNumber.Equals(accountNumber) ||
+                                      // or all accounts under this portfolio
+                                      ruleMap.Portfolio.Equals(porfolio) && ruleMap.ForAllAccounts ||
+                                      // or all accounts under all portfolios for this client
+                                      ruleMap.Client.Equals(client) && ruleMap.Portfolio.Equals("*") && ruleMap.ForAllAccounts)
+                                     )
                 .Select(ruleMap => ruleMap.BusinessRule)).ToList();
         }
 
@@ -42,11 +51,34 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
             return _rulesMapInstance.RulesInFile;
         }
 
+        public static List<CommandToBusinessRule> GetCommandsToBusinesRules()
+        {
+            List<CommandToBusinessRule> commands = new List<CommandToBusinessRule>();
+            
+            try
+            {
+                var filename = Environment.GetEnvironmentVariable("COMMANDS_TO_RULES_FILENAME");
+                string[] readText = File.ReadAllLines(filename);
+                foreach (var line in readText)
+                {
+                    if (line.StartsWith("#"))
+                        continue;
+                    var tokens = line.Split('|');
+                    commands.Add(new CommandToBusinessRule() { Command = tokens[0], BusinessRule = tokens[1] });
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            return commands;
+        }
         private static void UpdateAndReInitialize(List<AccountBusinessRuleMap> updatedRules)
         {
             try
             {
-                var filename = Environment.GetEnvironmentVariable("FILENAME");
+                var filename = Environment.GetEnvironmentVariable("BUSINESS_RULES_FILENAME");
                 _rulesMapInstance = new BusinessRulesMap(filename, updatedRules);
             }
             catch (Exception e)
@@ -60,7 +92,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
         {
             try
             {
-                var filename = Environment.GetEnvironmentVariable("FILENAME");
+                var filename = Environment.GetEnvironmentVariable("BUSINESS_RULES_FILENAME");
                 _rulesMapInstance = new BusinessRulesMap(filename);
             }
             catch (Exception e)
@@ -194,6 +226,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
         }
 
         List<AccountBusinessRuleMap> RulesInFile { get; }
+    }
+
+    public class CommandToBusinessRule
+    {
+        public string Command { get; set; }
+        public string BusinessRule { get; set; }
     }
 
     public class AccountBusinessRuleMap

@@ -82,9 +82,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
             // and the order in which they need to be applied
             // In future We would also want to pass in the command so we filter the search to just the rules 
             // associated to the command
-            var rulesFound = BusinessRulesMap.GetAccountBusinessRules(client, portfolioName, accountState.AccountNumber);
-            rulesFound.ForEach(x => Console.WriteLine($"{accountState.AccountNumber} matched rule '{x.GetType().Name}'") );
-            return BusinessRulesMap.GetAccountBusinessRules(client, portfolioName,accountState.AccountNumber);
+            var rulesFound = BusinessRulesMap.GetAccountBusinessRulesForCommand(client, portfolioName, accountState.AccountNumber, command);
+            rulesFound.ForEach(x => Console.WriteLine($"{accountState.AccountNumber} matched rule '{x.GetType().Name}' associated to command {command.GetType().Name}") );
+            return BusinessRulesMap.GetAccountBusinessRulesForCommand(client, portfolioName,accountState.AccountNumber, command);
  
         }
     }
