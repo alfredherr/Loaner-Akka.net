@@ -1,8 +1,7 @@
 {
 	"info": {
-		"name": "Step #0) Akka Demo - Account Boarding",
-		"_postman_id": "d0621fee-e600-218e-f25b-f0d66b76e26d",
-		"description": "",
+		"name": "Akka Demo - Account Boarding",
+		"_postman_id": "97c2c8b8-fdb5-5e18-24b0-667cc1737725",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -18,22 +17,21 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"ClientName\": \"Raintree\",\n  \"ClientAccountsFilePath\": \"./SampleData/Raintree.txt\",\n  \"ObligationsFilePath\":\"./SampleData/Obligations/Raintree.txt\"\n}"
+					"raw": "{\n\t\"ClientName\": \"Raintree\",\n\t\"ClientAccountsFilePath\": \"./SampleData/Raintree.txt\",\n\t\"ObligationsFilePath\":\"./SampleData/Obligations/Raintree.txt\"\n}"
 				},
 				"url": {
-					"raw": "http://localhost:50325/api/system/simulation",
+					"raw": "http://localhost:5000/api/system/simulation",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "50325",
+					"port": "5000",
 					"path": [
 						"api",
 						"system",
 						"simulation"
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		}

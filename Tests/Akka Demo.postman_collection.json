@@ -1,0 +1,357 @@
+{
+	"info": {
+		"name": "Akka Demo",
+		"_postman_id": "0a59d835-755c-df6b-e975-1cc1b2985a66",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "System Info",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:5000",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000"
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Instantiate Portfolios on System",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							" ",
+							" ",
+							" ",
+							"",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:5000/api/system/run",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"system",
+						"run"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Billing Business Rules",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							" ",
+							" ",
+							" ",
+							"",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:5000/api/system/businessrules",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"system",
+						"businessrules"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Billing Business Rules",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							" ",
+							" ",
+							" ",
+							"",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"client\": \"ClientRaintree\",\n        \"portfolio\": \"PortfolioUPD\",\n        \"accountNumber\": \"*\",\n        \"forAllAccounts\": true,\n        \"command\": \"BillingAssessment\",\n        \"businessRule\": \"AnObligationMustBeActiveForBilling\",\n        \"businessRuleParameters\": \"NoParameters\"\n    },\n    {\n        \"client\": \"ClientRaintree\",\n        \"portfolio\": \"PortfolioUPD\",\n        \"accountNumber\": \"*\",\n        \"forAllAccounts\": true,\n        \"command\": \"BillingAssessment\",\n        \"businessRule\": \"AccountBalanceMustNotBeNegative\",\n        \"businessRuleParameters\": \"NoParameters\"\n    }\n]"
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/system/businessrules",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"system",
+						"businessrules"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "View Portfolio Info",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							" ",
+							" ",
+							" ",
+							"",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:5000/api/portfolio/PortfolioUPD/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"portfolio",
+						"PortfolioUPD",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Instantiate Accounts on Portfolio",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							" ",
+							" ",
+							" ",
+							"",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:5000/api/portfolio/PortfolioUPD/run",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"portfolio",
+						"PortfolioUPD",
+						"run"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Account Alive",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"LineItems\":\n\t[\n\t\t{\n\t\t    \"item\": 1,\n\t\t    \"units\": 10,\n\t\t    \"unitAmount\": 9.99,\n\t\t    \"totalAmount\": 99.90\n\t\t}\n    ]\n}"
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/account/79677466751/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"account",
+						"79677466751",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Account Info",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"LineItems\":\n\t[\n\t\t{\n\t\t    \"item\": 1,\n\t\t    \"units\": 10,\n\t\t    \"unitAmount\": 9.99,\n\t\t    \"totalAmount\": 99.90\n\t\t}\n    ]\n}"
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/account/55765352539/info",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"account",
+						"55765352539",
+						"info"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Bill An Account",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"item\": {\n            \"name\": \"Tax\",\n            \"amount\": 10\n        },\n        \"units\": 1,\n        \"unitAmount\": 1,\n        \"totalAmount\": 10\n    },\n    {\n        \"item\": {\n            \"name\": \"Dues\",\n            \"amount\": 100\n        },\n        \"units\": 1,\n        \"unitAmount\": 100,\n        \"totalAmount\": 100\n    },\n    {\n        \"item\": {\n            \"name\": \"Reserve\",\n            \"amount\": 25\n        },\n        \"units\": 1,\n        \"unitAmount\": 25,\n        \"totalAmount\": 25\n    }\n]"
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/account/55765352539/assessment",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"account",
+						"55765352539",
+						"assessment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Bill  The Whole Portfolio",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"item\": {\n            \"name\": \"Tax\",\n            \"amount\": 10\n        },\n        \"units\": 1,\n        \"unitAmount\": 1,\n        \"totalAmount\": 10\n    },\n    {\n        \"item\": {\n            \"name\": \"Dues\",\n            \"amount\": 100\n        },\n        \"units\": 1,\n        \"unitAmount\": 100,\n        \"totalAmount\": 100\n    },\n    {\n        \"item\": {\n            \"name\": \"Reserve\",\n            \"amount\": 25\n        },\n        \"units\": 1,\n        \"unitAmount\": 25,\n        \"totalAmount\": 25\n    }\n]"
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/portfolio/PortfolioACE/assessment",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"portfolio",
+						"PortfolioACE",
+						"assessment"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
