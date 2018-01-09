@@ -2,7 +2,7 @@
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Events
 {
-    public class AccountCurrentBalanceUpdated : IEvent
+    public class AccountCurrentBalanceUpdated : IDomainEvent
     {
         public AccountCurrentBalanceUpdated(string accountNumber, double newCurrentBalance) : this()
         {

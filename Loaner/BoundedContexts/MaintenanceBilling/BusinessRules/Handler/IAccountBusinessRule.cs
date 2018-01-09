@@ -1,10 +1,8 @@
 using System.Collections.Generic;
-using Loaner.BoundedContexts.MaintenanceBilling.Aggregates;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
-using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 using Loaner.BoundedContexts.MaintenanceBilling.Events;
 
-namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
+namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
     public interface IAccountBusinessRule
     {
@@ -19,7 +17,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
          * The purpose of a rule is to return a list of orderd events which must be 
          * applied to the account 
         */
-        List<IEvent> GetGeneratedEvents();
+        List<IDomainEvent> GetGeneratedEvents();
 
         /**
          * This is what the resulting AccountState would be from all the applied

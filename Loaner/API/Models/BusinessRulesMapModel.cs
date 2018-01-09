@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
 
 namespace Loaner.API.Models
 {

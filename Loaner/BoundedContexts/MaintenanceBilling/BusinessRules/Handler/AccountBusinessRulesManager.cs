@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using Loaner.BoundedContexts.MaintenanceBilling.Aggregates;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Exceptions;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules;
 using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 
-namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
+namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
     public class AccountBusinessRulesManager
     {

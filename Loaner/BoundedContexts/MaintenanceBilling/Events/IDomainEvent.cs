@@ -2,7 +2,7 @@
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Events
 {
-    public interface IEvent
+    public interface IDomainEvent
     {
         DateTime OccurredOn();
         Guid UniqueGuid();

@@ -1,15 +1,15 @@
 using System.Collections.Generic;
-using Loaner.BoundedContexts.MaintenanceBilling.Aggregates;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
 using Loaner.BoundedContexts.MaintenanceBilling.Events;
 
-namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
+namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 {
     public class AccountBalanceMustNotBeNegative : IAccountBusinessRule
     {
         private AccountState AccountState { get; set; }
         private string _detailsGenerated;
-        private List<IEvent> _eventsGenerated;
+        private List<IDomainEvent> _eventsGenerated;
 
         public AccountBalanceMustNotBeNegative()
         {
@@ -31,7 +31,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
             return _detailsGenerated;
         }
 
-        public List<IEvent> GetGeneratedEvents()
+        public List<IDomainEvent> GetGeneratedEvents()
         {
             return _eventsGenerated;
         }
@@ -50,9 +50,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
         /* Rule logic goes here. */
         public void RunRule()
         {
-            _eventsGenerated = new List<IEvent>
+            _eventsGenerated = new List<IDomainEvent>
             {
-                new SuperSimpleSuperCoolEventFoundByRules(
+                new SuperSimpleSuperCoolDomainEventFoundByRules(
                     AccountState.AccountNumber,
                     "AccountBalanceMustNotBeNegative"
                 )

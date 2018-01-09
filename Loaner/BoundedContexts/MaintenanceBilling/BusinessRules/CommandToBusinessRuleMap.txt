@@ -1,2 +1,6 @@
-﻿BillingAssessment|AnObligationMustBeActiveForBilling
-BillingAssessment|AccountBalanceMustNotBeNegative
+﻿BillingAssessment|AccountBalanceMustNotBeNegative|NoParameters|Fail creating the billing if the account balance is negative.
+BillingAssessment|AnObligationMustBeActiveForBilling|NoParameters|Fail creating the billing if the account doesn't have an active obligation.
+BillingAssessment|AssessTaxAsPercentageOfDuesDuringBilling|TaxPercentageRate=[Double]|Assess a tax concept to billing based on the amount of Dues.
+BillingAssessment|ApplyUacAfterBilling|MinimumAmount=[Double],MaxAmount=[Double]|If there is Unapplied Cash (i.e account balance is negative), apply it immediatly after billing.
+BillingAssessment|BillingConceptCannotBeBilledMoreThanOnce|NoParameters|Fail creating the billing if the account has been assessed a billing for the same concept.
+BillingAssessment|ClientSpecificRuleForCalculatingTax|ExcludedStates=[StateAbbreviation/OnePerState],CaliforniaTaxPercentageRate=[Double]|Client specific rule for Client ThousandTrails. Some states do not get assessed tax; others do, rates vary. Here maybe i reference a URL where more details are available about this rule.

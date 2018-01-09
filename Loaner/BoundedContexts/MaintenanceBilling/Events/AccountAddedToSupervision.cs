@@ -2,7 +2,7 @@
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Events
 {
-    internal class AccountAddedToSupervision : IEvent
+    internal class AccountAddedToSupervision : IDomainEvent
     {
         public AccountAddedToSupervision()
         {

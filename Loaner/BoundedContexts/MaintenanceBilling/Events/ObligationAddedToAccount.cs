@@ -3,7 +3,7 @@ using Loaner.BoundedContexts.MaintenanceBilling.Models;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Events
 {
-    public class ObligationAddedToAccount : IEvent
+    public class ObligationAddedToAccount : IDomainEvent
     {
         
         public ObligationAddedToAccount(string accountNumber, MaintenanceFee maintenanceFee)  

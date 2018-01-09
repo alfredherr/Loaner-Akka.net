@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Loaner", "Loaner\Loaner.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SnapShotStore", "SnapShotStore\SnapShotStore.csproj", "{DD5111C6-6CE1-49CD-A128-3E71D1BDEB6A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kafka_actors", "kafka_actors\kafka_actors.csproj", "{D348D2FA-833C-443C-BEC3-C194B1ACFE39}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{DD5111C6-6CE1-49CD-A128-3E71D1BDEB6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD5111C6-6CE1-49CD-A128-3E71D1BDEB6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD5111C6-6CE1-49CD-A128-3E71D1BDEB6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D348D2FA-833C-443C-BEC3-C194B1ACFE39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D348D2FA-833C-443C-BEC3-C194B1ACFE39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D348D2FA-833C-443C-BEC3-C194B1ACFE39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D348D2FA-833C-443C-BEC3-C194B1ACFE39}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

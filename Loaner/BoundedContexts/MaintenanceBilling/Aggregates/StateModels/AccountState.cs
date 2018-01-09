@@ -85,9 +85,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels
         /**
          * The ApplyEvent() handler is responsible for always returning a new state
          */
-        public AccountState ApplyEvent(IEvent @event)
+        public AccountState ApplyEvent(IDomainEvent domainEvent)
         {
-            switch (@event)
+            switch (domainEvent)
             {
                 case AccountCurrentBalanceUpdated occurred:
                     return ApplyEvent(occurred);
@@ -103,11 +103,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels
                     return ApplyEvent(occurred);
                 case AccountCreated occurred:
                     return ApplyEvent(occurred);
-                case SuperSimpleSuperCoolEventFoundByRules occurred:
+                case SuperSimpleSuperCoolDomainEventFoundByRules occurred:
                     return ApplyEvent(occurred);
 
                 default:
-                    throw new UnknownAccountEvent($"{@event.GetType()}");
+                    throw new UnknownAccountEvent($"{domainEvent.GetType()}");
             }
         }
 
@@ -129,7 +129,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels
                 AuditLog.Add(new StateLog("SomeOneSaidHiToMe", occurred.UniqueGuid(), occurred.OccurredOn())));
         }
 
-        private AccountState ApplyEvent(SuperSimpleSuperCoolEventFoundByRules occurred)
+        private AccountState ApplyEvent(SuperSimpleSuperCoolDomainEventFoundByRules occurred)
         {
             return new AccountState(AccountNumber, CurrentBalance,
                 AccountStatus, Obligations,

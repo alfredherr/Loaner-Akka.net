@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Principal;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules;
 using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 using Newtonsoft.Json;
 
-namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
+namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
     public class BusinessRulesMap
     {
@@ -64,7 +64,18 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
                     if (line.StartsWith("#"))
                         continue;
                     var tokens = line.Split('|');
-                    commands.Add(new CommandToBusinessRule() { Command = tokens[0], BusinessRule = tokens[1] });
+                    var param = tokens[2].Split(',');
+                    Dictionary<string, string> parameters = new Dictionary<string, string>();
+                    if (param.Length > 1 || tokens[2].Contains("="))
+                    {
+                        foreach (var p in param)
+                        {
+                            Console.WriteLine($"Parameter: {p}");
+                            var keyVals = p.Split('=');
+                            parameters.Add(keyVals[0], keyVals[1]);
+                        }
+                    }
+                    commands.Add(new CommandToBusinessRule() { Command = tokens[0], BusinessRule = tokens[1], Parameters = parameters, Description = tokens[3]  });
                 }
             }
             catch (Exception e)
@@ -232,6 +243,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
     {
         public string Command { get; set; }
         public string BusinessRule { get; set; }
+        public Dictionary<string, string> Parameters { get; set; }
+        public string Description { get; set; }
     }
 
     public class AccountBusinessRuleMap

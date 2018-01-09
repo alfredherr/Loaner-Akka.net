@@ -88,16 +88,52 @@ This is what you’ll see ( I think I limit to 10,000):
 # To get a list of possible commands to run for billing and the list of possible business rules 
 GET to this endpint: [http://localhost:5000/api/system/businessrules](http://localhost:5000/api/system/businessrules)
 
-You will see this model (in this case you can see AnObligationMustBeActiveForBilling & AccountBalanceMustNotBeNegative are available for the BillingAssessment command) : 
-```JSON
+Parameters are key/value pairs. If the rule has parameters, they are listed with the key name and they datatype/description of accetable values to set. : 
+```json
 [
     {
         "command": "BillingAssessment",
-        "businessRule": "AnObligationMustBeActiveForBilling"
+        "businessRule": "AccountBalanceMustNotBeNegative",
+        "parameters": {},
+        "description": "Fail creating the billing if the account balance is negative."
     },
     {
         "command": "BillingAssessment",
-        "businessRule": "AccountBalanceMustNotBeNegative"
+        "businessRule": "AnObligationMustBeActiveForBilling",
+        "parameters": {},
+        "description": "Fail creating the billing if the account doesn't have an active obligation."
+    },
+    {
+        "command": "BillingAssessment",
+        "businessRule": "AssessTaxAsPercentageOfDuesDuringBilling",
+        "parameters": {
+            "taxPercentageRate": "[Double]"
+        },
+        "description": "Assess a tax concept to billing based on the amount of Dues."
+    },
+    {
+        "command": "BillingAssessment",
+        "businessRule": "ApplyUacAfterBilling",
+        "parameters": {
+            "minimumAmount": "[Double]",
+            "maxAmount": "[Double]"
+        },
+        "description": "If there is Unapplied Cash (i.e account balance is negative), apply it immediately after billing. A minimum or maximum can be set. Use 0 for no minimum and 999999 for no maximum. "
+    },
+    {
+        "command": "BillingAssessment",
+        "businessRule": "BillingConceptCannotBeBilledMoreThanOnce",
+        "parameters": {},
+        "description": "Fail creating the billing if the account has been assessed a billing for the same concept."
+    },
+    {
+        "command": "BillingAssessment",
+        "businessRule": "ClientSpecificRuleForCalculatingTax",
+        "parameters": {
+            "excludedStates": "[StateAbbreviation/OnePerState]",
+            "californiaTaxPercentageRate": "[Double]"
+        },
+        "description": "Client specific rule for Client ThousandTrails. Some states do not get assessed tax; others do, rates vary. Here maybe i reference a URL where more details are available about this rule."
     }
 ]
 ```

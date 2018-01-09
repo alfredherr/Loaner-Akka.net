@@ -3,7 +3,7 @@ using Loaner.BoundedContexts.MaintenanceBilling.Events;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages
 {
-    public class SomeOneSaidHiToMe : IEvent
+    public class SomeOneSaidHiToMe : IDomainEvent
     {
         public SomeOneSaidHiToMe(string accountNumber, string debuInfo)
         {

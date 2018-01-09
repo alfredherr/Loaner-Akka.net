@@ -3,7 +3,7 @@ using Loaner.BoundedContexts.MaintenanceBilling.Models;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Events
 {
-    public class ObligationAssessedConcept : IEvent
+    public class ObligationAssessedConcept : IDomainEvent
     {
         public ObligationAssessedConcept()
         {

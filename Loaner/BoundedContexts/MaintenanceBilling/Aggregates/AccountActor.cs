@@ -8,6 +8,7 @@ using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
 using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 using Loaner.BoundedContexts.MaintenanceBilling.Events;
 
@@ -29,7 +30,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Recover<AccountCreated>(@event => ApplyPastEvent("AccountCreated", @event));
             Recover<ObligationAddedToAccount>(@event => ApplyPastEvent("ObligationAddedToAccount", @event));
             Recover<ObligationAssessedConcept>(@event => ApplyPastEvent("ObligationAssessedConcept", @event));
-            Recover<SuperSimpleSuperCoolEventFoundByRules>(
+            Recover<SuperSimpleSuperCoolDomainEventFoundByRules>(
                 @event => ApplyPastEvent("SuperSimpleSuperCoolEventFoundByRules", @event));
 
             /**
@@ -109,10 +110,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             _log.Debug($"Snapshot recovered.");
         }
 
-        private void ApplyPastEvent(string eventname, IEvent @event)
+        private void ApplyPastEvent(string eventname, IDomainEvent domainEvent)
         {
             RecoveryCounter();
-            _accountState = _accountState.ApplyEvent(@event);
+            _accountState = _accountState.ApplyEvent(domainEvent);
             _log.Debug($"Recovery event: {eventname}");
         }
 

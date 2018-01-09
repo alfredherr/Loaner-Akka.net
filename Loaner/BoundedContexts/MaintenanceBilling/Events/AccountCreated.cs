@@ -2,7 +2,7 @@
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Events
 {
-    public class AccountCreated : IEvent
+    public class AccountCreated : IDomainEvent
     {
         public AccountCreated(string accountNumber)
         {

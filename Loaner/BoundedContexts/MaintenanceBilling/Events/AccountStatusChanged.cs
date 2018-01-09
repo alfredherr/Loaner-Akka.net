@@ -3,7 +3,7 @@ using Loaner.BoundedContexts.MaintenanceBilling.Models;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Events
 {
-    public class AccountStatusChanged : IEvent
+    public class AccountStatusChanged : IDomainEvent
     {
         public AccountStatusChanged()
         {

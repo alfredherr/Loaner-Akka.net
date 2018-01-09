@@ -11,3 +11,9 @@
 ################################################################################################
 ClientRaintree-PortfolioABC-*|BillingAssessment|AccountBalanceMustNotBeNegative|NoParameters
 ClientRaintree-PortfolioABC-*|BillingAssessment|AnObligationMustBeActiveForBilling|NoParameters
+
+##Examples of rules with parameters
+ClientRaintree-PortfolioMGO-*|BillingAssessment|AssessTaxAsPercentageOfDuesDuringBilling|TaxPercentageRate=8.9
+ClientRaintree-PortfolioMGO-*|BillingAssessment|ApplyUacAfterBilling|MinimumAmount=1.00,MaxAmount=999999
+ClientRaintree-PortfolioMGO-*|BillingAssessment|BillingConceptCannotBeBilledMoreThanOnce|NoParameters
+ClientRaintree-PortfolioMGO-*|BillingAssessment|ClientSpecificRuleForCalculatingTax|ExcludedStates=AZ,CaliforniaTaxPercentageRate=9.9

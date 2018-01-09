@@ -2,20 +2,20 @@
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Events
 {
-    public class SuperSimpleSuperCoolEventFoundByRules : IEvent
+    public class SuperSimpleSuperCoolDomainEventFoundByRules : IDomainEvent
     {
-        public SuperSimpleSuperCoolEventFoundByRules()
+        public SuperSimpleSuperCoolDomainEventFoundByRules()
         {
             _UniqueGuid = Guid.NewGuid();
             _OccurredOn = DateTime.Now;
         }
 
-        public SuperSimpleSuperCoolEventFoundByRules(string message) : this()
+        public SuperSimpleSuperCoolDomainEventFoundByRules(string message) : this()
         {
             Message = message;
         }
 
-        public SuperSimpleSuperCoolEventFoundByRules(string accountNumber, string message) : this()
+        public SuperSimpleSuperCoolDomainEventFoundByRules(string accountNumber, string message) : this()
         {
             Message = message;
             AccountNumber = accountNumber;

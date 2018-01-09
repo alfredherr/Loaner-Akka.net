@@ -1,26 +1,33 @@
 ﻿using System;
-using Loaner.BoundedContexts.MaintenanceBilling.Models;
+using System.Collections.Generic;
+using System.Text;
+ 
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Events
 {
-    public class AccountCancelled : IDomainEvent
+    public class TaxAppliedDuringBilling : IDomainEvent
     {
-        public AccountCancelled()
+        public TaxAppliedDuringBilling()
         {
             _UniqueGuid = Guid.NewGuid();
             _OccurredOn = DateTime.Now;
         }
 
-        public AccountCancelled(string accountNumber, AccountStatus status) : this()
+        public TaxAppliedDuringBilling(double taxAmount) : this()
         {
-            AccountStatus = status;
+            TaxAmountApplied = taxAmount;
+        }
+
+        public TaxAppliedDuringBilling(string accountNumber, double taxAmount) : this()
+        {
+            TaxAmountApplied = taxAmount;
             AccountNumber = accountNumber;
         }
 
-        public AccountStatus AccountStatus { get; }
         public string AccountNumber { get; }
         private DateTime _OccurredOn { get; }
         private Guid _UniqueGuid { get; }
+        public double TaxAmountApplied { get; }
 
         public DateTime OccurredOn()
         {
