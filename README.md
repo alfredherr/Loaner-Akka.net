@@ -140,7 +140,10 @@ Parameters are key/value pairs. If the rule has parameters, they are listed with
 # To create associations between business rules and accounts/portfolios/clients
 POST to the following endpoint: [http://localhost:5000/api/system/businessrules](http://localhost:5000/api/system/businessrules)
 
-using this model:
+Note that parameters mus tbe provided as single string, like so: "MinimumAmount=1.00,MaxAmount=999999". 
+
+Use "NoParameters" if there are none.
+
 ```json
 [
     {
