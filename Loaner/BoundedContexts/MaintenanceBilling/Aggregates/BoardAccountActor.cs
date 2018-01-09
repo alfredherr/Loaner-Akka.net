@@ -1,6 +1,3 @@
-
-using System.Diagnostics;
-
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {
     using Akka.Actor;
@@ -14,7 +11,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
     using System.Collections.Generic;
     using System.IO;
     using System.Text;
-    using static ActorManagement.LoanerActors;
     using Messages;
 
     /**
@@ -37,6 +33,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             /* Example of custom error handling, also using messages */
             Receive<FailedToLoadAccounts>(m => Self.Tell(typeof(Stop)));
             Receive<FailedToLoadObligations>(m => Self.Tell(typeof(Stop)));
+            //Receive<SaveSnapshotSuccess>(m => _log.Info($"snapshot taken {m.Metadata.PersistenceId}") );
             ReceiveAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
 

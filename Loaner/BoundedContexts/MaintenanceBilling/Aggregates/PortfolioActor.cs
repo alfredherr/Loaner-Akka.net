@@ -6,6 +6,7 @@ using Akka.Event;
 using Akka.Monitoring;
 using Akka.Persistence;
 using Akka.Util.Internal;
+using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 using Loaner.BoundedContexts.MaintenanceBilling.Events;
@@ -154,9 +155,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 var @event = new AccountAddedToSupervision(command.AccountNumber);
                 Persist(@event, s =>
                 {
-                    _accounts.Add(command.AccountNumber, null); 
+                    _accounts.Add(command.AccountNumber, null);
+                    InstantiateThisAccount(command.AccountNumber);
                 });
                 ApplySnapShotStrategy();
+                
             }
             else
             {
@@ -211,8 +214,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         }
         public void ApplySnapShotStrategy()
         {
-            //if (LastSequenceNr != 0 && LastSequenceNr % 10000 == 0)
-            //{
+            if (LastSequenceNr != 0 && LastSequenceNr % LoanerActors.TakePortolioSnapshotAt == 0)
+            {
                 var state = new List<string>(); // Just need the name to kick it off?
                 foreach (var record in _accounts.Keys)
                     state.Add(record);
@@ -220,7 +223,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 //_log.Debug($"Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
                 Context.IncrementCounter("SnapShotTaken");
                 //Console.WriteLine($"PortfolioActor: {DateTime.Now}\t{LastSequenceNr}\tProcessed another snapshot");
-            //}
+            }
         }
     }
 

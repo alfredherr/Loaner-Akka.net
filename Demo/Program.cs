@@ -61,14 +61,16 @@ namespace Demo
                {
                     actor 
                     {
-                     serializers 
+                        serializers 
                         {
                           hyperion = ""Akka.Serialization.HyperionSerializer, Akka.Serialization.Hyperion"" 
                         }
+                        
                         serialization-bindings 
                         {
-                            ""System.Object"" = hyperion
+                            ""System.Object"" = hyperion 
                         }
+                         
                     }
                 }
                 #akka.suppress-json-serializer-warning = on
@@ -77,22 +79,29 @@ namespace Demo
                 akka.actor.debug.unhandled = on
                 
 
-                akka.loglevel = DEBUG
+                akka.loglevel = INFO
                 
                 akka.loggers=[""Akka.Logger.NLog.NLogLogger, Akka.Logger.NLog""]
                      
             
-                ## SqLite
-                #akka.persistence.journal.plugin = ""akka.persistence.journal.sqlite""
-                #akka.persistence.journal.sqlite.class = ""Akka.Persistence.Sqlite.Journal.SqliteJournal, Akka.Persistence.Sqlite""
-                #akka.persistence.journal.sqlite.plugin-dispatcher = ""akka.actor.default-dispatcher""
-                #akka.persistence.journal.sqlite.connection-timeout = 30s
-                #akka.persistence.journal.sqlite.table-name = event_journal
-                #akka.persistence.journal.sqlite.metadata-table-name = journal_metadata
-                #akka.persistence.journal.sqlite.auto-initialize = on
-                #akka.persistence.journal.sqlite.timestamp-provider = ""Akka.Persistence.Sql.Common.Journal.DefaultTimestampProvider, Akka.Persistence.Sql.Common""
-                #akka.persistence.journal.sqlite.connection-string = ""Data Source=../../../akka_demo.db""
-                
+                ##############################################################
+                ## SQLite Journal
+                ##############################################################
+                akka.persistence.journal.plugin = ""akka.persistence.journal.sqlite""
+                akka.persistence.journal.sqlite.class = ""Akka.Persistence.Sqlite.Journal.BatchingSqliteJournal, Akka.Persistence.Sqlite""
+                akka.persistence.journal.sqlite.plugin-dispatcher = ""akka.actor.default-dispatcher""
+                akka.persistence.journal.sqlite.connection-timeout = 30s
+                akka.persistence.journal.sqlite.table-name = event_journal
+                akka.persistence.journal.sqlite.metadata-table-name = journal_metadata
+                akka.persistence.journal.sqlite.auto-initialize = on
+                akka.persistence.journal.sqlite.timestamp-provider = ""Akka.Persistence.Sql.Common.Journal.DefaultTimestampProvider, Akka.Persistence.Sql.Common""
+                akka.persistence.journal.sqlite.connection-string = ""Data Source=../../../akka_demo.db""
+                akka.persistence.journal.sqlite.max-batch-size = 10000
+                #akka.persistence.journal.sqlite.isolation-level = ""read-uncommitted""
+
+                ##############################################################
+                ## SQLite Snapshot
+                ##############################################################
                 #akka.persistence.snapshot-store.plugin = ""akka.persistence.snapshot-store.sqlite""
                 #akka.persistence.snapshot-store.sqlite.class = ""Akka.Persistence.Sqlite.Snapshot.SqliteSnapshotStore, Akka.Persistence.Sqlite""
                 #akka.persistence.snapshot-store.sqlite.plugin-dispatcher = ""akka.actor.default-dispatcher""
@@ -100,7 +109,38 @@ namespace Demo
                 #akka.persistence.snapshot-store.sqlite.table-name = snapshot_store
                 #akka.persistence.snapshot-store.sqlite.auto-initialize = on
                 #akka.persistence.snapshot-store.sqlite.connection-string = ""Data Source=../../../akka_demo.db""
+            
+                ##############################################################
+                ## RocksDB Journal
+                ##############################################################
+                #akka.persistence.journal.rocksdb.class = ""Akka.Persistence.RocksDb.Journal.RocksDbJournal, Akka.Persistence.RocksDb""
+                #akka.persistence.journal.rocksdb.plugin-dispatcher = ""akka.persistence.dispatchers.default-plugin-dispatcher""
+                #akka.persistence.journal.rocksdb.replay-dispatcher = ""akka.persistence.dispatchers.default-replay-dispatcher""
+                #akka.persistence.journal.rocksdb.path = ""C:\\dev\\Loaner2\\Demo\\journal""
+                #akka.persistence.journal.rocksdb.fsync = on
+                #akka.persistence.journal.rocksdb.checksum = off
+                
+                
+                ##############################################################
+                ## PostgreSQL Journal
+                ##############################################################
+                #akka.persistence.journal.plugin = ""akka.persistence.journal.postgresql""
+                #akka.persistence.journal.postgresql.class = ""Akka.Persistence.PostgreSql.Journal.PostgreSqlJournal, Akka.Persistence.PostgreSql""
+                #akka.persistence.journal.postgresql.plugin-dispatcher = ""akka.actor.default-dispatcher""
+                #akka.persistence.journal.postgresql.connection-string = ""Server=127.0.0.1;Port=5432;Database=akka;User Id=akka;Password=Testing123;""
+                #akka.persistence.journal.postgresql.connection-timeout = 30s
+                #akka.persistence.journal.postgresql.schema-name = public
+                #akka.persistence.journal.postgresql.table-name = event_journal
+                #akka.persistence.journal.postgresql.auto-initialize = on
+                #akka.persistence.journal.postgresql.timestamp-provider = ""Akka.Persistence.Sql.Common.Journal.DefaultTimestampProvider, Akka.Persistence.Sql.Common""
+                #akka.persistence.journal.postgresql.metadata-table-name = metadata
+                ## defines column db type used to store payload. Available option: BYTEA (default), JSON, JSONB
+                #akka.persistence.journal.postgresql.stored-as = BYTEA
 
+
+                ##############################################################
+                ## Akka Cluster
+                ##############################################################
                 akka.actor.provider = ""Akka.Cluster.ClusterActorRefProvider, Akka.Cluster""
                 akka.remote.log-remote-lifecycle-events = INFO
                 akka.remote.dot-netty.tcp.hostname = ""127.0.0.1""

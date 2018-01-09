@@ -1,0 +1,9 @@
+# Ignore files and do not put them in the final image
+
+*.md
+!README.md
+
+*.xlsx
+*.txt
+/.git
+/.vs

@@ -4,6 +4,7 @@ using Akka.Actor;
 using Akka.Event;
 using Akka.Monitoring;
 using Akka.Persistence;
+using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules;
@@ -81,6 +82,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             Sender.Tell(new MyAccountStatus($"Your billing request has been submitted.",AccountState.Clone(_accountState)));
             ApplyBusinessRules(command);
+            if (_accountState.AccountNumber == null)
+            {
+                throw new Exception($"Actor {Self.Path.Name} is passing an empty account number.");
+            }
             Context.Parent.Tell(
                     new RegisterMyAccountBilling(_accountState.AccountNumber,
                             command.LineItems.Select(x => x.TotalAmount).Sum() ,
@@ -164,7 +169,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 			 * Then, based on the outcome generated events.
 			 * In this example, we are simply going to accept it and updated our state.
 			 */
-            BusinessRuleApplicationResult result = AccountBusinessRulesManager.ApplyBusinessRules(_accountState, command);
+            BusinessRuleApplicationResult result = AccountBusinessRulesManager.ApplyBusinessRules(Self.Path.Parent.Parent.Name, Self.Path.Parent.Name ,_accountState, command);
             _log.Info($"There were {result.GeneratedEvents.Count} events for {command} command. And it was {result.Success}");
             if (result.Success)
             {
@@ -186,12 +191,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         /*Example of how snapshotting can be custom to the actor, in this case per 'Account' events*/
         public void ApplySnapShotStrategy()
         {
-            //if (LastSequenceNr != 0 && LastSequenceNr % 1000 == 0)
-            //{
+            if (LastSequenceNr != 0 && LastSequenceNr % LoanerActors.TakeAccountSnapshotAt == 0)
+            {
                 SaveSnapshot(_accountState);
                // _log.Debug($"Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
                 Context.IncrementCounter("SnapShotTaken");
-            //}
+            }
         }
 
         private void Monitor()

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
+using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 using Loaner.BoundedContexts.MaintenanceBilling.Events;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
@@ -26,5 +27,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
          * perhaps. Note that this its the calles choice to accept the events or not.
          */
         AccountState GetGeneratedState();
+
+        bool RuleAppliedSuccessfuly();
+ 
     }
 }

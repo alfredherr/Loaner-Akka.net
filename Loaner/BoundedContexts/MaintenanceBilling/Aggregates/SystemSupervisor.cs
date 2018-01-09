@@ -1,4 +1,5 @@
 using Akka.Util.Internal;
+using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.Models;
 
@@ -215,8 +216,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         }
         public void ApplySnapShotStrategy()
         {
-            //if (LastSequenceNr != 0 && LastSequenceNr % 1000 == 0)
-            //{
+            if (LastSequenceNr != 0 && LastSequenceNr % LoanerActors.TakeSystemSupervisorSnapshotAt == 0)
+            {
                 var state = new List<string>(); // Just need the name to kick it off?
                 foreach (var record in _portfolios.Keys)
                     state.Add(record);
@@ -224,7 +225,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 //_log.Debug($"Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
                 Context.IncrementCounter("SnapShotTaken");
                 Console.WriteLine($"PortfolioActor: {DateTime.Now}\t{LastSequenceNr}\tProcessed another snapshot");
-            //}
+            }
         }
     }
 

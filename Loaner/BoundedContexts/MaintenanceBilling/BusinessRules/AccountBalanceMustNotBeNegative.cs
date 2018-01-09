@@ -7,15 +7,23 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
 {
     public class AccountBalanceMustNotBeNegative : IAccountBusinessRule
     {
-        private readonly AccountState _accountState;
+        private AccountState AccountState { get; set; }
         private string _detailsGenerated;
         private List<IEvent> _eventsGenerated;
 
-        public AccountBalanceMustNotBeNegative(AccountState accountState)
+        public AccountBalanceMustNotBeNegative()
         {
-            this._accountState = accountState;
         }
 
+        public AccountBalanceMustNotBeNegative(AccountState accountState)
+        {
+            AccountState = accountState;
+        }
+
+        public void SetAccountState(AccountState state)
+        {
+            AccountState = state;
+        }
         public bool Success { get; private set; }
 
         public string GetResultDetails()
@@ -30,8 +38,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
 
         public AccountState GetGeneratedState()
         {
-            return _accountState;
+            return AccountState;
         }
+
+        public bool RuleAppliedSuccessfuly()
+        {
+            return Success;
+        }
+
 
         /* Rule logic goes here. */
         public void RunRule()
@@ -39,7 +53,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
             _eventsGenerated = new List<IEvent>
             {
                 new SuperSimpleSuperCoolEventFoundByRules(
-                    _accountState.AccountNumber,
+                    AccountState.AccountNumber,
                     "AccountBalanceMustNotBeNegative"
                 )
             };

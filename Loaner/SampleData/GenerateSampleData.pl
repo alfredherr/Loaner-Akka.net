@@ -11,7 +11,7 @@ my $obligationCounter = 1;
 my @Chars = ('1'..'9');
 my $Length = 11;
 my %unique=();
-my $portfolio = join('', map +(q(A)..q(Z))[rand(26)], 1..10);
+my $portfolio = "ABC";
 print STDOUT "The first portfolio is: $portfolio\n";
 my $portfolio_splitter = 0;
 for(my $i = 0; $i < $NumberOfRecords ; $i++ ){
@@ -21,7 +21,7 @@ for(my $i = 0; $i < $NumberOfRecords ; $i++ ){
     }
    
      if(++$portfolio_splitter % $RecordsPerPortfolio == 0){
-         $portfolio = join('', map +(q(A)..q(Z))[rand(26)], 1..10);
+         $portfolio = join('', map +(q(A)..q(Z))[rand(26)], 1..3);
          print STDOUT "$portfolio_splitter new portfolio: $portfolio\n";
      }
     if(exists $unique{$number}){

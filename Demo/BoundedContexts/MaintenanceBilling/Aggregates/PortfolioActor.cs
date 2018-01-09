@@ -9,6 +9,7 @@ using Akka.Util.Internal;
 using Demo.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Demo.BoundedContexts.MaintenanceBilling.Commands;
 using Demo.BoundedContexts.MaintenanceBilling.Events;
+//using Demo.Custom.Persistence;
 using static Demo.ActorManagement.LoanerActors;
 
 namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
@@ -16,6 +17,8 @@ namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
     public class PortfolioActor : ReceivePersistentActor
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
+
+        //private OneDatabasePerActor db;
 
         /**
          * Actor's state = just a list of account under supervision
@@ -59,7 +62,7 @@ namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
             // delete all messages from journal and snapshot store before latests confirmed
             // snapshot, we won't need them anymore
             //DeleteMessages(snapshotSeqNr);
-            DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
+            //DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
         }
         private void RegisterBillingStatus(RegisterMyAccountBilling cmd)
         {
@@ -155,9 +158,9 @@ namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
                 var @event = new AccountAddedToSupervision(command.AccountNumber);
                 Persist(@event, s =>
                 {
-                    _accounts.Add(command.AccountNumber, null); 
+                    _accounts.Add(command.AccountNumber, null);
+                    ApplySnapShotStrategy();
                 });
-                ApplySnapShotStrategy();
             }
             else
             {
@@ -210,17 +213,30 @@ namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
             }
             _log.Info($"Snapshot recovered. ${snap} accounts.");
         }
+        //private void CustomPersistence()
+        //{
+        //    if (db == null)
+        //    {
+        //        db = new OneDatabasePerActor(PersistenceId);
+        //    }
+        //    var state = new List<string>(); // Just need the name to kick it off?
+        //    foreach (var record in _accounts.Keys)
+        //        state.Add(record);
+        //    SaveSnapshot(state.ToArray());
+        //    db.Snapshot(PersistenceId, typeof(PortfolioActor).ToString(), state.ToArray());
+        //}
         public void ApplySnapShotStrategy()
         {
             if (LastSequenceNr != 0 && LastSequenceNr % TAKE_PORTFOLIO_SNAPSHOT_AT == 0)
             {
-                var state = new List<string>(); // Just need the name to kick it off?
-                foreach (var record in _accounts.Keys)
-                    state.Add(record);
-                SaveSnapshot(state.ToArray());
-                //_log.Debug($"Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
                 Context.IncrementCounter("SnapShotTaken");
-                //Console.WriteLine($"PortfolioActor: {DateTime.Now}\t{LastSequenceNr}\tProcessed another snapshot");
+                //CustomPersistence();
+                var state = new List<string>();
+                foreach (var record in _accounts.Keys)
+                {
+                    state.Add(record);
+                }
+                SaveSnapshot(state.ToArray());
             }
         }
     }

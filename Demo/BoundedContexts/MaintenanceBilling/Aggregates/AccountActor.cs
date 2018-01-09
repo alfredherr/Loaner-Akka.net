@@ -11,9 +11,11 @@ using Demo.BoundedContexts.MaintenanceBilling.Commands;
 using Demo.BoundedContexts.MaintenanceBilling.Events;
 using static Demo.ActorManagement.LoanerActors;
 
+//using Demo.Custom.Persistence;
+
 namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
 {
-    public class AccountActor : ReceivePersistentActor
+    public class AccountActor : ReceivePersistentActor 
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
@@ -21,9 +23,11 @@ namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
         private AccountState _accountState = new AccountState();
 
         private DateTime _lastBootedOn;
-        
+
+        //private OneDatabasePerActor db;
         public AccountActor()
         {
+            
             /* Hanlde Recovery */
             Recover<SnapshotOffer>(offer => offer.Snapshot is AccountState, offer => ApplySnapShot(offer));
             Recover<AccountCreated>(@event => ApplyPastEvent("AccountCreated", @event));
@@ -66,8 +70,8 @@ namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
             var snapshotSeqNr = success.Metadata.SequenceNr;
             // delete all messages from journal and snapshot store before latests confirmed
             // snapshot, we won't need them anymore
-            DeleteMessages(snapshotSeqNr);
-            DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
+            //DeleteMessages(snapshotSeqNr);
+            //DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
         }
 
         private void RegisterStartup()
@@ -77,7 +81,7 @@ namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
 
 
         public override string PersistenceId => Self.Path.Name;
-
+      
         private void ProcessBilling(BillingAssessment command)
         {
             Sender.Tell(new MyAccountStatus($"Your billing request has been submitted.",AccountState.Clone(_accountState)));
@@ -149,6 +153,7 @@ namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
                     _accountState = _accountState.ApplyEvent(@event);
                     _log.Debug($"Created account {command.AccountNumber}");
                 });
+                
             }
             else
             {
@@ -156,6 +161,8 @@ namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
                     $"You are trying to create {command.AccountNumber}, but has already been created. No action taken.");
             }
         }
+
+       
 
         private void ApplyBusinessRules(IDomainCommand command)
         {
@@ -180,18 +187,27 @@ namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
                         _accountState = _accountState.ApplyEvent(@event);
                         ApplySnapShotStrategy();
                      });
+
                 }
             }
         }
-
+        //private void CustomPersistence()
+        //{
+        //    if (db == null)
+        //    {
+        //        db = new OneDatabasePerActor(_accountState.AccountNumber.Substring(0, 3));
+        //    }
+        //
+        //    db.Snapshot(PersistenceId, typeof(AccountActor).ToString(), _accountState);
+        //}
         /*Example of how snapshotting can be custom to the actor, in this case per 'Account' events*/
         public void ApplySnapShotStrategy()
         {
             if (LastSequenceNr != 0 && LastSequenceNr % TAKE_ACCOUNT_SNAPSHOT_AT == 0)
-            {
-                SaveSnapshot(_accountState);
-                // _log.Debug($"Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
+            {   
                 Context.IncrementCounter("SnapShotTaken");
+                //CustomPersistence();
+                SaveSnapshot(_accountState);
             }
         }
 

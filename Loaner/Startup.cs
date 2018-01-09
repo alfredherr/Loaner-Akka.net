@@ -63,8 +63,7 @@
             app.AddNLogWeb();
 
         }
-
-
+        
         private int GetConfiValueInt(string key)
         {
             TryParse(Environment.GetEnvironmentVariable(key), out int port);
@@ -91,6 +90,7 @@
             return result;
 
         }
+
         private static Config GetConfiguration()
         {
             var hocon = @" 
@@ -119,17 +119,32 @@
                 
                 akka.loggers=[""Akka.Logger.NLog.NLogLogger, Akka.Logger.NLog""]
                      
-            
+                ##############################################################
+                ## PostgreSQL Journal
+                ##############################################################
+                #akka.persistence.journal.plugin = ""akka.persistence.journal.postgresql""
+                #akka.persistence.journal.postgresql.class = ""Akka.Persistence.PostgreSql.Journal.PostgreSqlJournal, Akka.Persistence.PostgreSql""
+                #akka.persistence.journal.postgresql.plugin-dispatcher = ""akka.actor.default-dispatcher""
+                #akka.persistence.journal.postgresql.connection-string = ""Server=127.0.0.1;Port=5432;Database=akka;User Id=akka;Password=Testing123;""
+                #akka.persistence.journal.postgresql.connection-timeout = 30s
+                #akka.persistence.journal.postgresql.schema-name = public
+                #akka.persistence.journal.postgresql.table-name = event_journal  
+                #akka.persistence.journal.postgresql.auto-initialize = on
+                #akka.persistence.journal.postgresql.timestamp-provider = ""Akka.Persistence.Sql.Common.Journal.DefaultTimestampProvider, Akka.Persistence.Sql.Common""
+                #akka.persistence.journal.postgresql.metadata-table-name = metadata
+                ## defines column db type used to store payload. Available option: BYTEA (default), JSON, JSONB
+                #akka.persistence.journal.postgresql.stored-as = BYTEA
+                
                 ## SqLite
-                akka.persistence.journal.plugin = ""akka.persistence.journal.sqlite""
-                akka.persistence.journal.sqlite.class = ""Akka.Persistence.Sqlite.Journal.SqliteJournal, Akka.Persistence.Sqlite""
-                akka.persistence.journal.sqlite.plugin-dispatcher = ""akka.actor.default-dispatcher""
-                akka.persistence.journal.sqlite.connection-timeout = 30s
-                akka.persistence.journal.sqlite.table-name = event_journal
-                akka.persistence.journal.sqlite.metadata-table-name = journal_metadata
-                akka.persistence.journal.sqlite.auto-initialize = on
-                akka.persistence.journal.sqlite.timestamp-provider = ""Akka.Persistence.Sql.Common.Journal.DefaultTimestampProvider, Akka.Persistence.Sql.Common""
-                akka.persistence.journal.sqlite.connection-string = ""Data Source=../../../akka_demo.db""
+                #akka.persistence.journal.plugin = ""akka.persistence.journal.sqlite""
+                #akka.persistence.journal.sqlite.class = ""Akka.Persistence.Sqlite.Journal.SqliteJournal, Akka.Persistence.Sqlite""
+                #akka.persistence.journal.sqlite.plugin-dispatcher = ""akka.actor.default-dispatcher""
+                #akka.persistence.journal.sqlite.connection-timeout = 30s
+                #akka.persistence.journal.sqlite.table-name = event_journal
+                #akka.persistence.journal.sqlite.metadata-table-name = journal_metadata
+                #akka.persistence.journal.sqlite.auto-initialize = on
+                #akka.persistence.journal.sqlite.timestamp-provider = ""Akka.Persistence.Sql.Common.Journal.DefaultTimestampProvider, Akka.Persistence.Sql.Common""
+                #akka.persistence.journal.sqlite.connection-string = ""Data Source=../../../akka_demo.db""
                 
                 #akka.persistence.snapshot-store.plugin = ""akka.persistence.snapshot-store.sqlite""
                 #akka.persistence.snapshot-store.sqlite.class = ""Akka.Persistence.Sqlite.Snapshot.SqliteSnapshotStore, Akka.Persistence.Sqlite""
@@ -138,6 +153,25 @@
                 #akka.persistence.snapshot-store.sqlite.table-name = snapshot_store
                 #akka.persistence.snapshot-store.sqlite.auto-initialize = on
                 #akka.persistence.snapshot-store.sqlite.connection-string = ""Data Source=../../../akka_demo.db""
+
+                ## Jonfile 
+                akka.persistence {
+            	    snapshot-store {
+		                jonfile {
+			                # qualified type name of the File persistence snapshot actor
+            			    class = ""SnapShotStore.FileSnapshotStore3, SnapShotStore""
+                            max-load-attempts=19
+#                            dir = ""/db""
+                            dir = ""C:\\temp""
+
+                            # dispatcher used to drive snapshot storage actor
+                            plugin-dispatcher = ""akka.actor.default-dispatcher""
+                            #plugin-dispatcher = ""snapshot-dispatcher""
+                        }
+                    }
+                }
+
+                akka.persistence.snapshot-store.plugin = ""akka.persistence.snapshot-store.jonfile""
 
                 akka.actor.provider = ""Akka.Cluster.ClusterActorRefProvider, Akka.Cluster""
                 akka.remote.log-remote-lifecycle-events = INFO

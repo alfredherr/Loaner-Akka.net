@@ -12,13 +12,12 @@
     using System;
     using System.Threading.Tasks;
     using static ActorManagement.LoanerActors;
-    
+    using Nancy.ModelBinding;
+
     public class AccountModule : NancyModule
     {
         public AccountModule() : base("/api/account")
         {
- 
-
             Get("/{actorName}", async args =>
              {
                  try
@@ -93,19 +92,12 @@
             Post("/{actorName}/assessment", async args =>
             {
                 string account = args.actorName;
-                //var assessment = this.Bind<InvoiceLineItem>();
-                var reader = new StreamReader(this.Request.Body);
-                string text = reader.ReadToEnd();
-                InvoiceLineItem assessment = JsonConvert.DeserializeObject<InvoiceLineItem>(text);
-                
-                  Console.WriteLine($"assessment: {assessment.Item.Name} \t");
-               
-                List<InvoiceLineItem> liofInvoices = new List<InvoiceLineItem>();
-                liofInvoices.Add(assessment);
+                SimulateAssessmentModel assessment = this.Bind<SimulateAssessmentModel>();
+              
                 try
                 {
                      
-                    var domanCommand = new BillingAssessment(account, liofInvoices);
+                    var domanCommand = new BillingAssessment(account, assessment.LineItems);
                     var system = DemoActorSystem
                         .ActorSelection($"/user/demoSupervisor/*/{account}")
                         .ResolveOne(TimeSpan.FromSeconds(3));

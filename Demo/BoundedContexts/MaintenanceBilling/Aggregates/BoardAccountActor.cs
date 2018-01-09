@@ -58,14 +58,17 @@ namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
             {
                 string portfolio = portfolioDic.Key.Instance;
                 var accounts  = portfolioDic.Value;
-                IActorRef porfolioActor = ActorRefs.Nobody;
+                IActorRef portfolioActor = ActorRefs.Nobody;
 
-                await Task.Run( () =>
-                {
-                    porfolioActor = supervisor.Ask<IActorRef>(new SuperviseThisPortfolio(portfolio), TimeSpan.FromSeconds(3)).Result;
-                });
+                Console.WriteLine($"portfolio {portfolio}");
+                Console.WriteLine($"accounts {accounts.Count}");
+                Console.WriteLine($"supervisor {supervisor.Path.Name}");
+                portfolioActor = Context.ActorOf(Props.Create<PortfolioActor>(), portfolio);
+                portfolioActor.Tell(new CheckYoSelf()); // to instantiate actor
+                supervisor.Tell(new SuperviseThisPortfolio(portfolio));
+                _log.Debug($"While boarding, instantiated portfolio {portfolioActor.Path.Name}");
 
-                _log.Info($"The portfolio name is: {porfolioActor.Path.Name}");
+                _log.Info($"The portfolio name is: {portfolioActor.Path.Name}");
 
                 foreach (var account in accounts)
                 {
@@ -73,12 +76,12 @@ namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
                     {
                         //Pluck out all the obligations for this account, LINQ anyone?
                         var obligations = _obligationsInFile[account.Key];
-                        if (++counter % 100 == 0)
+                        if (++counter % 1000 == 0)
                         {
                             _log.Info(
                                 $"({counter}) Telling router {_roundRobinPoolBoardingActor.Path.Name} to spin up account {account.Key.Instance} with initial balance of {account.Value}... ");
                         }
-                        _roundRobinPoolBoardingActor.Tell(new SpinUpAccountActor(portfolio, account.Key.Instance, obligations, porfolioActor));
+                        _roundRobinPoolBoardingActor.Tell(new SpinUpAccountActor(portfolio, account.Key.Instance, obligations, portfolioActor));
                     }
                     else
                     {
@@ -100,7 +103,7 @@ namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates
              
             accountActor.Tell(new AskToBeSupervised(command.Portfolio,command.Supervisor));
             _accounSpunUp++;
-            if (_accounSpunUp  % 100 == 0)
+            if (_accounSpunUp  % 1000 == 0)
             {
                 Console.WriteLine($"Boarding: {DateTime.Now}\t{_accounSpunUp} accounts processed.");
 

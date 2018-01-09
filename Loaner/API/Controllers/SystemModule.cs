@@ -1,4 +1,10 @@
-﻿namespace Loaner.api.Controllers
+﻿using System.Collections.Generic;
+using System.IO;
+using Loaner.API.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules;
+using Newtonsoft.Json;
+
+namespace Loaner.api.Controllers
 {
     using System.Linq;
     using Akka.Util.Internal;
@@ -44,6 +50,34 @@
                 return Response.AsJson(answer);
 
             });
+            Get("/businessrules", async args =>
+            {
+                 
+                 return AppDomain
+                .CurrentDomain
+                .GetAssemblies()
+                .SelectMany(x => x.GetTypes())
+                .Where(x => typeof(IAccountBusinessRule).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
+                .Select(x => x.Name).ToList();
+                
+                //var rules = BusinessRulesMap.ListAllAccountBusinessRules();
+                //var model = new BusinessRulesMapModel() { Message = $"Info as of: {DateTime.Now}", RulesMap = rules };
+                //return rules;
+
+            });
+
+            Post("/businessrules", async args =>
+            {
+                var reader = new StreamReader(this.Request.Body);
+                string text = reader.ReadToEnd();
+                var newRules = JsonConvert.DeserializeObject<AccountBusinessRuleMap[]>(text);
+                 
+                var proof = BusinessRulesMap.UpdateAccountBusinessRules(updatedRules: newRules.ToList());
+                 
+                return new BusinessRulesMapModel() { Message = $"Info as of: {DateTime.Now}", RulesMap = proof };
+
+            });
+
             Post("/billall", args =>
             {
                 InvoiceLineItem[] assessment = this.Bind<InvoiceLineItem[]>();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
+using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 using Loaner.BoundedContexts.MaintenanceBilling.Events;
 using Loaner.BoundedContexts.MaintenanceBilling.Models;
 
@@ -10,18 +11,34 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
 {
     public class AnObligationMustBeActiveForBilling : IAccountBusinessRule
     {
-        private readonly AccountState _accountState;
+        private AccountState AccountState { set; get; }
         private string _detailsGenerated;
         private List<IEvent> _eventsGenerated;
-        private readonly List<InvoiceLineItem> _lineItems;
+        private List<InvoiceLineItem> LineItems { get; set; }
+
+
+        public AnObligationMustBeActiveForBilling()
+        {
+        }
+
 
         public AnObligationMustBeActiveForBilling(AccountState accountState, List<InvoiceLineItem> lineItems)
         {
-            _accountState = accountState;
-            _lineItems = lineItems;
+            AccountState = accountState;
+            LineItems = lineItems;
         }
 
-        public bool Success { get; private set; }
+        public void SetAccountState(AccountState state)
+        {
+            AccountState = state;
+        }
+
+        public void SetLineItems(List<InvoiceLineItem> lineItems)
+        {
+            LineItems = lineItems;
+        }
+
+        private bool Success { get; set; }
 
         public string GetResultDetails()
         {
@@ -35,8 +52,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
 
         public AccountState GetGeneratedState()
         {
-            return _accountState;
+            return AccountState;
         }
+
+        public bool RuleAppliedSuccessfuly()
+        {
+            return Success;
+        }
+
 
         /* Rule logic goes here. */
         public void RunRule()
@@ -44,18 +67,19 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
             Success = false;
             _eventsGenerated = new List<IEvent>();
             MaintenanceFee maintenanceFeeToUse = null;
-            maintenanceFeeToUse = 
-                _accountState
-                .Obligations
-                .Where( x => x.Value.Status == ObligationStatus.Active)
-                .Select(y => y.Value).First();
-            
+            maintenanceFeeToUse =
+                AccountState
+                    .Obligations
+                    .Where(x => x.Value.Status == ObligationStatus.Active)
+                    .Select(y => y.Value).First();
+
             if (maintenanceFeeToUse != null)
             {
-                foreach (var item in _lineItems)
+                foreach (var item in LineItems)
                 {
                     var @event =
-                        new ObligationAssessedConcept(maintenanceFeeToUse.ObligationNumber, item.Item, item.TotalAmount);
+                        new ObligationAssessedConcept(maintenanceFeeToUse.ObligationNumber, item.Item,
+                            item.TotalAmount);
                     _eventsGenerated.Add(@event);
                 }
 
@@ -66,8 +90,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
             {
                 _detailsGenerated = "No Active obligations on this account.";
             }
-            
-              
         }
     }
 }

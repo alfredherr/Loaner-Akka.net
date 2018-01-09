@@ -10,17 +10,21 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
 {
     public class AccountBusinessRulesManager
     {
-        public static BusinessRuleApplicationResult ApplyBusinessRules(AccountState accountState, IDomainCommand comnd)
+        public static BusinessRuleApplicationResult ApplyBusinessRules(string client, string portfolioName, AccountState accountState, IDomainCommand comnd)
         {
-            List<IAccountBusinessRule> rules = GetBusinessRulesToApply(accountState, comnd) ?? throw new ArgumentNullException("GetBusinessRulesToApply(accountState, comnd)");
+            List<IAccountBusinessRule> rules = GetBusinessRulesToApply(client, portfolioName, accountState, comnd) ?? throw new ArgumentNullException("GetBusinessRulesToApply(accountState, comnd)");
             BusinessRuleApplicationResult result = new BusinessRuleApplicationResult();
 
             foreach (IAccountBusinessRule reglaDeNegocio in rules)
+            {
+                // I don't see a need to explicitly handle rules
+                // we could remove the switch and just call directly.
                 switch (reglaDeNegocio)
                 {
                     case AccountBalanceMustNotBeNegative rule:
+                        rule.SetAccountState(accountState);
                         rule.RunRule();
-                        if (rule.Success)
+                        if (rule.RuleAppliedSuccessfuly())
                         {
                             result.RuleProcessedResults.Add(rule, $"Business Rule Applied. {rule.GetResultDetails()}");
                             rule.GetGeneratedEvents().ForEach(@event => result.GeneratedEvents.Add(@event));
@@ -35,9 +39,15 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
                             return result; //we stop processing any further rules.
                         }
                         break;
+                    
                     case AnObligationMustBeActiveForBilling rule:
+                        rule.SetAccountState(accountState);
+                        if (comnd is BillingAssessment cmd)
+                        {
+                            rule.SetLineItems(cmd.LineItems);
+                        }
                         rule.RunRule();
-                        if (rule.Success)
+                        if (rule.RuleAppliedSuccessfuly())
                         {
                             result.RuleProcessedResults.Add(rule, $"Business Rule Applied. {rule.GetResultDetails()}");
                             rule.GetGeneratedEvents().ForEach(@event => result.GeneratedEvents.Add(@event));
@@ -52,11 +62,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
                             return result; //we stop processing any further rules.
                         }
                         
-                         
                         break;
                     default:
                         throw new UnknownBusinessRule();
                 }
+            }
             //for each rule in rules
             // pass the info to the rule and call rule
             // create event of result of calling rule & apply event to state
@@ -64,24 +74,18 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules
             return result;
         }
 
-        public static List<IAccountBusinessRule> GetBusinessRulesToApply(AccountState accountState,
+        public static List<IAccountBusinessRule> GetBusinessRulesToApply(string client, string portfolioName, AccountState accountState,
             IDomainCommand command)
         {
             //When ApplyEvent is a SettleFinancialConcept?orWhatever command
             // get the rules to apply to this account for this particular command
             // and the order in which they need to be applied
-            List<IAccountBusinessRule> list = new List<IAccountBusinessRule>
-            {
-                new AccountBalanceMustNotBeNegative(accountState)
-            };
-            
-           
-            if (command is BillingAssessment cmd)
-            {
-                list.Add(new AnObligationMustBeActiveForBilling(accountState, cmd.LineItems));
-            }
-
-            return list;
+            // In future We would also want to pass in the command so we filter the search to just the rules 
+            // associated to the command
+            var rulesFound = BusinessRulesMap.GetAccountBusinessRules(client, portfolioName, accountState.AccountNumber);
+            rulesFound.ForEach(x => Console.WriteLine($"{accountState.AccountNumber} matched rule '{x.GetType().Name}'") );
+            return BusinessRulesMap.GetAccountBusinessRules(client, portfolioName,accountState.AccountNumber);
+ 
         }
     }
 }

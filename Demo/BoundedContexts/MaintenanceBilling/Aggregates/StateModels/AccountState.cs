@@ -4,9 +4,11 @@ using Demo.BoundedContexts.MaintenanceBilling.Aggregates.Exceptions;
 using Demo.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Demo.BoundedContexts.MaintenanceBilling.Events;
 using Demo.BoundedContexts.MaintenanceBilling.Models;
+//using MessagePack;
 
 namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates.StateModels
 {
+    //[MessagePackObject]
     public class AccountState
     {
         /**
@@ -68,7 +70,6 @@ namespace Demo.BoundedContexts.MaintenanceBilling.Aggregates.StateModels
             AuditLog = log;
             SimulatedFields = simulation;
         }
-
 
         public string AccountNumber { get; }
 

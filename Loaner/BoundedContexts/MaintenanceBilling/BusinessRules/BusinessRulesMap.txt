@@ -1,0 +1,13 @@
+﻿################################################################################################ 
+# Client-Portfolio-Account|Command|Rules|Parameters(comma separated key value pairs)
+################################################################################################
+#Example; 
+#	For all Raintree accounts under portfolio 'PortfolioABC'
+#	when executing an BillingAssessment command, 
+#	verify that the account balance is not negative (AccountBalanceMustNotBeNegative), then
+#	verify that the account has at least one active obligaction on to which do the billing
+# ClientRaintree-PortfolioABC-*|BillingAssessment|AccountBalanceMustNotBeNegative|NoParameters
+# ClientRaintree-PortfolioABC-*|BillingAssessment|AnObligationMustBeActiveForBilling|NoParameters
+################################################################################################
+ClientRaintree-PortfolioABC-*|BillingAssessment|AccountBalanceMustNotBeNegative|NoParameters
+ClientRaintree-PortfolioABC-*|BillingAssessment|AnObligationMustBeActiveForBilling|NoParameters
