@@ -162,5 +162,5 @@ Using the following model (you can bill one or more ‘items’, currently these
         "unitAmount": 25,
         "totalAmount": 25
     }
-]
+]   
 ```
