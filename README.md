@@ -141,7 +141,7 @@ Parameters are key/value pairs. If the rule has parameters, they are listed with
 POST to the following endpoint: [http://localhost:5000/api/system/businessrules](http://localhost:5000/api/system/businessrules)
 
 using this model:
-```JSOn
+```json
 [
     {
         "client": "ClientRaintree",
@@ -159,6 +159,42 @@ using this model:
         "forAllAccounts": true,
         "command": "BillingAssessment",
         "businessRule": "AccountBalanceMustNotBeNegative",
+        "businessRuleParameters": "NoParameters"
+    },
+    {
+        "client": "ClientRaintree",
+        "portfolio": "PortfolioMGO",
+        "accountNumber": "*",
+        "forAllAccounts": true,
+        "command": "BillingAssessment",
+        "businessRule": "AssessTaxAsPercentageOfDuesDuringBilling",
+        "businessRuleParameters": "TaxPercentageRate=8.9"
+    },
+    {
+        "client": "ClientRaintree",
+        "portfolio": "PortfolioMGO",
+        "accountNumber": "*",
+        "forAllAccounts": true,
+        "command": "BillingAssessment",
+        "businessRule": "ApplyUacAfterBilling",
+        "businessRuleParameters": "MinimumAmount=1.00,MaxAmount=999999"
+    },
+    {
+        "client": "ClientRaintree",
+        "portfolio": "PortfolioMGO",
+        "accountNumber": "*",
+        "forAllAccounts": true,
+        "command": "BillingAssessment",
+        "businessRule": "ClientSpecificRuleForCalculatingTax",
+        "businessRuleParameters": "ExcludedStates=AZ,CaliforniaTaxPercentageRate=9.9"
+    },
+    {
+        "client": "ClientRaintree",
+        "portfolio": "PortfolioMGO",
+        "accountNumber": "*",
+        "forAllAccounts": true,
+        "command": "BillingAssessment",
+        "businessRule": "BillingConceptCannotBeBilledMoreThanOnce",
         "businessRuleParameters": "NoParameters"
     }
 ]

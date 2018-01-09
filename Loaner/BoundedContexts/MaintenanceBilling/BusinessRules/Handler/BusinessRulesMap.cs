@@ -58,6 +58,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             try
             {
                 var filename = Environment.GetEnvironmentVariable("COMMANDS_TO_RULES_FILENAME");
+                Console.WriteLine($"COMMANDS_TO_RULES_FILENAME file location: {filename}");
                 string[] readText = File.ReadAllLines(filename);
                 foreach (var line in readText)
                 {
@@ -70,7 +71,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                     {
                         foreach (var p in param)
                         {
-                            Console.WriteLine($"Parameter: {p}");
                             var keyVals = p.Split('=');
                             parameters.Add(keyVals[0], keyVals[1]);
                         }
@@ -306,10 +306,20 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         {
             switch (rule)
             {
+                // This is clearly a horrible way to do this
+                // TODO: make this dynamic
                 case "AccountBalanceMustNotBeNegative":
                     return new AccountBalanceMustNotBeNegative();
                 case "AnObligationMustBeActiveForBilling":
                     return new AnObligationMustBeActiveForBilling();
+                case "AssessTaxAsPercentageOfDuesDuringBilling":
+                    return new AssessTaxAsPercentageOfDuesDuringBilling();
+                case "ApplyUacAfterBilling":
+                    return new ApplyUacAfterBilling();
+                case "BillingConceptCannotBeBilledMoreThanOnce":
+                    return new BillingConceptCannotBeBilledMoreThanOnce();
+                case "ClientSpecificRuleForCalculatingTax":
+                    return new ClientSpecificRuleForCalculatingTax();
                 default:
                     throw new InvalidIAccountBusinessRule(rule);
             }
