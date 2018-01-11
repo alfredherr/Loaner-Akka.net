@@ -1,4 +1,6 @@
-﻿namespace Loaner
+﻿using Loaner.Configuration;
+
+namespace Loaner
 {
     using BoundedContexts.MaintenanceBilling.Aggregates.Messages;
     using System;
@@ -39,7 +41,7 @@
                                         , prefix: GetConfigValue("StatsDPrefix")
                     ));
 
-            DemoSystemSupervisor.Tell(new AboutMe("Starting Up"));
+            DemoSystemSupervisor.Tell(new TellMeAboutYou("Starting Up"));
 
             var builder = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")

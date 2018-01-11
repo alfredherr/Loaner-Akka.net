@@ -3,8 +3,9 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Loaner.ActorManagement;
 using Loaner.API.Models;
-using Loaner.BoundedContexts.MaintenanceBilling.Commands;
-using Loaner.BoundedContexts.MaintenanceBilling.Events;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 using Nancy;
 using Nancy.ModelBinding;
 
@@ -16,7 +17,7 @@ namespace Loaner.API.Controllers
         {
             Get("/{portfolioName}", async args =>
             {
-                var answer = new MyPortfolioStatus("This didn't work");
+                var answer = new TellMeYourPortfolioStatus("This didn't work");
                 
                 string portfolio = args.portfolioName;
                 
@@ -31,7 +32,7 @@ namespace Loaner.API.Controllers
                
                 await Task.Run(() =>
                 {
-                    answer = portfolioActor.Result.Ask<MyPortfolioStatus>(new TellMeYourStatus(), TimeSpan.FromSeconds(30)).Result;
+                    answer = portfolioActor.Result.Ask<TellMeYourPortfolioStatus>(new TellMeYourStatus(), TimeSpan.FromSeconds(30)).Result;
                     return Response.AsJson( new SupervisedAccounts(answer.Message, answer.Accounts));
                 });
                 return Response.AsJson( new SupervisedAccounts(answer.Message, answer.Accounts));
@@ -39,7 +40,7 @@ namespace Loaner.API.Controllers
 
             Get("/{portfolioName}/run", async args =>
             {
-                var answer = new MyPortfolioStatus("This didn't work");
+                var answer = new TellMeYourPortfolioStatus("This didn't work");
                 
                 string portfolio = args.portfolioName;
                 
@@ -54,7 +55,7 @@ namespace Loaner.API.Controllers
                
                 await Task.Run(() =>
                 {
-                    answer = portfolioActor.Result.Ask<MyPortfolioStatus>(new StartAccounts(), TimeSpan.FromSeconds(30)).Result;
+                    answer = portfolioActor.Result.Ask<TellMeYourPortfolioStatus>(new StartAccounts(), TimeSpan.FromSeconds(30)).Result;
                     return Response.AsJson(new SupervisedAccounts(answer.Message, answer.Accounts));
                 });
                 return Response.AsJson(answer);
@@ -64,7 +65,7 @@ namespace Loaner.API.Controllers
             {
                 string portfolio = args.portfolioName;
                     
-                var answer = new MyPortfolioStatus("This didn't work");
+                var answer = new TellMeYourPortfolioStatus("This didn't work");
                 
                 SimulateAssessmentModel assessment = this.Bind<SimulateAssessmentModel>();
 
@@ -81,7 +82,7 @@ namespace Loaner.API.Controllers
                 {
                     answer = portfolioActor
                         .Result
-                        .Ask<MyPortfolioStatus>(new AssessWholePortfolio(portfolio,assessment.LineItems), TimeSpan.FromSeconds(5))
+                        .Ask<TellMeYourPortfolioStatus>(new AssessWholePortfolio(portfolio,assessment.LineItems), TimeSpan.FromSeconds(5))
                         .Result;
                     return Response.AsJson(new SupervisedAccounts(answer.Message, answer.Accounts));
                 });

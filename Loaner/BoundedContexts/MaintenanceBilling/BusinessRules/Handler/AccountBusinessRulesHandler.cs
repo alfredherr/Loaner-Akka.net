@@ -5,7 +5,7 @@ using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Exceptions;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules;
-using Loaner.BoundedContexts.MaintenanceBilling.Commands;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {

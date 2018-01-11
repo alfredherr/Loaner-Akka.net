@@ -1,7 +1,8 @@
 using Akka.Util.Internal;
 using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
-using Loaner.BoundedContexts.MaintenanceBilling.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {
@@ -9,8 +10,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
     using Akka.Event;
     using Akka.Monitoring;
     using Akka.Persistence;
-    using Commands;
-    using Events;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -37,8 +36,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             
             /* Commonly used commands */
             Command<TellMeYourStatus>(asking => GetMyStatus());
-            Command<AboutMe>(me => Console.WriteLine($"About me: {me.Me}"));
-            Command<MyPortfolioStatus>(msg => _log.Debug(msg.Message));
+            Command<TellMeAboutYou>(me => Console.WriteLine($"About me: {me.Me}"));
+            Command<TellMeYourPortfolioStatus>(msg => _log.Debug(msg.Message));
             Command<string>(noMessage => { });
             
             

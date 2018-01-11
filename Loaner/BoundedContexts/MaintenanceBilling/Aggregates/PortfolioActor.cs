@@ -8,8 +8,8 @@ using Akka.Persistence;
 using Akka.Util.Internal;
 using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
-using Loaner.BoundedContexts.MaintenanceBilling.Commands;
-using Loaner.BoundedContexts.MaintenanceBilling.Events;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {
@@ -38,8 +38,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<CheckYoSelf>(cmd => RegisterStartup());
             /* Common comands */
             Command<TellMeYourStatus>(asking => GetMyStatus());
-            Command<AboutMe>(me => Console.WriteLine($"About me: {me.Me}. I was last booted up on: {_lastBootedOn}"));
-            Command<MyPortfolioStatus>(msg => _log.Debug(msg.Message));
+            Command<TellMeAboutYou>(me => Console.WriteLine($"About me: {me.Me}. I was last booted up on: {_lastBootedOn}"));
+            Command<TellMeYourPortfolioStatus>(msg => _log.Debug(msg.Message));
             Command<string>(noMessage => { });
             Command<RegisterMyAccountBilling>(cmd => RegisterBillingStatus(cmd));
             
@@ -89,7 +89,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 BillingAssessment bill = new BillingAssessment(account.Key,cmd.Items) ;
                 account.Value.Tell(bill);   
             }
-            Sender.Tell(new MyPortfolioStatus($"Your request was sent to all { _accounts.Count } accounts",DictionaryToStringList()));
+            Sender.Tell(new TellMeYourPortfolioStatus($"Your request was sent to all { _accounts.Count } accounts",DictionaryToStringList()));
         }
 
         public override string PersistenceId => Self.Path.Name;
@@ -137,14 +137,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 {
                     _log.Warning($"skipped account {account}, already instantiated.");
                 }
-            Sender.Tell(new MyPortfolioStatus($"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",null));
+            Sender.Tell(new TellMeYourPortfolioStatus($"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",null));
         }
 
         private void GetMyStatus()
         {
             var tooMany = new Dictionary<string, string>();
             tooMany.Add("sorry","Too many accounts to list here");
-            Sender.Tell(new MyPortfolioStatus($"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",
+            Sender.Tell(new TellMeYourPortfolioStatus($"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",
                 (_accounts.Count > 10000) ? tooMany : DictionaryToStringList()));
         }
 

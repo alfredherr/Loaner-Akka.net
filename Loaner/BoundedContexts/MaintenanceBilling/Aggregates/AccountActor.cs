@@ -10,8 +10,8 @@ using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
-using Loaner.BoundedContexts.MaintenanceBilling.Commands;
-using Loaner.BoundedContexts.MaintenanceBilling.Events;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {

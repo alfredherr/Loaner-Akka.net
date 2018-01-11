@@ -3,9 +3,10 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Loaner.ActorManagement;
 using Loaner.API.Models;
-using Loaner.BoundedContexts.MaintenanceBilling.Commands;
-using Loaner.BoundedContexts.MaintenanceBilling.Events;
-using Loaner.BoundedContexts.MaintenanceBilling.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
 using Nancy;
 using Nancy.ModelBinding;
 

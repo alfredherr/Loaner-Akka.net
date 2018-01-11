@@ -1,4 +1,5 @@
-using Loaner.BoundedContexts.MaintenanceBilling.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {
@@ -7,7 +8,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
     using Akka.Event;
     using Akka.Monitoring;
     using Akka.Routing;
-    using Commands;
     using Models;
     using System;
     using System.Collections.Generic;

@@ -2,8 +2,8 @@ using System;
 using System.Collections.Immutable;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Exceptions;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
-using Loaner.BoundedContexts.MaintenanceBilling.Events;
-using Loaner.BoundedContexts.MaintenanceBilling.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 {
@@ -114,7 +114,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                     
 
                 default:
-                    throw new UnknownAccountEvent($"{domainEvent.GetType()}");
+                    throw new UnknownAccountEventException($"{domainEvent.GetType()}");
             }
         }
 

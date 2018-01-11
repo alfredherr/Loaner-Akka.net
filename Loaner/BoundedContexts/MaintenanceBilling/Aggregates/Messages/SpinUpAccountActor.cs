@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Akka.Actor;
-using Loaner.BoundedContexts.MaintenanceBilling.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages
 {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Exceptions;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules;
-using Loaner.BoundedContexts.MaintenanceBilling.Commands;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 using Newtonsoft.Json;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Loaner.BoundedContexts.MaintenanceBilling.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
 
 namespace Loaner.API.Models
 {

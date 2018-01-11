@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
-using Loaner.BoundedContexts.MaintenanceBilling.Commands;
-using Loaner.BoundedContexts.MaintenanceBilling.Events;
-using Loaner.BoundedContexts.MaintenanceBilling.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 {
