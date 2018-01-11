@@ -90,7 +90,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             ApplyBusinessRules(command);
             Context.Parent.Tell(
                     new RegisterMyAccountBilling(_accountState.AccountNumber,
-                            command.LineItems.Select(x => x.TotalAmount).Sum() ,
+                            command.LineItems.Select(x => x.Item.Amount).Sum() ,
                             _accountState.CurrentBalance)
                 );
         }

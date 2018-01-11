@@ -47,6 +47,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             
             /** Special handlers below; we can decide how to handle snapshot processin outcomes. */
             Command<SaveSnapshotSuccess>(success => PurgeOldSnapShots(success));
+            Command<DeleteSnapshotsSuccess>(msg => { });
             Command<SaveSnapshotFailure>(
                 failure => _log.Error(
                     $"Actor {Self.Path.Name} was unable to save a snapshot. {failure.Cause.Message}"));

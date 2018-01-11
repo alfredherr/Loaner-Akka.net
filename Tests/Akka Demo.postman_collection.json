@@ -1,7 +1,7 @@
 {
 	"info": {
 		"name": "Akka Demo",
-		"_postman_id": "0a59d835-755c-df6b-e975-1cc1b2985a66",
+		"_postman_id": "94a90657-5c96-9f49-4350-fce6fe4aae72",
 		"description": "",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -22,7 +22,10 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"body": {},
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
 				"url": {
 					"raw": "http://localhost:5000",
 					"protocol": "http",
@@ -54,7 +57,10 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"body": {},
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
 				"url": {
 					"raw": "http://localhost:5000/api/system/run",
 					"protocol": "http",
@@ -91,7 +97,10 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"body": {},
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
 				"url": {
 					"raw": "http://localhost:5000/api/system/businessrules",
 					"protocol": "http",
@@ -135,7 +144,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "[\n    {\n        \"client\": \"ClientRaintree\",\n        \"portfolio\": \"PortfolioUPD\",\n        \"accountNumber\": \"*\",\n        \"forAllAccounts\": true,\n        \"command\": \"BillingAssessment\",\n        \"businessRule\": \"AnObligationMustBeActiveForBilling\",\n        \"businessRuleParameters\": \"NoParameters\"\n    },\n    {\n        \"client\": \"ClientRaintree\",\n        \"portfolio\": \"PortfolioUPD\",\n        \"accountNumber\": \"*\",\n        \"forAllAccounts\": true,\n        \"command\": \"BillingAssessment\",\n        \"businessRule\": \"AccountBalanceMustNotBeNegative\",\n        \"businessRuleParameters\": \"NoParameters\"\n    }\n]"
+					"raw": "[\r\n    {\r\n        \"client\": \"ClientRaintree\",\r\n        \"portfolio\": \"PortfolioUPD\",\r\n        \"accountNumber\": \"*\",\r\n        \"forAllAccounts\": true,\r\n        \"command\": \"BillingAssessment\",\r\n        \"businessRule\": \"AnObligationMustBeActiveForBilling\",\r\n        \"businessRuleParameters\": \"NoParameters\"\r\n    },\r\n    {\r\n        \"client\": \"ClientRaintree\",\r\n        \"portfolio\": \"PortfolioUPD\",\r\n        \"accountNumber\": \"*\",\r\n        \"forAllAccounts\": true,\r\n        \"command\": \"BillingAssessment\",\r\n        \"businessRule\": \"AccountBalanceMustNotBeNegative\",\r\n        \"businessRuleParameters\": \"NoParameters\"\r\n    },\r\n    {\r\n        \"client\": \"ClientRaintree\",\r\n        \"portfolio\": \"PortfolioISR\",\r\n        \"accountNumber\": \"*\",\r\n        \"forAllAccounts\": true,\r\n        \"command\": \"BillingAssessment\",\r\n        \"businessRule\": \"AssessTaxAsPercentageOfDuesDuringBilling\",\r\n        \"businessRuleParameters\": \"TaxPercentageRate=8.9\"\r\n    },\r\n    {\r\n        \"client\": \"ClientRaintree\",\r\n        \"portfolio\": \"PortfolioMGO\",\r\n        \"accountNumber\": \"*\",\r\n        \"forAllAccounts\": true,\r\n        \"command\": \"BillingAssessment\",\r\n        \"businessRule\": \"ApplyUacAfterBilling\",\r\n        \"businessRuleParameters\": \"MinimumAmount=1.00,MaxAmount=999999\"\r\n    },\r\n    {\r\n        \"client\": \"ClientRaintree\",\r\n        \"portfolio\": \"PortfolioMGO\",\r\n        \"accountNumber\": \"*\",\r\n        \"forAllAccounts\": true,\r\n        \"command\": \"BillingAssessment\",\r\n        \"businessRule\": \"ClientSpecificRuleForCalculatingTax\",\r\n        \"businessRuleParameters\": \"ExcludedStates=AZ,CaliforniaTaxPercentageRate=9.9\"\r\n    },\r\n    {\r\n        \"client\": \"ClientRaintree\",\r\n        \"portfolio\": \"PortfolioISR\",\r\n        \"accountNumber\": \"*\",\r\n        \"forAllAccounts\": true,\r\n        \"command\": \"BillingAssessment\",\r\n        \"businessRule\": \"BillingConceptCannotBeBilledMoreThanOnce\",\r\n        \"businessRuleParameters\": \"NoParameters\"\r\n    }\r\n]"
 				},
 				"url": {
 					"raw": "http://localhost:5000/api/system/businessrules",
@@ -173,7 +182,10 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"body": {},
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
 				"url": {
 					"raw": "http://localhost:5000/api/portfolio/PortfolioUPD/",
 					"protocol": "http",
@@ -211,7 +223,10 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"body": {},
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
 				"url": {
 					"raw": "http://localhost:5000/api/portfolio/PortfolioUPD/run",
 					"protocol": "http",
@@ -275,7 +290,7 @@
 					"raw": "{\n\t\"LineItems\":\n\t[\n\t\t{\n\t\t    \"item\": 1,\n\t\t    \"units\": 10,\n\t\t    \"unitAmount\": 9.99,\n\t\t    \"totalAmount\": 99.90\n\t\t}\n    ]\n}"
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/account/55765352539/info",
+					"raw": "http://localhost:5000/api/account/51838716426/info",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -284,7 +299,7 @@
 					"path": [
 						"api",
 						"account",
-						"55765352539",
+						"51838716426",
 						"info"
 					]
 				}
@@ -334,10 +349,10 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "[\n    {\n        \"item\": {\n            \"name\": \"Tax\",\n            \"amount\": 10\n        },\n        \"units\": 1,\n        \"unitAmount\": 1,\n        \"totalAmount\": 10\n    },\n    {\n        \"item\": {\n            \"name\": \"Dues\",\n            \"amount\": 100\n        },\n        \"units\": 1,\n        \"unitAmount\": 100,\n        \"totalAmount\": 100\n    },\n    {\n        \"item\": {\n            \"name\": \"Reserve\",\n            \"amount\": 25\n        },\n        \"units\": 1,\n        \"unitAmount\": 25,\n        \"totalAmount\": 25\n    }\n]"
+					"raw": "[\n    {\n        \"item\": {\n            \"name\": \"Tax\",\n            \"amount\": 10\n        }\n    },\n    {\n        \"item\": {\n            \"name\": \"Dues\",\n            \"amount\": 100\n        }\n    },\n    {\n        \"item\": {\n            \"name\": \"Reserve\",\n            \"amount\": 25\n        }\n    }\n]"
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/portfolio/PortfolioACE/assessment",
+					"raw": "http://localhost:5000/api/portfolio/PortfolioISR/assessment",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -346,7 +361,7 @@
 					"path": [
 						"api",
 						"portfolio",
-						"PortfolioACE",
+						"PortfolioISR",
 						"assessment"
 					]
 				}

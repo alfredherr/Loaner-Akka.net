@@ -80,9 +80,9 @@
             {
                 InvoiceLineItem[] lineItems = new InvoiceLineItem[]
                 {
-                    new InvoiceLineItem(new Tax(), 0,0,0),
-                    new InvoiceLineItem(new Dues(), 0,0,0),
-                    new InvoiceLineItem(new Reserve(), 0,0,0)
+                    new InvoiceLineItem(new Tax()),
+                    new InvoiceLineItem(new Dues()),
+                    new InvoiceLineItem(new Reserve())
                 };
                 
                 

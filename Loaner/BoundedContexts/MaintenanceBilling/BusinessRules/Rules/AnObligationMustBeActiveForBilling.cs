@@ -27,8 +27,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                 foreach (var item in LineItems)
                 {
                     var @event =
-                        new ObligationAssessedConcept(maintenanceFeeToUse.ObligationNumber, item.Item,
-                            item.TotalAmount);
+                        new ObligationAssessedConcept(maintenanceFeeToUse.ObligationNumber, item.Item);
                     _eventsGenerated.Add(@event);
                 }
 

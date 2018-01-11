@@ -190,9 +190,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels
 
         private AccountState ApplyEvent(ObligationAssessedConcept occurred)
         {
-            var trans = new FinancialTransaction(occurred.FinancialBucket, occurred.Amount);
+            var trans = new FinancialTransaction(occurred.FinancialBucket, occurred.FinancialBucket.Amount);
             Obligations[occurred.ObligationNumber]?.PostTransaction(trans);
-            var newState =  new AccountState(AccountNumber, CurrentBalance + occurred.Amount,
+            var newState =  new AccountState(AccountNumber, CurrentBalance + occurred.FinancialBucket.Amount,
                 AccountStatus, Obligations,
                 SimulatedFields,
                 AuditLog.Add(new StateLog("ObligationAssessedConcept", occurred.UniqueGuid(), occurred.OccurredOn())));

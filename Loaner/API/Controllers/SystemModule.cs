@@ -82,7 +82,7 @@ namespace Loaner.api.Controllers
                     {
                         Console.Write($"Item Name: {x.Item.Name} \t");
                         Console.Write($"Item Amount: {x.Item.Amount} \t");
-                        Console.WriteLine($"Units: {x.Units} \t");
+                        
                     });
                
 

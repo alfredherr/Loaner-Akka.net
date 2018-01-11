@@ -19,25 +19,81 @@ $> GenerateSampleData.pl <Total_#_of_Records> <#_of_Records_Per_Portfolio>
 Simply open (GET) the root url: [http://localhost:5000](http://localhost:5000)
 
 You will see the following: 
-```
-    Available routes:
-    Method	URL
-    GET	/api/account/{actorName}
-    GET	/api/account/{actorName}/info
-    GET	/api/account/{actorName}/assessment
-    POST	/api/account/{actorName}/assessment
-    GET	/
-    GET	/api/portfolio/{portfolioName}
-    GET	/api/portfolio/{portfolioName}/run
-    POST	/api/portfolio/{portfolioName}/assessment
-    GET	/api/system
-    GET	/api/system/run
-    GET	/api/system/businessrules
-    POST	/api/system/businessrules
-    POST	/api/system/billall
-    GET	/api/system/BillingStatus
-    POST	/api/system/simulation
-```
+
+<body>
+        <h1>Available routes:</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>URL</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td>/api/account/{actorName}</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/api/account/{actorName}/info</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/api/account/{actorName}/assessment</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/api/account/{actorName}/assessment</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/api/portfolio/{portfolioName}</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/api/portfolio/{portfolioName}/run</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/api/portfolio/{portfolioName}/assessment</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/api/system</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/api/system/run</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/api/system/businessrules</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/api/system/businessrules</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/api/system/billall</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/api/system/BillingStatus</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/api/system/simulation</td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+
 # To load/run all the actors
 GET the following endpoint: [http://localhost:5000/api/system/run](http://localhost:5000/api/system/run)
 
@@ -166,7 +222,7 @@ Use "NoParameters" if there are none.
     },
     {
         "client": "ClientRaintree",
-        "portfolio": "PortfolioMGO",
+        "portfolio": "PortfolioISR",
         "accountNumber": "*",
         "forAllAccounts": true,
         "command": "BillingAssessment",
@@ -193,7 +249,7 @@ Use "NoParameters" if there are none.
     },
     {
         "client": "ClientRaintree",
-        "portfolio": "PortfolioMGO",
+        "portfolio": "PortfolioISR",
         "accountNumber": "*",
         "forAllAccounts": true,
         "command": "BillingAssessment",
@@ -208,34 +264,25 @@ Be aware that I’m just taking what you post and removing any previous rule ass
 POST to the following endpoint: [http://localhost:5000/api/portfolio/PortfolioACE/assessment](http://localhost:5000/api/portfolio/PortfolioACE/assessment
 )
 Using the following model (you can bill one or more ‘items’, currently these are all possible types): 
-```JSOn
+```json
 [
     {
         "item": {
             "name": "Tax",
             "amount": 10
-        },
-        "units": 1,
-        "unitAmount": 1,
-        "totalAmount": 10
+        }
     },
     {
         "item": {
             "name": "Dues",
             "amount": 100
-        },
-        "units": 1,
-        "unitAmount": 100,
-        "totalAmount": 100
+        }
     },
     {
         "item": {
             "name": "Reserve",
             "amount": 25
-        },
-        "units": 1,
-        "unitAmount": 25,
-        "totalAmount": 25
+        }
     }
-]   
+]
 ```

@@ -10,17 +10,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Models
         }
 
         //[JsonConstructor]
-        public InvoiceLineItem(IFinancialBucket item, int units, double unitAmount, double totalAmount)
+        public InvoiceLineItem(IFinancialBucket item)
         {
             Item = item;
-            Units = units;
-            UnitAmount = unitAmount;
-            TotalAmount = totalAmount;
         }
 
         public IFinancialBucket Item { get; set; }
-        public int Units { get; set; }
-        public double UnitAmount { get; set; }
-        public double TotalAmount { get; set; }
+      
     }
 }

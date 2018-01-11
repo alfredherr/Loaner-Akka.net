@@ -11,16 +11,15 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Events
             _UniqueGuid = Guid.NewGuid();
             _OccurredOn = DateTime.Now;
         }
-        public ObligationAssessedConcept(string obligationNumber, IFinancialBucket bucket, double amount ) :this()  
+        public ObligationAssessedConcept(string obligationNumber, IFinancialBucket bucket) :this()  
         {
             ObligationNumber = obligationNumber;
-            FinancialBucket = bucket;
-            Amount = amount;            
+            FinancialBucket = bucket;   
         }
 
         public string ObligationNumber { get; }
         public IFinancialBucket FinancialBucket { get; }
-        public double Amount { get; }
+        
         private DateTime _OccurredOn { get; }
         private Guid _UniqueGuid { get; }
         
@@ -36,7 +35,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Events
 
         public override string ToString()
         {
-            return $"[ObligationNumber={ObligationNumber}, FinancialBucket={typeof(IFinancialBucket)},Amount={Amount}]";
+            return $"[ObligationNumber={ObligationNumber}, FinancialBucket={FinancialBucket.GetType().Name}]";
         }
     }
 }
