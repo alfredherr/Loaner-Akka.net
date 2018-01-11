@@ -1,27 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Akka.Actor;
+using Akka.Util.Internal;
+using Loaner.ActorManagement;
 using Loaner.API.Models;
-using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.Commands;
+using Loaner.BoundedContexts.MaintenanceBilling.Events;
+using Loaner.BoundedContexts.MaintenanceBilling.Models;
+using Nancy;
+using Nancy.ModelBinding;
 using Newtonsoft.Json;
 
-namespace Loaner.api.Controllers
+namespace Loaner.API.Controllers
 {
-    using System.Linq;
-    using Akka.Util.Internal;
-    using BoundedContexts.MaintenanceBilling.Aggregates.Messages;
-    using BoundedContexts.MaintenanceBilling.Models;
-    using static ActorManagement.LoanerActors;
-    using Akka.Actor;
-    using BoundedContexts.MaintenanceBilling.Commands;
-    using BoundedContexts.MaintenanceBilling.Events;
-    using Models;
-    using Nancy;
-    using Nancy.ModelBinding;
-    using System;
-    using System.Threading.Tasks;
-
     public class SystemModule : NancyModule
     {
         public SystemModule() : base("/api/system")
@@ -31,7 +27,7 @@ namespace Loaner.api.Controllers
                 var answer = new MySystemStatus("This didn't work");
                 await Task.Run(() =>
                 {
-                    answer = DemoSystemSupervisor
+                    answer = LoanerActors.DemoSystemSupervisor
                             .Ask<MySystemStatus>(new TellMeYourStatus(), TimeSpan.FromSeconds(30))
                             .Result;
                     return Response.AsJson( new SupervisedPortfolios(answer.Message, answer.Portfolios));
@@ -44,7 +40,7 @@ namespace Loaner.api.Controllers
                 var answer = new MySystemStatus("This didn't work");
                 await Task.Run(() =>
                 {
-                    answer = DemoSystemSupervisor
+                    answer = LoanerActors.DemoSystemSupervisor
                         .Ask<MySystemStatus>(new StartPortfolios(), TimeSpan.FromSeconds(30))
                         .Result;
                     return Response.AsJson(new SupervisedAccounts(answer.Message, answer.Portfolios));
@@ -63,7 +59,7 @@ namespace Loaner.api.Controllers
             {
                 var reader = new StreamReader(this.Request.Body);
                 string text = reader.ReadToEnd();
-                var newRules = JsonConvert.DeserializeObject<AccountBusinessRuleMap[]>(text);
+                var newRules = JsonConvert.DeserializeObject<AccountBusinessRuleMapModel[]>(text);
                  
                 var proof = AccountBusinessRulesMapper.UpdateAccountBusinessRules(updatedRules: newRules.ToList());
                  
@@ -86,7 +82,7 @@ namespace Loaner.api.Controllers
                     });
                
 
-                DemoActorSystem.ActorSelection($"/user/demoSupervisor/*")
+                LoanerActors.DemoActorSystem.ActorSelection($"/user/demoSupervisor/*")
                      .Tell(new AssessWholePortfolio("AllPortfolios", assessment.ToList()));
                 
                 return Response.AsJson(new SupervisedPortfolios("Sent billing command to all accounts", null ));
@@ -98,7 +94,7 @@ namespace Loaner.api.Controllers
                 BillingStatusModel billingSummary = null;
                 await Task.Run(() =>
                 {
-                    var answer = DemoSystemSupervisor
+                    var answer = LoanerActors.DemoSystemSupervisor
                         .Ask<PortfolioBillingStatus>(new ReportBillingProgress(), TimeSpan.FromSeconds(30))
                         .Result;
                     billingSummary = new BillingStatusModel(answer);
@@ -114,9 +110,9 @@ namespace Loaner.api.Controllers
             {
                 SimulateBoardingOfAccountModel client = this.Bind<SimulateBoardingOfAccountModel>();
                 
-                Console.WriteLine($"Supervisor's name is: {DemoSystemSupervisor.Path.Name}");
+                Console.WriteLine($"Supervisor's name is: {LoanerActors.DemoSystemSupervisor.Path.Name}");
 
-                DemoSystemSupervisor.Tell(new SimulateBoardingOfAccounts(
+                LoanerActors.DemoSystemSupervisor.Tell(new SimulateBoardingOfAccounts(
                     client.ClientName,
                     client.ClientAccountsFilePath,
                     client.ObligationsFilePath

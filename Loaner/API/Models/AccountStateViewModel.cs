@@ -1,8 +1,7 @@
 ﻿using System;
-using Loaner.BoundedContexts.MaintenanceBilling.Aggregates;
-using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 
-namespace Loaner.api.Models
+namespace Loaner.API.Models
 {
     public class AccountStateViewModel
     {

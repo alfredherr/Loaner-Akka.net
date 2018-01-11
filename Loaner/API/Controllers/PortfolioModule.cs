@@ -1,15 +1,15 @@
-﻿namespace Loaner.api.Controllers
-{
-    using System;
-    using System.Threading.Tasks;
-    using Akka.Actor;
-    using static ActorManagement.LoanerActors;
-    using Models;
-    using BoundedContexts.MaintenanceBilling.Commands;
-    using BoundedContexts.MaintenanceBilling.Events;
-    using Nancy;
-    using Nancy.ModelBinding;
+﻿using System;
+using System.Threading.Tasks;
+using Akka.Actor;
+using Loaner.ActorManagement;
+using Loaner.API.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.Commands;
+using Loaner.BoundedContexts.MaintenanceBilling.Events;
+using Nancy;
+using Nancy.ModelBinding;
 
+namespace Loaner.API.Controllers
+{
     public class PortfolioModule : NancyModule
     {
         public PortfolioModule() : base("/api/portfolio")
@@ -20,7 +20,7 @@
                 
                 string portfolio = args.portfolioName;
                 
-                var portfolioActor = DemoActorSystem
+                var portfolioActor = LoanerActors.DemoActorSystem
                     .ActorSelection($"/user/demoSupervisor/{portfolio}")
                     .ResolveOne(TimeSpan.FromSeconds(3));
                 
@@ -43,7 +43,7 @@
                 
                 string portfolio = args.portfolioName;
                 
-                var portfolioActor = DemoActorSystem
+                var portfolioActor = LoanerActors.DemoActorSystem
                     .ActorSelection($"/user/demoSupervisor/{portfolio}")
                     .ResolveOne(TimeSpan.FromSeconds(3));
                
@@ -68,7 +68,7 @@
                 
                 SimulateAssessmentModel assessment = this.Bind<SimulateAssessmentModel>();
 
-                var portfolioActor = DemoActorSystem
+                var portfolioActor = LoanerActors.DemoActorSystem
                     .ActorSelection($"/user/demoSupervisor/{portfolio}")
                     .ResolveOne(TimeSpan.FromSeconds(3));
                 

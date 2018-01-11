@@ -1,8 +1,8 @@
 ﻿
-namespace Loaner.api.Models
-{
-    using System.Collections.Generic;
+using System.Collections.Generic;
 
+namespace Loaner.API.Models
+{
     public class SupervisedAccounts 
     {
         public SupervisedAccounts()

@@ -1,11 +1,11 @@
 ﻿
-namespace Loaner
-{
-    using Nancy.Configuration;
-    using Nancy;
-    using Nancy.TinyIoc;
-    using Nancy.Diagnostics;
+using Nancy;
+using Nancy.Configuration;
+using Nancy.Diagnostics;
+using Nancy.TinyIoc;
 
+namespace Loaner.Configuration
+{
     public class DemoBootstrapper : DefaultNancyBootstrapper
     {
         private readonly IAppConfiguration _appConfig;

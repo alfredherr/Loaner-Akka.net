@@ -5,10 +5,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Models
     using System.Linq;
     using Newtonsoft.Json;
 
-    public interface IObligation
-    {
-    }
-
     public class MaintenanceFee : IObligation
     {
         public ObligationStatus Status { get; private set; }
@@ -56,20 +52,5 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Models
         }
 
          
-    }
-    
-    
-    public class Bucket 
-    {
-       
-        public Bucket(string bucket, double balance)
-        {
-            Name = bucket;
-            Amount = balance;
-        }
-
-        
-        public string Name { get; }
-        public double Amount { get; set; }
     }
 }

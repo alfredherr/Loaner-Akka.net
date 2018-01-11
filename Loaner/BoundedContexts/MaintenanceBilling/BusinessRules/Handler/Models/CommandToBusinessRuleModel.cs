@@ -2,7 +2,7 @@
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models
 {
-    public class CommandToBusinessRule
+    public class CommandToBusinessRuleModel
     {
         public string Command { get; set; }
         public string BusinessRule { get; set; }

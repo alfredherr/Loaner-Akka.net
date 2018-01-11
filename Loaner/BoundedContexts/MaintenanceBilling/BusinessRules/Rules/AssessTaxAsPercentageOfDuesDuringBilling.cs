@@ -4,7 +4,8 @@ using System.Linq;
 using Akka;
 using Akka.Persistence;
 using Akka.Util.Internal;
-using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Exceptions;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
 using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 using Loaner.BoundedContexts.MaintenanceBilling.Events;
@@ -64,7 +65,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         private double ExtractParameter(string parameterName)
         {
             if (!CommandState.Parameters.ContainsKey(parameterName))
-                throw new CommandStateOptionMissing(
+                throw new CommandStateOptionMissingException(
                     $"Rule AssessTaxAsPercentageOfDuesDuringBilling requires parameter '{parameterName}'.");
             Double.TryParse((string)CommandState.Parameters[parameterName], out double value);
             return value;
@@ -115,13 +116,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         public bool RuleAppliedSuccessfuly()
         {
             return Success;
-        }
-    }
-
-    public class CommandStateOptionMissing : Exception
-    {
-        public CommandStateOptionMissing(string s) : base(s)
-        {
         }
     }
 }

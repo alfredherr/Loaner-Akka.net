@@ -1,5 +1,5 @@
 ﻿
-namespace Loaner.api.Models
+namespace Loaner.API.Models
 { 
     public class SimulateBoardingOfAccountModel
     {

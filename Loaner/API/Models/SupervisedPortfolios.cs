@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Loaner.api.Models
+namespace Loaner.API.Models
 {
     public class SupervisedPortfolios 
     {

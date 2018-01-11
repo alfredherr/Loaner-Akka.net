@@ -12,9 +12,6 @@ namespace Loaner.KafkaProducer
 {
     #region Command classes
     // Command to flush the producer
-    public class Flush
-    {
-    }
 
     #endregion
 

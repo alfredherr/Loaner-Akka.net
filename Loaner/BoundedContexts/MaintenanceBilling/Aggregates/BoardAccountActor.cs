@@ -1,3 +1,5 @@
+using Loaner.BoundedContexts.MaintenanceBilling.Models;
+
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {
     using Akka.Actor;
@@ -209,82 +211,5 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             Context.IncrementActorCreated();
         }
-    }
-
-    internal class PortfolioName
-    {
-        public PortfolioName(string name)
-        {
-            Instance = name;
-        }
-        public string Instance { get; }
-        public override int GetHashCode()
-        {
-            return Instance.GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            PortfolioName test = obj as PortfolioName;
-            return test.Instance == this.Instance;
-        }
-    }
-
-    internal class AccountNumber
-    {
-        public AccountNumber(string accountNumber)
-        {
-            Instance = accountNumber;
-        }
-        public string Instance { get; }
-        public override int GetHashCode()
-        {
-            return Instance.GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            AccountNumber test = obj as AccountNumber;
-            return test.Instance == this.Instance;
-        }
-    }
-
-    internal class Balance
-    {
-        public Balance(double amount)
-        {
-            Instance = amount;
-        }
-        public double Instance { get; }
-        public override int GetHashCode()
-        {
-            return Instance.GetHashCode();
-        }
-    
-        public override bool Equals(object obj)
-        {
-            Balance test = obj as Balance;
-            return test.Instance == this.Instance;
-        }
-    }
-
-
-    internal class SpinUpAccountActor
-    {
-        public SpinUpAccountActor(
-            string portfolio ,
-            string accountNumber,
-            List<MaintenanceFee> oligations,
-            IActorRef supervisor)
-        {
-            Portfolio = portfolio;
-            AccountNumber = accountNumber;
-            Obligations = oligations;
-            Supervisor = supervisor;
-        }
-        public string Portfolio { get; }
-        public string AccountNumber { get; }
-        public List<MaintenanceFee> Obligations { get; }
-        public IActorRef Supervisor { get; }
     }
 }

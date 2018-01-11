@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using Akka.Actor;
 using Akka.Util.Internal;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 
-namespace Loaner.api.Models
+namespace Loaner.API.Models
 {
     public class BillingStatusModel
     {

@@ -6,9 +6,10 @@ using Akka.Monitoring;
 using Akka.Persistence;
 using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
-using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 using Loaner.BoundedContexts.MaintenanceBilling.Events;
 
@@ -172,14 +173,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 			 * In this example, we are simply going to accept it and updated our state.
 			 */
 
-            BusinessRuleApplicationResult result = 
-                    AccountBusinessRulesManager.ApplyBusinessRules( _log, Self.Path.Parent.Parent.Name, Self.Path.Parent.Name ,_accountState, command);
-            _log.Info($"There were {result.GeneratedEvents.Count} events for {command} command. And it was {result.Success}");
-            if (result.Success)
+            BusinessRuleApplicationResultModel resultModel = 
+                    AccountBusinessRulesHandler.ApplyBusinessRules( _log, Self.Path.Parent.Parent.Name, Self.Path.Parent.Name ,_accountState, command);
+            _log.Info($"There were {resultModel.GeneratedEvents.Count} events for {command} command. And it was {resultModel.Success}");
+            if (resultModel.Success)
             {
                 /* I may want to do old vs new state comparisons for other reasons
 				 *  but ultimately we just update the state.. */
-                var events = result.GeneratedEvents;
+                var events = resultModel.GeneratedEvents;
                 foreach (var @event in events)
                 {
                     Persist(@event, s =>

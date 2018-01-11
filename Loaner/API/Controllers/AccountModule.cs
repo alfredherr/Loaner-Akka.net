@@ -1,19 +1,16 @@
-﻿namespace Loaner.api.Controllers
-{
-    using System.Collections.Generic;
-    using System.IO;
-    using Newtonsoft.Json;
-    using Akka.Actor;
-    using Models;
-    using BoundedContexts.MaintenanceBilling.Commands;
-    using BoundedContexts.MaintenanceBilling.Events;
-    using BoundedContexts.MaintenanceBilling.Models;
-    using Nancy;
-    using System;
-    using System.Threading.Tasks;
-    using static ActorManagement.LoanerActors;
-    using Nancy.ModelBinding;
+﻿using System;
+using System.Threading.Tasks;
+using Akka.Actor;
+using Loaner.ActorManagement;
+using Loaner.API.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.Commands;
+using Loaner.BoundedContexts.MaintenanceBilling.Events;
+using Loaner.BoundedContexts.MaintenanceBilling.Models;
+using Nancy;
+using Nancy.ModelBinding;
 
+namespace Loaner.API.Controllers
+{
     public class AccountModule : NancyModule
     {
         public AccountModule() : base("/api/account")
@@ -22,7 +19,7 @@
              {
                  try
                  {
-                     var system = DemoActorSystem
+                     var system = LoanerActors.DemoActorSystem
                          .ActorSelection($"/user/demoSupervisor/*/{args.actorName}")
                          .ResolveOne(TimeSpan.FromSeconds(3));
                      if (system.Exception != null)
@@ -51,7 +48,7 @@
                 {
                     string account = args.actorName;
                     string path = $@"/user/demoSupervisor/*/{account}";
-                    var system = DemoActorSystem
+                    var system = LoanerActors.DemoActorSystem
                         .ActorSelection(path)
                         .ResolveOne(TimeSpan.FromSeconds(3)).Result;
 
@@ -98,7 +95,7 @@
                 {
                      
                     var domanCommand = new BillingAssessment(account, assessment.LineItems);
-                    var system = DemoActorSystem
+                    var system = LoanerActors.DemoActorSystem
                         .ActorSelection($"/user/demoSupervisor/*/{account}")
                         .ResolveOne(TimeSpan.FromSeconds(3));
                     if (system.Exception != null)

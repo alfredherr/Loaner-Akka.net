@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
+using Loaner.API.Models;
+using Nancy;
 using Nancy.Routing;
 
-namespace Loaner.api.Controllers
+namespace Loaner.API.Controllers
 {
-    using Nancy;
-
     public class HomeModule : NancyModule
     {
         // add dependency to IRouteCacheProvider
@@ -29,10 +28,4 @@ namespace Loaner.api.Controllers
             return response;
         }
     }
-
-}
-
-public class HomeModel
-{
-    public IEnumerable<Nancy.Routing.RouteDescription> Routes { get; set; }
 }

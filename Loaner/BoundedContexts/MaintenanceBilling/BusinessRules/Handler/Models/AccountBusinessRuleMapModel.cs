@@ -1,15 +1,16 @@
 ﻿using System.Collections.Generic;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Exceptions;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules;
 using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 using Newtonsoft.Json;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models
 {
-    public class AccountBusinessRuleMap
+    public class AccountBusinessRuleMapModel
     {
         /* Client-Portfolio-Account|Command|Rules|Parameters(comma separated key value pairs) */
         [JsonConstructor]
-        public AccountBusinessRuleMap(string client, string portfolio, string accountNumber, bool forAllAccounts,
+        public AccountBusinessRuleMapModel(string client, string portfolio, string accountNumber, bool forAllAccounts,
             string command,
             string businessRule, string businessRuleParameters)
         {
@@ -22,7 +23,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models
             BusinessRule = validateBusinessRuleExists(businessRule, BusinessRuleParameters);
         }
 
-        public AccountBusinessRuleMap(string client, string portfolio, string account, bool allAccounts, string command,
+        public AccountBusinessRuleMapModel(string client, string portfolio, string account, bool allAccounts, string command,
             string rule, (string Command, Dictionary<string, object> Parameters) parameters)
         {
             Client = client;

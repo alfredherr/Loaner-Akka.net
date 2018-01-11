@@ -1,4 +1,4 @@
-﻿namespace Loaner
+﻿namespace Loaner.Configuration
 {
 
     public interface IAppConfiguration

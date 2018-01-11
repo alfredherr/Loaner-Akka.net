@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Loaner.BoundedContexts.MaintenanceBilling.Models;
 
-namespace Loaner.api.Models
+namespace Loaner.API.Models
 {
     
     public class SimulateAssessmentModel

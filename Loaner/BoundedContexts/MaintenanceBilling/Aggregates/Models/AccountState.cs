@@ -5,7 +5,7 @@ using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.Events;
 using Loaner.BoundedContexts.MaintenanceBilling.Models;
 
-namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels
+namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 {
     public class AccountState
     {

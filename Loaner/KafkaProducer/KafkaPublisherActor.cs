@@ -8,30 +8,9 @@ namespace Loaner.KafkaProducer
 {
     #region Command classes
     // The message to be published
-    public class Publish
-    {
-        public Publish(string key, object msg)
-        {
-            this.Key = key;
-            this.Msg = msg;
-        }
-
-        public string Key { get; private set; }
-        public object Msg { get; private set; }
-    }
 
     // If a message fails then it is contained in the Resend cmd below
-    public class Resend
-    {
-        public Resend(string key, string msg)
-        {
-            this.Key = key;
-            this.Msg = msg;
-        }
 
-        public string Key { get; private set; }
-        public string Msg { get; private set; }
-    }
     #endregion
 
     class KafkaPublisherActor : ReceiveActor

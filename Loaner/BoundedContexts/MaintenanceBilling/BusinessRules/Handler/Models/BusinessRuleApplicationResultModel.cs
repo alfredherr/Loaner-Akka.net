@@ -1,12 +1,12 @@
 using System.Collections.Generic;
-using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.Events;
 
-namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
+namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models
 {
-    public class BusinessRuleApplicationResult
+    public class BusinessRuleApplicationResultModel
     {
-        public BusinessRuleApplicationResult()
+        public BusinessRuleApplicationResultModel()
         {
             RuleProcessedResults = new Dictionary<IAccountBusinessRule, string>();
             GeneratedEvents = new List<IDomainEvent>();

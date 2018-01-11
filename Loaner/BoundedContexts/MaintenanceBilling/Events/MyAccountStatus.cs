@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates;
-using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Events
 {

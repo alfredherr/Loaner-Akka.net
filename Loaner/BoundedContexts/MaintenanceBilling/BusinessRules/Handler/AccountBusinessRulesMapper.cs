@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Exceptions;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 
@@ -36,7 +37,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             return rulesFound;
         }
 
-        public static List<AccountBusinessRuleMap> ListAllAccountBusinessRules()
+        public static List<AccountBusinessRuleMapModel> ListAllAccountBusinessRules()
         {
             if (AccountBusinessRulesMapper._rulesMapperInstance == null)
             {
@@ -46,16 +47,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             return _rulesMapperInstance.RulesInFile;
         }
 
-        public static List<AccountBusinessRuleMap> UpdateAccountBusinessRules(List<AccountBusinessRuleMap> updatedRules)
+        public static List<AccountBusinessRuleMapModel> UpdateAccountBusinessRules(List<AccountBusinessRuleMapModel> updatedRules)
         {
             UpdateAndReInitialize(updatedRules);
 
             return _rulesMapperInstance.RulesInFile;
         }
 
-        public static List<CommandToBusinessRule> GetCommandsToBusinesRules()
+        public static List<CommandToBusinessRuleModel> GetCommandsToBusinesRules()
         {
-            List<CommandToBusinessRule> commands = new List<CommandToBusinessRule>();
+            List<CommandToBusinessRuleModel> commands = new List<CommandToBusinessRuleModel>();
             
             try
             {
@@ -77,7 +78,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                             parameters.Add(keyVals[0], keyVals[1]);
                         }
                     }
-                    commands.Add(new CommandToBusinessRule() { Command = tokens[0], BusinessRule = tokens[1], Parameters = parameters, Description = tokens[3]  });
+                    commands.Add(new CommandToBusinessRuleModel() { Command = tokens[0], BusinessRule = tokens[1], Parameters = parameters, Description = tokens[3]  });
                 }
             }
             catch (Exception e)
@@ -87,7 +88,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             }
             return commands;
         }
-        private static void UpdateAndReInitialize(List<AccountBusinessRuleMap> updatedRules)
+        private static void UpdateAndReInitialize(List<AccountBusinessRuleMapModel> updatedRules)
         {
             try
             {
@@ -118,7 +119,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 
         public AccountBusinessRulesMapper(string businessRulesMapFile)
         {
-            RulesInFile = new List<AccountBusinessRuleMap>();
+            RulesInFile = new List<AccountBusinessRuleMapModel>();
             if (!File.Exists(businessRulesMapFile))
             {
                 throw new FileNotFoundException(@"I can't find {businessRulesMapFile}");
@@ -127,9 +128,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             ReadInBusinessRules(businessRulesMapFile);
         }
 
-        public AccountBusinessRulesMapper(string businessRulesMapFile, List<AccountBusinessRuleMap> updatedRules)
+        public AccountBusinessRulesMapper(string businessRulesMapFile, List<AccountBusinessRuleMapModel> updatedRules)
         {
-            RulesInFile = new List<AccountBusinessRuleMap>();
+            RulesInFile = new List<AccountBusinessRuleMapModel>();
             if (!File.Exists(businessRulesMapFile))
             {
                 throw new FileNotFoundException(@"I can't find {businessRulesMapFile}");
@@ -138,7 +139,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             ReadInBusinessRules(businessRulesMapFile);
         }
 
-        private void WriteOutBusinessRules(string businessRulesMapFile, List<AccountBusinessRuleMap> updatedRules)
+        private void WriteOutBusinessRules(string businessRulesMapFile, List<AccountBusinessRuleMapModel> updatedRules)
         {
             string[] readText = File.ReadAllLines(businessRulesMapFile);
             List<string> outfile = new List<string>();
@@ -223,7 +224,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                         }
                     }
                      
-                    RulesInFile.Add(new AccountBusinessRuleMap(
+                    RulesInFile.Add(new AccountBusinessRuleMapModel(
                         client: dpl[0],
                         portfolio: dpl[1],
                         account: dpl[2],
@@ -237,27 +238,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             }
         }
 
-        List<AccountBusinessRuleMap> RulesInFile { get; }
-    }
-
-    public class InvalidIAccountBusinessRuleException : Exception
-    {
-        public InvalidIAccountBusinessRuleException(string rule) : base(rule)
-        {
-        }
-    }
-
-    public class InvalidIDomainCommandException : Exception
-    {
-        public InvalidIDomainCommandException(string command) : base(command)
-        {
-        }
-    }
-
-    public class InvalidBusinessRulesMapFileException : Exception
-    {
-        public InvalidBusinessRulesMapFileException(string businessRulesMapFile) : base(businessRulesMapFile)
-        {
-        }
+        List<AccountBusinessRuleMapModel> RulesInFile { get; }
     }
 }
