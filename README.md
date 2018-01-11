@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/alfredherr/AkkaDotNetCoreDocker.svg?branch=master)](https://travis-ci.org/alfredherr/AkkaDotNetCoreDocker)
-[![Gitter chat](https://badges.gitter.im/ixtlesoft/AkkaDotNetCoreDocker.png)](https://gitter.im/ixtlesoft/AkkaDotNetCoreDocker) 
-[![Waffle.io - Columns and their card count](https://badge.waffle.io/alfredherr/AkkaDotNetCoreDocker.svg?columns=all)](http://waffle.io/alfredherr/AkkaDotNetCoreDocker)
+[![Build Status](https://travis-ci.org/alfredherr/Demo.svg?branch=master)](https://travis-ci.org/alfredherr/Demo)
+[![Gitter chat](https://badges.gitter.im/ixtlesoft/Demo.png)](https://gitter.im/ixtlesoft/Demo) 
+[![Waffle.io - Columns and their card count](https://badge.waffle.io/alfredherr/Demo.svg?columns=all)](http://waffle.io/alfredherr/Demo)
 
 # PoC of Akka.Net on Docker
 This is a POC of Akka.net on .Net Core deployed on Docker.  
@@ -14,7 +14,7 @@ The goals of this POC are as follows:
 Here is the list of pending [TODOs](TODO.md)
 
 ## High-level Objective
-![alt text](https://github.com/alfredherr/AkkaDotNetCoreDocker/blob/master/Akka%20POC.png "Diagram")
+![alt text](https://github.com/alfredherr/Demo/blob/master/Akka%20POC.png "Diagram")
 
 
 ## Running It
