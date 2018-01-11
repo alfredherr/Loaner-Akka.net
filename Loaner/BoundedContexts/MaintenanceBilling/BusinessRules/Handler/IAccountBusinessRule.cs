@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
+using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 using Loaner.BoundedContexts.MaintenanceBilling.Events;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
@@ -9,7 +11,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         /**
          * Rule logic gets handled in this method.
          */
-        void RunRule();
+        void RunRule(IDomainCommand command);
 
         string GetResultDetails();
 
@@ -27,6 +29,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         AccountState GetGeneratedState();
 
         bool RuleAppliedSuccessfuly();
- 
+
+        void SetAccountState(AccountState accountState);
+
+        void SetCallingCommandState((string Command, Dictionary<string, object> Parameters) commandState);
     }
+ 
 }

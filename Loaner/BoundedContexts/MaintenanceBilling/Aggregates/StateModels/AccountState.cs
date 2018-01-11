@@ -105,10 +105,60 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels
                     return ApplyEvent(occurred);
                 case SuperSimpleSuperCoolDomainEventFoundByRules occurred:
                     return ApplyEvent(occurred);
+                case TaxAppliedDuringBilling occurred:
+                    return ApplyEvent(occurred);
+                case UacAppliedAfterBilling occurred:
+                    return ApplyEvent(occurred);
+                case AccountBusinessRuleValidationSuccess occurred:
+                    return ApplyEvent(occurred);
+                    
 
                 default:
                     throw new UnknownAccountEvent($"{domainEvent.GetType()}");
             }
+        }
+
+        private AccountState ApplyEvent(AccountBusinessRuleValidationSuccess occurred)
+        {
+            return new AccountState(
+                AccountNumber, 
+                CurrentBalance,
+                AccountStatus, 
+                Obligations,
+                SimulatedFields,
+                AuditLog.Add(new StateLog($"AccountBusinessRuleValidationSuccess on {occurred.Message}", 
+                                            occurred.UniqueGuid(),
+                                            occurred.OccurredOn()
+                                            )
+                             )
+                );
+        }
+
+        private AccountState ApplyEvent(UacAppliedAfterBilling occurred)
+        {
+            var trans = new FinancialTransaction(new Tax() { Amount = occurred.UacAmountApplied }, occurred.UacAmountApplied);
+            Obligations[occurred.ObligationNumber]?.PostTransaction(trans);
+            var newState = new AccountState(AccountNumber, CurrentBalance + (-1 * occurred.UacAmountApplied),
+                AccountStatus, Obligations,
+                SimulatedFields,
+                AuditLog.Add(new StateLog("ObligationAssessedConcept", occurred.UniqueGuid(), occurred.OccurredOn())));
+            Console.WriteLine($"ObligationAssessedConcept: {occurred}");
+            Console.WriteLine($"New AccountState: {newState}");
+
+            return newState;
+        }
+        private AccountState ApplyEvent(TaxAppliedDuringBilling occurred)
+        {
+            var trans = new FinancialTransaction(new Tax(){Amount=occurred.TaxAmountApplied}, occurred.TaxAmountApplied);
+            Obligations[occurred.ObligationNumber]?.PostTransaction(trans);
+            var newState = new AccountState(AccountNumber, CurrentBalance + occurred.TaxAmountApplied,
+                AccountStatus, Obligations,
+                SimulatedFields,
+                AuditLog.Add(new StateLog("ObligationAssessedConcept", occurred.UniqueGuid(), occurred.OccurredOn())));
+            Console.WriteLine($"ObligationAssessedConcept: {occurred}");
+            Console.WriteLine($"New AccountState: {newState}");
+
+            return newState;
         }
 
         public static AccountState Clone(AccountState state)

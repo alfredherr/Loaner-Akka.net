@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
+using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 using Loaner.BoundedContexts.MaintenanceBilling.Events;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
@@ -9,14 +10,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
     {
 
         /* Rule logic goes here. */
-        public void RunRule()
+        public void RunRule(IDomainCommand command)
         {
            
             _eventsGenerated = new List<IDomainEvent>
             {
-                new UacAppliedAfterBilling(
+                new AccountBusinessRuleValidationSuccess(
                     AccountState.AccountNumber,
-                    15.0
+                    "BillingConceptCannotBeBilledMoreThanOnce"
                 )
             };
             _detailsGenerated = "THIS WORKED";
@@ -27,8 +28,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         private string _detailsGenerated;
         private List<IDomainEvent> _eventsGenerated;
 
-        public BillingConceptCannotBeBilledMoreThanOnce()
+        private (string Command, Dictionary<string, object> Parameters) CommandState { get; set; }
+
+        public BillingConceptCannotBeBilledMoreThanOnce((string Command, Dictionary<string, object> Parameters) commandState)
         {
+            CommandState = commandState;
         }
 
         public BillingConceptCannotBeBilledMoreThanOnce(AccountState accountState)
@@ -40,6 +44,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             AccountState = state;
         }
+
+        public void SetCallingCommandState((string Command, Dictionary<string, object> Parameters) commandState)
+        {
+            CommandState = commandState;
+        }
+
+      
         public bool Success { get; private set; }
 
         public string GetResultDetails()

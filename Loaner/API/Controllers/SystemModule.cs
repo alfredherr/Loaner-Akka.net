@@ -3,6 +3,7 @@ using System.IO;
 using Loaner.API.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 using Newtonsoft.Json;
 
 namespace Loaner.api.Controllers
@@ -54,7 +55,7 @@ namespace Loaner.api.Controllers
             Get("/businessrules", async args =>
             {
                  
-               return BusinessRulesMap.GetCommandsToBusinesRules();
+               return AccountBusinessRulesMapper.GetCommandsToBusinesRules();
 
             });
 
@@ -64,7 +65,7 @@ namespace Loaner.api.Controllers
                 string text = reader.ReadToEnd();
                 var newRules = JsonConvert.DeserializeObject<AccountBusinessRuleMap[]>(text);
                  
-                var proof = BusinessRulesMap.UpdateAccountBusinessRules(updatedRules: newRules.ToList());
+                var proof = AccountBusinessRulesMapper.UpdateAccountBusinessRules(updatedRules: newRules.ToList());
                  
                 return new BusinessRulesMapModel() { Message = $"Info as of: {DateTime.Now}", RulesMap = proof };
 

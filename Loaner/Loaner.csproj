@@ -62,7 +62,6 @@
   <ItemGroup>
     <Folder Include="BoundedContexts\MaintenanceBilling\Aggregates\Messages\" />
     <Folder Include="ActorManagement\" />
-    <Folder Include="BoundedContexts\MaintenanceBilling\BusinessRules\Commands\BillingAssessment\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

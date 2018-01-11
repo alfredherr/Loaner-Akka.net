@@ -51,6 +51,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             /** Special handlers below; we can decide how to handle snapshot processin outcomes. */
             Command<SaveSnapshotSuccess>(success => PurgeOldSnapShots(success));
+            Command<DeleteSnapshotsSuccess>(msg => { });
             Command<SaveSnapshotFailure>(
                 failure => _log.Error(
                     $"Actor {Self.Path.Name} was unable to save a snapshot. {failure.Cause.Message}"));
@@ -81,12 +82,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void ProcessBilling(BillingAssessment command)
         {
-            Sender.Tell(new MyAccountStatus($"Your billing request has been submitted.",AccountState.Clone(_accountState)));
-            ApplyBusinessRules(command);
+            //Sender.Tell(new MyAccountStatus($"Your billing request has been submitted.",AccountState.Clone(_accountState)));
             if (_accountState.AccountNumber == null)
             {
                 throw new Exception($"Actor {Self.Path.Name} is passing an empty account number.");
             }
+            ApplyBusinessRules(command);
             Context.Parent.Tell(
                     new RegisterMyAccountBilling(_accountState.AccountNumber,
                             command.LineItems.Select(x => x.TotalAmount).Sum() ,
@@ -170,7 +171,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 			 * Then, based on the outcome generated events.
 			 * In this example, we are simply going to accept it and updated our state.
 			 */
-            BusinessRuleApplicationResult result = AccountBusinessRulesManager.ApplyBusinessRules(Self.Path.Parent.Parent.Name, Self.Path.Parent.Name ,_accountState, command);
+
+            BusinessRuleApplicationResult result = 
+                    AccountBusinessRulesManager.ApplyBusinessRules( _log, Self.Path.Parent.Parent.Name, Self.Path.Parent.Name ,_accountState, command);
             _log.Info($"There were {result.GeneratedEvents.Count} events for {command} command. And it was {result.Success}");
             if (result.Success)
             {
@@ -181,7 +184,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 {
                     Persist(@event, s =>
                     {
-                        _log.Info($"Processing event {@event.ToString()} ");
+                        _log.Info($"Processing event {@event.GetType().Name} on account {_accountState.AccountNumber} ");
                         _accountState = _accountState.ApplyEvent(@event);
                         ApplySnapShotStrategy();
                      });

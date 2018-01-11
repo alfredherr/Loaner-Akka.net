@@ -5,22 +5,29 @@ using System.Text;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Events
 {
-    public class UacAppliedAfterBilling : IDomainEvent
+    public class AccountBusinessRuleValidationFailure : IDomainEvent
     {
-        public UacAppliedAfterBilling(string accountNumber, string obligationNumber, double uacAmount) 
+        public AccountBusinessRuleValidationFailure()
         {
             _UniqueGuid = Guid.NewGuid();
             _OccurredOn = DateTime.Now;
-            UacAmountApplied = uacAmount;
-            AccountNumber = accountNumber;
-            ObligationNumber = obligationNumber;
         }
 
-        public string ObligationNumber { get; }
+        public AccountBusinessRuleValidationFailure(string message) : this()
+        {
+            Message = message;
+        }
+
+        public AccountBusinessRuleValidationFailure(string accountNumber, string message) : this()
+        {
+            Message = message;
+            AccountNumber = accountNumber;
+        }
+
         public string AccountNumber { get; }
         private DateTime _OccurredOn { get; }
         private Guid _UniqueGuid { get; }
-        public double UacAmountApplied { get; }
+        public string Message { get; }
 
         public DateTime OccurredOn()
         {

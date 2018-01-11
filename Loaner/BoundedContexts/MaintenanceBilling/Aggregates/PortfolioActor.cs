@@ -51,6 +51,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     $"Actor {Self.Path.Name} was unable to save a snapshot. {failure.Cause.Message}"));
             Command<DeleteMessagesSuccess>(
                 msg => _log.Debug($"Successfully cleared log after snapshot ({msg.ToString()})"));
+            Command<MyAccountStatus>(msg => _log.Debug($"Why is account {msg.AccountState.AccountNumber} sending me an 'MyAccountStatus' message?"));
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
         private void PurgeOldSnapShots(SaveSnapshotSuccess success)
@@ -72,7 +73,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             }
  
             Context.Parent.Tell(new RegisterPortolioBilling(Self.Path.Name ,viewble) ) ;
-            _log.Info($"{Self.Path.Name} sent {Context.Parent.Path.Name} portfolio billing message containting {viewble.Count} billed accounts ");
+            _log.Info($"{Self.Path.Name} sent {Context.Parent.Path.Name} portfolio billing message containing {viewble.Count} billed accounts ");
           
         }
 

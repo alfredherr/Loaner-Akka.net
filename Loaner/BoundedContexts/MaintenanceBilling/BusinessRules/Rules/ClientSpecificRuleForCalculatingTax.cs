@@ -1,7 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.StateModels;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
+using Loaner.BoundedContexts.MaintenanceBilling.Commands;
 using Loaner.BoundedContexts.MaintenanceBilling.Events;
+using Loaner.BoundedContexts.MaintenanceBilling.Models;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 {
@@ -9,13 +13,38 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
     {
 
         /* Rule logic goes here. */
-        public void RunRule()
+        public void RunRule(IDomainCommand command)
         {
+            //Extract parameter Dues from Command
+            double duesAmount = 0.00;
+            var com = (BillingAssessment)command;
+            foreach (var c in com.LineItems)
+            {
+                if (c.Item.Name.Equals("Dues"))
+                {
+                    duesAmount = c.Item.Amount;
+                    break;
+                }
+            }
+            if (duesAmount != 0.00)
+            {
+                _eventsGenerated = new List<IDomainEvent>
+                {
+                    new AccountBusinessRuleValidationFailure(
+                        AccountState.AccountNumber,
+                        "ClientSpecificRuleForCalculatingTax requires a 'Dues' amount be provided when billing."
+                    )
+                }; ;
+                Success = false;
+                return;
+            }
+
             _eventsGenerated = new List<IDomainEvent>
             {
                 new TaxAppliedDuringBilling(
                     AccountState.AccountNumber,
-                    15.0
+                    AccountState.Obligations.FirstOrDefault(x => x.Value.Status == ObligationStatus.Active).Key,
+                    (15.0 / 100) * duesAmount
                 )
             };
             _detailsGenerated = "THIS WORKED";
@@ -26,8 +55,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         private string _detailsGenerated;
         private List<IDomainEvent> _eventsGenerated;
 
-        public ClientSpecificRuleForCalculatingTax()
+        private (string Command, Dictionary<string, object> Parameters) CommandState { get; set; }
+        public ClientSpecificRuleForCalculatingTax((string Command, Dictionary<string, object> Parameters) commandState)
         {
+            CommandState = commandState;
         }
 
         public ClientSpecificRuleForCalculatingTax(AccountState accountState)
@@ -39,6 +70,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             AccountState = state;
         }
+
+        public void SetCallingCommandState((string Command, Dictionary<string, object> Parameters) commandState)
+        {
+            CommandState = commandState;
+        }
+ 
         public bool Success { get; private set; }
 
         public string GetResultDetails()

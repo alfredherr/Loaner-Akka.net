@@ -2,25 +2,25 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.Commands;
-using Newtonsoft.Json;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
-    public class BusinessRulesMap
+    public class AccountBusinessRulesMapper
     {
 
-        private static BusinessRulesMap _rulesMapInstance;
+        private static AccountBusinessRulesMapper _rulesMapperInstance;
 
-        public static List<IAccountBusinessRule> GetAccountBusinessRulesForCommand(string client, string porfolio, string accountNumber,IDomainCommand command)
+        public static List<IAccountBusinessRule> 
+            GetAccountBusinessRulesForCommand(string client, string porfolio, string accountNumber,IDomainCommand command)
         {
-            if (BusinessRulesMap._rulesMapInstance == null)
+            if (AccountBusinessRulesMapper._rulesMapperInstance == null)
             {
                 Initialize();
             }
 
-            return (_rulesMapInstance.RulesInFile
+            List<IAccountBusinessRule> rulesFound = (_rulesMapperInstance.RulesInFile
                 .Where(ruleMap => 
                     // Look for rules associated to this command              
                     ruleMap.Command.GetType().Name.Equals(command.GetType().Name) &&
@@ -32,23 +32,25 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                                       ruleMap.Client.Equals(client) && ruleMap.Portfolio.Equals("*") && ruleMap.ForAllAccounts)
                                      )
                 .Select(ruleMap => ruleMap.BusinessRule)).ToList();
+            
+            return rulesFound;
         }
 
         public static List<AccountBusinessRuleMap> ListAllAccountBusinessRules()
         {
-            if (BusinessRulesMap._rulesMapInstance == null)
+            if (AccountBusinessRulesMapper._rulesMapperInstance == null)
             {
                 Initialize();
             }
 
-            return _rulesMapInstance.RulesInFile;
+            return _rulesMapperInstance.RulesInFile;
         }
 
         public static List<AccountBusinessRuleMap> UpdateAccountBusinessRules(List<AccountBusinessRuleMap> updatedRules)
         {
             UpdateAndReInitialize(updatedRules);
 
-            return _rulesMapInstance.RulesInFile;
+            return _rulesMapperInstance.RulesInFile;
         }
 
         public static List<CommandToBusinessRule> GetCommandsToBusinesRules()
@@ -90,7 +92,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             try
             {
                 var filename = Environment.GetEnvironmentVariable("BUSINESS_RULES_FILENAME");
-                _rulesMapInstance = new BusinessRulesMap(filename, updatedRules);
+                _rulesMapperInstance = new AccountBusinessRulesMapper(filename, updatedRules);
             }
             catch (Exception e)
             {
@@ -104,7 +106,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             try
             {
                 var filename = Environment.GetEnvironmentVariable("BUSINESS_RULES_FILENAME");
-                _rulesMapInstance = new BusinessRulesMap(filename);
+                _rulesMapperInstance = new AccountBusinessRulesMapper(filename);
             }
             catch (Exception e)
             {
@@ -114,19 +116,18 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         }
 
 
-        public BusinessRulesMap(string businessRulesMapFile)
+        public AccountBusinessRulesMapper(string businessRulesMapFile)
         {
             RulesInFile = new List<AccountBusinessRuleMap>();
             if (!File.Exists(businessRulesMapFile))
             {
                 throw new FileNotFoundException(@"I can't find {businessRulesMapFile}");
             }
-
-
+            
             ReadInBusinessRules(businessRulesMapFile);
         }
 
-        public BusinessRulesMap(string businessRulesMapFile, List<AccountBusinessRuleMap> updatedRules)
+        public AccountBusinessRulesMapper(string businessRulesMapFile, List<AccountBusinessRuleMap> updatedRules)
         {
             RulesInFile = new List<AccountBusinessRuleMap>();
             if (!File.Exists(businessRulesMapFile))
@@ -154,33 +155,33 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             }
             foreach (var update in updatedRules)
             {
-                string Client = update.Client;
-                string Portfolio = update.Portfolio;
-                string AccountNumber = update.ForAllAccounts ? "*" : update.AccountNumber;
-                string Command = update.Command.GetType().Name;
-                string BusinessRule = update.BusinessRule.GetType().Name;
-                string BusinessRuleParameters = "";
-                if (update.BusinessRuleParameters.Count == 0)
+                string client = update.Client;
+                string portfolio = update.Portfolio;
+                string accountNumber = update.ForAllAccounts ? "*" : update.AccountNumber;
+                string command = update.Command.GetType().Name;
+                string businessRule = update.BusinessRule.GetType().Name;
+                string businessRuleParameters = "";
+                if (update.BusinessRuleParameters.Parameters.Count == 0)
                 {
-                    BusinessRuleParameters = "NoParameters";
+                    businessRuleParameters = "NoParameters";
                 }
                 else
                 {
-                    foreach (var keyval in update.BusinessRuleParameters)
+                    foreach (var keyval in update.BusinessRuleParameters.Parameters)
                     {
-                        if (BusinessRuleParameters.Length == 0)
+                        if (businessRuleParameters.Length == 0)
                         {
-                            BusinessRuleParameters = $"{keyval.Key}={keyval.Value}";
+                            businessRuleParameters = $"{keyval.Key}={(string)keyval.Value}";
                         }
                         else
                         {
-                            BusinessRuleParameters += $",{keyval.Key}={keyval.Value}";
+                            businessRuleParameters += $",{keyval.Key}={(string)keyval.Value}";
                         }
                     }
                 }
                 /* Client-Portfolio-Account|Command|Rules|Parameters(comma separated key value pairs) */
 
-                outfile.Add($"{Client}-{Portfolio}-{AccountNumber}|{Command}|{BusinessRule}|{BusinessRuleParameters}");
+                outfile.Add($"{client}-{portfolio}-{accountNumber}|{command}|{businessRule}|{businessRuleParameters}");
             }
 
             try
@@ -206,12 +207,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                 var dpl = tokens[0].Split('-');
                 if (tokens.Length != 4 || dpl.Length != 3)
                 {
-                    throw new InvalidBusinessRulesMapFile(businessRulesMapFile);
+                    throw new InvalidBusinessRulesMapFileException(businessRulesMapFile);
                 }
                 else
                 {
                     bool all = dpl[2].Contains("*");
-                    Dictionary<string, string> parametros = new Dictionary<string, string>();
+                    Dictionary<string, object> parametros = new Dictionary<string, object>();
                     if (tokens[3].Contains(",") || tokens[3].Contains("="))
                     {
                         var ruleparams = tokens[3].Split(',');
@@ -221,7 +222,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                             parametros.Add(keyVal[0], keyVal[1]);
                         }
                     }
-
+                     
                     RulesInFile.Add(new AccountBusinessRuleMap(
                         client: dpl[0],
                         portfolio: dpl[1],
@@ -229,128 +230,33 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                         allAccounts: all,
                         command: tokens[1],
                         rule: tokens[2],
-                        parameters: parametros
+                        parameters: (tokens[1], parametros)
                     ));
                 }
-                Console.WriteLine(s);
+                
             }
         }
 
         List<AccountBusinessRuleMap> RulesInFile { get; }
     }
 
-    public class CommandToBusinessRule
+    public class InvalidIAccountBusinessRuleException : Exception
     {
-        public string Command { get; set; }
-        public string BusinessRule { get; set; }
-        public Dictionary<string, string> Parameters { get; set; }
-        public string Description { get; set; }
-    }
-
-    public class AccountBusinessRuleMap
-    {
-        /* Client-Portfolio-Account|Command|Rules|Parameters(comma separated key value pairs) */
-        [JsonConstructor]
-        public AccountBusinessRuleMap(string client, string portfolio, string accountNumber, bool forAllAccounts,
-            string command,
-            string businessRule, string businessRuleParameters)
-        {
-            Client = client;
-            Portfolio = portfolio;
-            AccountNumber = accountNumber;
-            ForAllAccounts = forAllAccounts;
-            Command = validateCommandExists(command);
-            BusinessRule = validateBusinessRuleExists(businessRule);
-            BusinessRuleParameters = SplitParameters(businessRuleParameters);
-        }
-
-        public AccountBusinessRuleMap(string client, string portfolio, string account, bool allAccounts, string command,
-            string rule, Dictionary<string, string> parameters)
-        {
-            Client = client;
-            Portfolio = portfolio;
-            AccountNumber = account;
-            ForAllAccounts = allAccounts;
-            Command = validateCommandExists(command);
-            BusinessRule = validateBusinessRuleExists(rule);
-            BusinessRuleParameters = parameters;
-        }
-
-        private Dictionary<string, string> SplitParameters(string parameters)
-        {
-            Dictionary<string, string> parametros = new Dictionary<string, string>();
-            if (parameters.Contains(",") || parameters.Contains("="))
-            {
-                var ruleparams = parameters.Split(',');
-                foreach (var parameter in ruleparams)
-                {
-                    string[] keyVal = parameter.Split("=");
-                    parametros.Add(keyVal[0], keyVal[1]);
-                }
-            }
-            return parametros;
-        }
-
-        private IDomainCommand validateCommandExists(string command)
-        {
-            switch (command)
-            {
-                case "BillingAssessment":
-                    return new BillingAssessment();
-                default:
-                    throw new InvalidIDomainCommand(command);
-            }
-        }
-
-        private IAccountBusinessRule validateBusinessRuleExists(string rule)
-        {
-            switch (rule)
-            {
-                // This is clearly a horrible way to do this
-                // TODO: make this dynamic
-                case "AccountBalanceMustNotBeNegative":
-                    return new AccountBalanceMustNotBeNegative();
-                case "AnObligationMustBeActiveForBilling":
-                    return new AnObligationMustBeActiveForBilling();
-                case "AssessTaxAsPercentageOfDuesDuringBilling":
-                    return new AssessTaxAsPercentageOfDuesDuringBilling();
-                case "ApplyUacAfterBilling":
-                    return new ApplyUacAfterBilling();
-                case "BillingConceptCannotBeBilledMoreThanOnce":
-                    return new BillingConceptCannotBeBilledMoreThanOnce();
-                case "ClientSpecificRuleForCalculatingTax":
-                    return new ClientSpecificRuleForCalculatingTax();
-                default:
-                    throw new InvalidIAccountBusinessRule(rule);
-            }
-        }
-
-        public string Client { get; private set; }
-        public string Portfolio { get; private set; }
-        public string AccountNumber { get; private set; }
-        public bool ForAllAccounts { get; private set; }
-        public IDomainCommand Command { get; private set; }
-        public IAccountBusinessRule BusinessRule { get; private set; }
-        public Dictionary<string, string> BusinessRuleParameters { get; private set; }
-    }
-
-    public class InvalidIAccountBusinessRule : Exception
-    {
-        public InvalidIAccountBusinessRule(string rule) : base(rule)
+        public InvalidIAccountBusinessRuleException(string rule) : base(rule)
         {
         }
     }
 
-    public class InvalidIDomainCommand : Exception
+    public class InvalidIDomainCommandException : Exception
     {
-        public InvalidIDomainCommand(string command) : base(command)
+        public InvalidIDomainCommandException(string command) : base(command)
         {
         }
     }
 
-    public class InvalidBusinessRulesMapFile : Exception
+    public class InvalidBusinessRulesMapFileException : Exception
     {
-        public InvalidBusinessRulesMapFile(string businessRulesMapFile) : base(businessRulesMapFile)
+        public InvalidBusinessRulesMapFileException(string businessRulesMapFile) : base(businessRulesMapFile)
         {
         }
     }
