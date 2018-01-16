@@ -1,11 +1,5 @@
 ﻿using Akka.Actor;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Akka.Actor;
-using Confluent.Kafka.Serialization;
 using Confluent.Kafka;
-using Newtonsoft.Json; 
 using Akka.Monitoring;
 
 namespace Loaner.KafkaProducer

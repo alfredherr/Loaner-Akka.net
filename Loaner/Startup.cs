@@ -1,10 +1,7 @@
-﻿using Loaner.Configuration;
-
-namespace Loaner
+﻿namespace Loaner
 {
     using BoundedContexts.MaintenanceBilling.Aggregates.Messages;
     using System;
-    using static System.Int32;
     using static ActorManagement.LoanerActors;
     using Akka.Actor;
     using Akka.Configuration;
@@ -18,6 +15,13 @@ namespace Loaner
     using Nancy.Owin;
     using NLog.Extensions.Logging;
     using NLog.Web;
+    using System.Collections.Generic;
+    using System.Text;
+    using Akka.Routing;
+    using Confluent.Kafka;
+    using Confluent.Kafka.Serialization;
+    using Configuration;
+    using KafkaProducer;
 
     public class Startup
     {
@@ -25,23 +29,12 @@ namespace Loaner
         public Startup(IHostingEnvironment env)
         {
             env.ConfigureNLog("nlog.config");
-            DemoActorSystem = ActorSystem.Create("demoSystem", GetConfiguration());
 
-            DemoSystemSupervisor = DemoActorSystem.ActorOf(Props.Create<SystemSupervisor>(), "demoSupervisor");
+            var config = GetConfiguration();
 
-            Console.WriteLine($"StatsDServer: {GetConfigValue("StatsDServer")}");
-            Console.WriteLine($"StatsDPort:   {GetConfiValueInt("StatsDPort")}");
-            Console.WriteLine($"StatsDPrefix: {GetConfigValue("StatsDPrefix")}");
+            ConfigureActorSystem(config);
 
-
-
-            ActorMonitoringExtension.RegisterMonitor(DemoActorSystem,
-                   new ActorStatsDMonitor(host: GetConfigValue("StatsDServer")
-                                        , port: GetConfiValueInt("StatsDPort")
-                                        , prefix: GetConfigValue("StatsDPrefix")
-                    ));
-
-            DemoSystemSupervisor.Tell(new TellMeAboutYou("Starting Up"));
+            ConfigureKafkaProducerActors(config);
 
             var builder = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
@@ -50,6 +43,105 @@ namespace Loaner
             _config = builder.Build();
         }
 
+        private void ConfigureActorSystem(Config config)
+        {
+            DemoActorSystem = ActorSystem.Create("demoSystem", config);
+
+            DemoSystemSupervisor = DemoActorSystem.ActorOf(Props.Create<SystemSupervisor>(), "demoSupervisor");
+
+            var statsDServer = config.GetString("Akka.StatsDServer");
+            int statsDPort = Convert.ToInt32(config.GetString("Akka.StatsDPort"));
+            var statsDPrefix = config.GetString("Akka.StatsDPrefix");
+            BusinessRulesFilename = config.GetString("Akka.BusinessRulesFilename");
+            CommandsToRulesFilename = config.GetString("Akka.CommandsToRulesFilename");
+
+            Console.WriteLine($"(StatsD) Server: {statsDServer}");
+            Console.WriteLine($"(StatsD) Port:   {statsDPort}");
+            Console.WriteLine($"(StatsD) Prefix: {statsDPrefix}");
+
+            Console.WriteLine($"(Business Rules) BusinessRulesFilename: {BusinessRulesFilename}");
+            Console.WriteLine($"(Business Rules) CommandsToRulesFilename: {CommandsToRulesFilename}");
+
+            ActorMonitoringExtension.RegisterMonitor(DemoActorSystem,
+                new ActorStatsDMonitor(host: statsDServer
+                    , port: statsDPort
+                    , prefix: statsDPrefix
+                ));
+
+            DemoSystemSupervisor.Tell(new TellMeAboutYou("Starting Up"));
+
+
+        }
+        
+        private void ConfigureKafkaProducerActors( Config config)
+        {
+            
+            var numAccountPublishers = Convert.ToInt32(config.GetString("Akka.NumAccountPublisherActor"));
+            //var numPortfolioPublishers = Convert.ToInt32(config.GetString("Akka.NumPortfolioPublisherActor"));
+            var brokerList = config.GetString("Kafka.BrokerList");
+            AccountStateKafkaTopicName = config.GetString("Akka.AccountStateTopicName");
+
+            Console.WriteLine($"(kafka) Number of Account Publishers:   {numAccountPublishers}");
+            //Console.WriteLine($"(kafka) Number of Portfolio Publishers: {numPortfolioPublishers}");
+            Console.WriteLine($"(kafka) List of brokers: {brokerList}");
+
+           // Create the Kafka Producer object for use by the actual actors
+            var kafkaConfig = new Dictionary<string, object>()
+            {
+                ["bootstrap.servers"] = brokerList,
+                //["retries"] = 20,
+                //["retry.backoff.ms"] = 1000,
+                ["client.id"] = "akks-arch-demo",
+                //["socket.nagle.disable"] = true,
+                ["default.topic.config"] = new Dictionary<string, object>()
+                {
+                    ["acks"] = -1,
+                    ["message.timeout.ms"] = 60000,
+                }
+            };
+
+            // Create the Kafka Producer
+            MyKafkaProducer = new Producer<string, string>(kafkaConfig, new StringSerializer(Encoding.UTF8), new StringSerializer(Encoding.UTF8));
+
+            // Subscribe to error, log and statistics
+            MyKafkaProducer.OnError += (obj, error) =>
+            {
+                Console.WriteLine(DateTime.Now.ToString("h:mm:ss tt") + $"- Error: {error} Obj: {obj}");
+                Console.WriteLine(DateTime.Now.ToString("h:mm:ss tt") + $"- Obj Type: {obj.GetType()}");
+
+                if (obj.GetType() == MyKafkaProducer.GetType())
+                {
+                    Console.WriteLine(DateTime.Now.ToString("h:mm:ss tt") + $"- Type matches produucer");
+                    Producer<string, string> temp = (Producer<string, string>)obj;
+                }
+            };
+
+            MyKafkaProducer.OnLog += (obj, error) =>
+            {
+                Console.WriteLine(DateTime.Now.ToString("h:mm:ss tt") + $"- Log: {error}");
+            };
+
+            MyKafkaProducer.OnStatistics += (obj, error) =>
+            {
+                Console.WriteLine(DateTime.Now.ToString("h:mm:ss tt") + $"- Statistics: {error}");
+            };
+
+            // Schedule the flush actor so we flush the producer on a regular basis
+            Props publisherFlushProps = Props.Create(() => new KafkaPublisherFlushActor(MyKafkaProducer));
+
+            AccountStateFlushActor = DemoActorSystem.ActorOf(publisherFlushProps, "publisherFlushActor");
+
+            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
+                TimeSpan.FromSeconds(5), AccountStateFlushActor, new Flush(), ActorRefs.NoSender);
+            
+            // Create the publisher actors for the AccountState
+            var actorName = "AccountStatePublisherActor";
+
+            Props accountStatePublisherProps = Props.Create(() => new KafkaPublisherActor(AccountStateKafkaTopicName, MyKafkaProducer, actorName))
+                .WithRouter(new RoundRobinPool(numAccountPublishers));
+
+            AccountStatePublisherActor = DemoActorSystem.ActorOf(accountStatePublisherProps, actorName);
+        }
 
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
@@ -65,38 +157,12 @@ namespace Loaner
             app.AddNLogWeb();
 
         }
-        
-        private int GetConfiValueInt(string key)
-        {
-            TryParse(Environment.GetEnvironmentVariable(key), out int port);
-            return port != 0 ? port : 8125;
-
-        }
-
-        private string GetConfigValue(string key)
-        {
-            string result;
-            try
-            {
-                result = Environment.GetEnvironmentVariable(key);
-                if (string.IsNullOrEmpty(result))
-                {
-                    result = "localhost";
-                }
-            }
-            catch
-            {
-                result = "localhost";
-            }
-
-            return result;
-
-        }
+    
 
         private static Config GetConfiguration()
         {
             var hocon = @" 
-
+              
                akka 
                {
                     actor 
@@ -110,9 +176,8 @@ namespace Loaner
                             ""System.Object"" = hyperion
                         }
                     }
-                }
-                #akka.suppress-json-serializer-warning = on
-                
+                }            
+                 
                 akka.actor.debug.lifecycle = on
                 akka.actor.debug.unhandled = on
                 
@@ -121,9 +186,7 @@ namespace Loaner
                 
                 akka.loggers=[""Akka.Logger.NLog.NLogLogger, Akka.Logger.NLog""]
                      
-                ##############################################################
-                ## PostgreSQL Journal
-                ##############################################################
+                ### PostgreSQL Journal ###
                 #akka.persistence.journal.plugin = ""akka.persistence.journal.postgresql""
                 #akka.persistence.journal.postgresql.class = ""Akka.Persistence.PostgreSql.Journal.PostgreSqlJournal, Akka.Persistence.PostgreSql""
                 #akka.persistence.journal.postgresql.plugin-dispatcher = ""akka.actor.default-dispatcher""
@@ -137,7 +200,7 @@ namespace Loaner
                 ## defines column db type used to store payload. Available option: BYTEA (default), JSON, JSONB
                 #akka.persistence.journal.postgresql.stored-as = BYTEA
                 
-                ## SqLite
+                ### SqLite Journal ###
                 #akka.persistence.journal.plugin = ""akka.persistence.journal.sqlite""
                 #akka.persistence.journal.sqlite.class = ""Akka.Persistence.Sqlite.Journal.SqliteJournal, Akka.Persistence.Sqlite""
                 #akka.persistence.journal.sqlite.plugin-dispatcher = ""akka.actor.default-dispatcher""
@@ -148,6 +211,7 @@ namespace Loaner
                 #akka.persistence.journal.sqlite.timestamp-provider = ""Akka.Persistence.Sql.Common.Journal.DefaultTimestampProvider, Akka.Persistence.Sql.Common""
                 #akka.persistence.journal.sqlite.connection-string = ""Data Source=../../../akka_demo.db""
                 
+                ### SqLite Snapshot ###
                 #akka.persistence.snapshot-store.plugin = ""akka.persistence.snapshot-store.sqlite""
                 #akka.persistence.snapshot-store.sqlite.class = ""Akka.Persistence.Sqlite.Snapshot.SqliteSnapshotStore, Akka.Persistence.Sqlite""
                 #akka.persistence.snapshot-store.sqlite.plugin-dispatcher = ""akka.actor.default-dispatcher""
@@ -156,25 +220,30 @@ namespace Loaner
                 #akka.persistence.snapshot-store.sqlite.auto-initialize = on
                 #akka.persistence.snapshot-store.sqlite.connection-string = ""Data Source=../../../akka_demo.db""
 
-                ## Jonfile 
-                akka.persistence {
-            	    snapshot-store {
-		                jonfile {
-			                # qualified type name of the File persistence snapshot actor
-            			    class = ""SnapShotStore.FileSnapshotStore3, SnapShotStore""
-                            max-load-attempts=19
-#                            dir = ""/db""
-                            dir = ""C:\\temp""
-
-                            # dispatcher used to drive snapshot storage actor
-                            plugin-dispatcher = ""akka.actor.default-dispatcher""
-                            #plugin-dispatcher = ""snapshot-dispatcher""
-                        }
-                    }
-                }
-
+                ### Jonfile Snapshot ###
+		        akka.persistence.snapshot-store.jonfile.class = ""SnapShotStore.FileSnapshotStore3, SnapShotStore""
+                akka.persistence.snapshot-store.jonfile.max-load-attempts=19
+                akka.persistence.snapshot-store.jonfile.dir = ""C:\\temp""
+                akka.persistence.snapshot-store.jonfile.plugin-dispatcher = ""akka.actor.default-dispatcher""
                 akka.persistence.snapshot-store.plugin = ""akka.persistence.snapshot-store.jonfile""
 
+                ### Kafka Config ####
+                Akka.NumAccountPublisherActor = 10 
+                Akka.NumPortfolioPublisherActor = 10 
+                Akka.AccountStateTopicName = ""jontest103"" 
+                Kafka.BrokerList = ""docker01.concordservicing.com:29092,docker02.concordservicing.com:29092,docker03.concordservicing.com:29092""
+
+                ### StatsD Config ##
+                Akka.StatsDServer = ""docker04""
+                Akka.StatsDPort   = 8125  
+                Akka.StatsDPrefix = ""akka-demo"" 
+
+                ### Business Rules Config ###
+                Akka.BusinessRulesFilename = ""C:\\Temp\\business_rules_map.rules""
+                Akka.CommandsToRulesFilename = ""C:\\Temp\\commands_to_rules.rules""
+
+
+                ### Akka Clustering Config ###
                 akka.actor.provider = ""Akka.Cluster.ClusterActorRefProvider, Akka.Cluster""
                 akka.remote.log-remote-lifecycle-events = INFO
                 akka.remote.dot-netty.tcp.hostname = ""127.0.0.1""
@@ -182,9 +251,10 @@ namespace Loaner
                 akka.cluster.seed-nodes = [""akka.tcp://demoSystem@127.0.0.1:4053""] 
                 akka.cluster.roles = [concord]
 
-           ";
-            return ConfigurationFactory.ParseString(hocon);
 
+           ";
+             var conf = ConfigurationFactory.ParseString(hocon);
+            return conf;
         }
     }
 }

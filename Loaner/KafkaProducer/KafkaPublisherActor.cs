@@ -1,5 +1,6 @@
 ﻿using System;
 using Akka.Actor;
+using Akka.Event;
 using Akka.Monitoring;
 using Confluent.Kafka;
 using Newtonsoft.Json;
@@ -18,7 +19,8 @@ namespace Loaner.KafkaProducer
         Producer<string, string> producer;
         private readonly string _topicName;
         ActorSelection thisActor = null;
-
+        private readonly ILoggingAdapter _log = Context.GetLogger();
+        private DateTime _lastBootedOn;
 
         public KafkaPublisherActor(string topicName, Producer<string, string> producer, string actorName)
         {
@@ -33,6 +35,10 @@ namespace Loaner.KafkaProducer
             Receive<Resend>(cmd => ResendMsg(cmd));
         }
 
+        private void RegisterStartup()
+        {
+            _lastBootedOn = DateTime.Now;
+        }
 
         // Send a message that has not been converted to json
         private void PublishMsg(Publish cmd)

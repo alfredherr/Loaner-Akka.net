@@ -1,3 +1,7 @@
-#!/usr/bin/env bash
-nohup dotnet run --project Lighthouse.NetCoreApp &
-nohup dotnet run --project Loaner &
+#!/bin/bash
+cd Lighthouse.NetCoreApp
+dotnet run  &
+cd ../Loaner
+dotnet run Loaner.csproj &
+
+

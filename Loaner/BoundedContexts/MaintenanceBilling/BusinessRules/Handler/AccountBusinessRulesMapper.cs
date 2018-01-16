@@ -1,13 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Exceptions;
-using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
-using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
-
+﻿
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using Exceptions;
+    using Models;
+    using DomainCommands;
+    using static Loaner.ActorManagement.LoanerActors;
+
     public class AccountBusinessRulesMapper
     {
 
@@ -60,7 +62,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             
             try
             {
-                var filename = Environment.GetEnvironmentVariable("COMMANDS_TO_RULES_FILENAME");
+                var filename = CommandsToRulesFilename;
                 Console.WriteLine($"COMMANDS_TO_RULES_FILENAME file location: {filename}");
                 string[] readText = File.ReadAllLines(filename);
                 foreach (var line in readText)
@@ -92,7 +94,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         {
             try
             {
-                var filename = Environment.GetEnvironmentVariable("BUSINESS_RULES_FILENAME");
+                var filename = BusinessRulesFilename;
                 _rulesMapperInstance = new AccountBusinessRulesMapper(filename, updatedRules);
             }
             catch (Exception e)
@@ -106,7 +108,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         {
             try
             {
-                var filename = Environment.GetEnvironmentVariable("BUSINESS_RULES_FILENAME");
+                var filename = BusinessRulesFilename;
                 _rulesMapperInstance = new AccountBusinessRulesMapper(filename);
             }
             catch (Exception e)

@@ -11,9 +11,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>out\</OutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="hosting.json" />
-  </ItemGroup>
 
   <!--ItemGroup>
     <None Remove="appsettings.Development.json" />
@@ -27,9 +24,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="hosting.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="nlog.config">
@@ -60,7 +54,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="BoundedContexts\MaintenanceBilling\Aggregates\Messages\" />
     <Folder Include="ActorManagement\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>

@@ -22,7 +22,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
          */
         private Dictionary<string, IActorRef> _portfolios = new Dictionary<string, IActorRef>();
         private Dictionary<string,Dictionary<string,Tuple<double,double>>> _portfolioBillings = new Dictionary<string, Dictionary<string, Tuple<double,double>>>();
-        
+        private DateTime _lastBootedOn;
+
         public SystemSupervisor()
         {
             /*** Recovery section **/
@@ -36,7 +37,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             
             /* Commonly used commands */
             Command<TellMeYourStatus>(asking => GetMyStatus());
-            Command<TellMeAboutYou>(me => Console.WriteLine($"About me: {me.Me}"));
+            Command<TellMeAboutYou>(me => Console.WriteLine($"About me: I am {Self.Path.Name} Msg: {me.Me} I was last booted up on: {_lastBootedOn}"));
             Command<TellMeYourPortfolioStatus>(msg => _log.Debug(msg.Message));
             Command<string>(noMessage => { });
             
@@ -53,6 +54,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<DeleteMessagesSuccess>(
                 msg => _log.Info($"Successfully cleared log after snapshot ({msg.ToString()})"));
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
+        }
+        private void RegisterStartup()
+        {
+            _lastBootedOn = DateTime.Now;
         }
         private void PurgeOldSnapShots(SaveSnapshotSuccess success)
         {
@@ -110,10 +115,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void RunSimulator(SimulateBoardingOfAccounts client)
         {
             Monitor();
-           
-            var boardingActor = Context.ActorOf<BoardAccountActor>($"Client{client.ClientName}");
+
+            var clientName = client.ClientName.ToUpper();
+            var boardingActor = Context.ActorOf<BoardAccountActor>($"Client{clientName}");
             boardingActor.Tell(client);
-            _log.Info($"Started boarding of {client.ClientName} accounts at {DateTime.Now} ");
+            _log.Info($"Started the boarding of accounts for Client{clientName} {DateTime.Now} ");
             
         }
 
@@ -152,20 +158,21 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void ProcessSupervision(SuperviseThisPortfolio command)
         {
+            var portfolioName = command.PortfolioName.ToUpper();
             Monitor();
-            if (!_portfolios.ContainsKey(command.PortfolioName))
+            if (!_portfolios.ContainsKey(portfolioName))
             {
-                var @event = new PortfolioAddedToSupervision(command.PortfolioName);
+                var @event = new PortfolioAddedToSupervision(portfolioName);
                 Persist(@event, s =>
                 {
-                    _portfolios.Add(command.PortfolioName, null); 
-                    Sender.Tell(InstantiateThisPortfolio(command.PortfolioName)); 
+                    _portfolios.Add(portfolioName, null); 
+                    Sender.Tell(InstantiateThisPortfolio(portfolioName)); 
                 });
                 ApplySnapShotStrategy();
             }
             else
             {
-                _log.Info($"You tried to load account {command.PortfolioName} which has already been loaded");
+                _log.Info($"You tried to load account {portfolioName} which has already been loaded");
             }
         }
 
@@ -191,6 +198,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
  
         private IActorRef InstantiateThisPortfolio(string portfolioName)
         {
+            
             if (_portfolios.ContainsKey(portfolioName))
             {
                 var portfolioActor = Context.ActorOf(Props.Create<PortfolioActor>(), portfolioName);

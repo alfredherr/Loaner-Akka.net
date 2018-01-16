@@ -19,8 +19,8 @@ namespace Loaner.API.Controllers
             {
                 var answer = new TellMeYourPortfolioStatus("This didn't work");
                 
-                string portfolio = args.portfolioName;
-                
+                string portfolio = ((string)args.portfolioName).ToUpper();
+
                 var portfolioActor = LoanerActors.DemoActorSystem
                     .ActorSelection($"/user/demoSupervisor/{portfolio}")
                     .ResolveOne(TimeSpan.FromSeconds(3));
@@ -42,8 +42,8 @@ namespace Loaner.API.Controllers
             {
                 var answer = new TellMeYourPortfolioStatus("This didn't work");
                 
-                string portfolio = args.portfolioName;
-                
+                string portfolio = ((string)args.portfolioName).ToUpper();
+
                 var portfolioActor = LoanerActors.DemoActorSystem
                     .ActorSelection($"/user/demoSupervisor/{portfolio}")
                     .ResolveOne(TimeSpan.FromSeconds(3));
@@ -63,7 +63,9 @@ namespace Loaner.API.Controllers
             });
             Post("/{portfolioName}/assessment", async args =>
             {
-                string portfolio = args.portfolioName;
+                string portfolio = ((string)args.portfolioName).ToUpper();
+                portfolio =portfolio.Replace("portfolio", "Portfolio");
+                Console.WriteLine($"Porfolio being billed: {portfolio}");
                     
                 var answer = new TellMeYourPortfolioStatus("This didn't work");
                 

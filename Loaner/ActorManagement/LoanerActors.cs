@@ -1,4 +1,5 @@
 ﻿using Akka.Actor;
+using Confluent.Kafka;
 
 namespace Loaner.ActorManagement
 {
@@ -6,9 +7,18 @@ namespace Loaner.ActorManagement
     { 
         public static ActorSystem DemoActorSystem;
         public static IActorRef DemoSystemSupervisor = ActorRefs.Nobody;
-        public const int TakeSystemSupervisorSnapshotAt = 1000;
-        public const int TakePortolioSnapshotAt = 1000;
-        public const int TakeAccountSnapshotAt = 3;
+
+        public static IActorRef AccountStatePublisherActor = ActorRefs.Nobody;
+        public static IActorRef AccountStateFlushActor = ActorRefs.Nobody;
+        public static string AccountStateKafkaTopicName;
+        public static Producer<string, string> MyKafkaProducer;
+
+        public static string CommandsToRulesFilename;
+        public static string BusinessRulesFilename;
+
+        public const int TakeSystemSupervisorSnapshotAt = 1;
+        public const int TakePortolioSnapshotAt = 1;
+        public const int TakeAccountSnapshotAt = 1;
 
     }
 

@@ -7,11 +7,12 @@ using Akka.Persistence;
 using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
-using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules;
+using static Loaner.ActorManagement.LoanerActors;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
+using Loaner.KafkaProducer;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {
@@ -49,6 +50,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<BillingAssessment>(command => ProcessBilling(command));
             Command<CancelAccount>(command => ApplyBusinessRules(command));
             Command<AskToBeSupervised>(command => SendParentMyState(command));
+            Command<PublishAccountStateToKafka>(msg => PublishToKafka(msg));
 
             /** Special handlers below; we can decide how to handle snapshot processin outcomes. */
             Command<SaveSnapshotSuccess>(success => PurgeOldSnapShots(success));
@@ -63,7 +65,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 msg => _log.Info($"Successfully cleared log after snapshot ({msg.ToString()})"));
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
-
+        private void PublishToKafka(PublishAccountStateToKafka msg)
+        {
+            var key = _accountState.AccountNumber;
+            AccountStatePublisherActor.Tell(new Publish(key, _accountState));
+            _log.Debug($"Sending kafka message for account {key}");
+        }
         private void PurgeOldSnapShots(SaveSnapshotSuccess success)
         {
             var snapshotSeqNr = success.Metadata.SequenceNr;
@@ -88,12 +95,19 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             {
                 throw new Exception($"Actor {Self.Path.Name} is passing an empty account number.");
             }
+
+            // Process all business rules
             ApplyBusinessRules(command);
+
+            // Let parent portfolio know my current balances
             Context.Parent.Tell(
                     new RegisterMyAccountBilling(_accountState.AccountNumber,
                             command.LineItems.Select(x => x.Item.Amount).Sum() ,
                             _accountState.CurrentBalance)
                 );
+
+            //Report current state to Kafka
+            Self.Tell(new PublishAccountStateToKafka());
         }
 
         private void SendParentMyState(AskToBeSupervised command)
@@ -223,8 +237,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             Context.IncrementCounter("AccountRecovery");
         }
-        private void IncrementCounter(string counterName){
-            Context.IncrementCounter(counterName);
-        }
+        
     }
 }

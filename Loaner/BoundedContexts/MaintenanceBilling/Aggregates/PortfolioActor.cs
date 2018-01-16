@@ -38,7 +38,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<CheckYoSelf>(cmd => RegisterStartup());
             /* Common comands */
             Command<TellMeYourStatus>(asking => GetMyStatus());
-            Command<TellMeAboutYou>(me => Console.WriteLine($"About me: {me.Me}. I was last booted up on: {_lastBootedOn}"));
+            Command<TellMeAboutYou>(me => Console.WriteLine($"About me: I am {Self.Path.Name} Msg: {me.Me} I was last booted up on: {_lastBootedOn}"));
             Command<TellMeYourPortfolioStatus>(msg => _log.Debug(msg.Message));
             Command<string>(noMessage => { });
             Command<RegisterMyAccountBilling>(cmd => RegisterBillingStatus(cmd));
