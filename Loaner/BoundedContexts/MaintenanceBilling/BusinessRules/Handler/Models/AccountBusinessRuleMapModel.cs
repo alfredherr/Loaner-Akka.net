@@ -23,7 +23,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models
             BusinessRule = validateBusinessRuleExists(businessRule, BusinessRuleParameters);
         }
 
-        public AccountBusinessRuleMapModel(string client, string portfolio, string account, bool allAccounts, string command,
+        public AccountBusinessRuleMapModel(string client, string portfolio, string account, bool allAccounts,
+            string command,
             string rule, (string Command, Dictionary<string, object> Parameters) parameters)
         {
             Client = client;
@@ -35,7 +36,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models
             BusinessRule = validateBusinessRuleExists(rule, BusinessRuleParameters);
         }
 
-        private (string Command, Dictionary<string, object> Parameters) SplitParameters(string commandName, string parameters)
+        private (string Command, Dictionary<string, object> Parameters) SplitParameters(string commandName,
+            string parameters)
         {
             Dictionary<string, object> parametros = new Dictionary<string, object>();
             if (parameters.Contains(",") || parameters.Contains("="))
@@ -48,7 +50,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models
                 }
             }
             return ( commandName, parametros);
-            
         }
 
         private IDomainCommand validateCommandExists(string command)
@@ -62,7 +63,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models
             }
         }
 
-        private IAccountBusinessRule validateBusinessRuleExists(string rule, (string Command, Dictionary<string, object> Parameters) parameters)
+        private IAccountBusinessRule validateBusinessRuleExists(string rule,
+            (string Command, Dictionary<string, object> Parameters) parameters)
         {
             switch (rule)
             {

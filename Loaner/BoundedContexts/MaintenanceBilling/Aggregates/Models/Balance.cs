@@ -6,12 +6,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
         {
             Instance = amount;
         }
+
         public double Instance { get; }
+
         public override int GetHashCode()
         {
             return Instance.GetHashCode();
         }
-    
+
         public override bool Equals(object obj)
         {
             Balance test = obj as Balance;

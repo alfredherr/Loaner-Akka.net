@@ -21,10 +21,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
          * Actor's state = just a list of account under supervision
          */
         private Dictionary<string, IActorRef> _accounts = new Dictionary<string, IActorRef>();
-        private Dictionary<string,Tuple<double,double>> _billings = new Dictionary<string, Tuple<double,double>>();
-        
+
+        private Dictionary<string, Tuple<double, double>> _billings = new Dictionary<string, Tuple<double, double>>();
+
         private DateTime _lastBootedOn;
-        
+
         public PortfolioActor()
         {
             /*** recovery section **/
@@ -38,11 +39,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<CheckYoSelf>(cmd => RegisterStartup());
             /* Common comands */
             Command<TellMeYourStatus>(asking => GetMyStatus());
-            Command<TellMeAboutYou>(me => Console.WriteLine($"About me: I am {Self.Path.Name} Msg: {me.Me} I was last booted up on: {_lastBootedOn}"));
+            Command<TellMeAboutYou>(me =>
+                Console.WriteLine(
+                    $"About me: I am {Self.Path.Name} Msg: {me.Me} I was last booted up on: {_lastBootedOn}"));
             Command<TellMeYourPortfolioStatus>(msg => _log.Debug(msg.Message));
             Command<string>(noMessage => { });
             Command<RegisterMyAccountBilling>(cmd => RegisterBillingStatus(cmd));
-            
+
             /** Special handlers below; we can decide how to handle snapshot processin outcomes. */
             Command<SaveSnapshotSuccess>(success => PurgeOldSnapShots(success));
             Command<DeleteSnapshotsSuccess>(msg => { });
@@ -51,9 +54,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     $"Actor {Self.Path.Name} was unable to save a snapshot. {failure.Cause.Message}"));
             Command<DeleteMessagesSuccess>(
                 msg => _log.Debug($"Successfully cleared log after snapshot ({msg.ToString()})"));
-            Command<MyAccountStatus>(msg => _log.Debug($"Why is account {msg.AccountState.AccountNumber} sending me an 'MyAccountStatus' message?"));
+            Command<MyAccountStatus>(msg =>
+                _log.Debug(
+                    $"Why is account {msg.AccountState.AccountNumber} sending me an 'MyAccountStatus' message?"));
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
+
         private void PurgeOldSnapShots(SaveSnapshotSuccess success)
         {
             var snapshotSeqNr = success.Metadata.SequenceNr;
@@ -62,19 +68,20 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             DeleteMessages(snapshotSeqNr);
             DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
         }
+
         private void RegisterBillingStatus(RegisterMyAccountBilling cmd)
         {
-           _billings.AddOrSet(cmd.AccountNumber,Tuple.Create(cmd.AmountBilled, cmd.AccountBalanceAfterBilling));
-            
-            var viewble = new Dictionary<string, Tuple<double,double>>();
+            _billings.AddOrSet(cmd.AccountNumber, Tuple.Create(cmd.AmountBilled, cmd.AccountBalanceAfterBilling));
+
+            var viewble = new Dictionary<string, Tuple<double, double>>();
             foreach (var a in _billings)
             {
-                viewble.Add(a.Key,a.Value);
+                viewble.Add(a.Key, a.Value);
             }
- 
-            Context.Parent.Tell(new RegisterPortolioBilling(Self.Path.Name ,viewble) ) ;
-            _log.Info($"{Self.Path.Name} sent {Context.Parent.Path.Name} portfolio billing message containing {viewble.Count} billed accounts ");
-          
+
+            Context.Parent.Tell(new RegisterPortolioBilling(Self.Path.Name, viewble));
+            _log.Info(
+                $"{Self.Path.Name} sent {Context.Parent.Path.Name} portfolio billing message containing {viewble.Count} billed accounts ");
         }
 
         private void RegisterStartup()
@@ -86,10 +93,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             foreach (var account in _accounts)
             {
-                BillingAssessment bill = new BillingAssessment(account.Key,cmd.Items) ;
-                account.Value.Tell(bill);   
+                BillingAssessment bill = new BillingAssessment(account.Key, cmd.Items);
+                account.Value.Tell(bill);
             }
-            Sender.Tell(new TellMeYourPortfolioStatus($"Your request was sent to all { _accounts.Count } accounts",DictionaryToStringList()));
+            Sender.Tell(new TellMeYourPortfolioStatus($"Your request was sent to all {_accounts.Count} accounts",
+                DictionaryToStringList()));
         }
 
         public override string PersistenceId => Self.Path.Name;
@@ -113,8 +121,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             Context.IncrementCounter("PortfolioRecovery");
         }
-        
-       
+
+
         private Dictionary<string, string> DictionaryToStringList()
         {
             var viewble = new Dictionary<string, string>();
@@ -127,8 +135,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             Monitor();
             var immutAccounts = _accounts.Keys.ToList();
-            
-            foreach (var account in immutAccounts )
+
+            foreach (var account in immutAccounts)
                 if (account.Length != 0 && _accounts[account] == null)
                 {
                     InstantiateThisAccount(account);
@@ -137,14 +145,17 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 {
                     _log.Warning($"skipped account {account}, already instantiated.");
                 }
-            Sender.Tell(new TellMeYourPortfolioStatus($"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",null));
+            Sender.Tell(
+                new TellMeYourPortfolioStatus($"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",
+                    null));
         }
 
         private void GetMyStatus()
         {
             var tooMany = new Dictionary<string, string>();
-            tooMany.Add("sorry","Too many accounts to list here");
-            Sender.Tell(new TellMeYourPortfolioStatus($"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",
+            tooMany.Add("sorry", "Too many accounts to list here");
+            Sender.Tell(new TellMeYourPortfolioStatus(
+                $"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",
                 (_accounts.Count > 10000) ? tooMany : DictionaryToStringList()));
         }
 
@@ -160,7 +171,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     InstantiateThisAccount(command.AccountNumber);
                 });
                 ApplySnapShotStrategy();
-                
             }
             else
             {
@@ -175,19 +185,18 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             {
                 throw new Exception("Why is this blank?");
             }
-            
-                if (_accounts.ContainsKey(accountNumber))
-                {
-                    _log.Debug($"Supervisor already has {accountNumber} in state. No action taken");
-                }
-                else
-                {
-                    _accounts.Add(accountNumber, null);
-                    _log.Debug($"Replayed event on {accountNumber}");
-                }
-            
+
+            if (_accounts.ContainsKey(accountNumber))
+            {
+                _log.Debug($"Supervisor already has {accountNumber} in state. No action taken");
+            }
+            else
+            {
+                _accounts.Add(accountNumber, null);
+                _log.Debug($"Replayed event on {accountNumber}");
+            }
         }
- 
+
         private IActorRef InstantiateThisAccount(string accountNumber)
         {
             if (_accounts.ContainsKey(accountNumber))
@@ -200,6 +209,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             }
             throw new Exception($"Why are you trying to instantiate an account not yet registered?");
         }
+
         private void ProcessSnapshot(SnapshotOffer offer)
         {
             Monitor();
@@ -213,6 +223,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             }
             _log.Info($"Snapshot recovered. ${snap} accounts.");
         }
+
         public void ApplySnapShotStrategy()
         {
             if (LastSequenceNr != 0 && LastSequenceNr % LoanerActors.TakePortolioSnapshotAt == 0)
@@ -227,6 +238,4 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             }
         }
     }
-
-    
 }

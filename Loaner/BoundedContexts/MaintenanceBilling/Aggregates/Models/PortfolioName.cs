@@ -6,7 +6,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
         {
             Instance = name;
         }
+
         public string Instance { get; }
+
         public override int GetHashCode()
         {
             return Instance.GetHashCode();

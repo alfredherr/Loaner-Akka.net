@@ -1,5 +1,4 @@
-﻿
-namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
+﻿namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
     using System;
     using System.Collections.Generic;
@@ -12,11 +11,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 
     public class AccountBusinessRulesMapper
     {
-
         private static AccountBusinessRulesMapper _rulesMapperInstance;
 
-        public static List<IAccountBusinessRule> 
-            GetAccountBusinessRulesForCommand(string client, string porfolio, string accountNumber,IDomainCommand command)
+        public static List<IAccountBusinessRule>
+            GetAccountBusinessRulesForCommand(string client, string porfolio, string accountNumber,
+                IDomainCommand command)
         {
             if (AccountBusinessRulesMapper._rulesMapperInstance == null)
             {
@@ -24,18 +23,18 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             }
 
             List<IAccountBusinessRule> rulesFound = (_rulesMapperInstance.RulesInFile
-                .Where(ruleMap => 
+                .Where(ruleMap =>
                     // Look for rules associated to this command              
-                    ruleMap.Command.GetType().Name.Equals(command.GetType().Name) &&
-                                    // which also either match this account
-                                    ( ruleMap.AccountNumber.Equals(accountNumber) ||
-                                      // or all accounts under this portfolio
-                                      ruleMap.Portfolio.Equals(porfolio) && ruleMap.ForAllAccounts ||
-                                      // or all accounts under all portfolios for this client
-                                      ruleMap.Client.Equals(client) && ruleMap.Portfolio.Equals("*") && ruleMap.ForAllAccounts)
-                                     )
+                        ruleMap.Command.GetType().Name.Equals(command.GetType().Name) &&
+                        // which also either match this account
+                        (ruleMap.AccountNumber.Equals(accountNumber) ||
+                         // or all accounts under this portfolio
+                         ruleMap.Portfolio.Equals(porfolio) && ruleMap.ForAllAccounts ||
+                         // or all accounts under all portfolios for this client
+                         ruleMap.Client.Equals(client) && ruleMap.Portfolio.Equals("*") && ruleMap.ForAllAccounts)
+                )
                 .Select(ruleMap => ruleMap.BusinessRule)).ToList();
-            
+
             return rulesFound;
         }
 
@@ -49,7 +48,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             return _rulesMapperInstance.RulesInFile;
         }
 
-        public static List<AccountBusinessRuleMapModel> UpdateAccountBusinessRules(List<AccountBusinessRuleMapModel> updatedRules)
+        public static List<AccountBusinessRuleMapModel> UpdateAccountBusinessRules(
+            List<AccountBusinessRuleMapModel> updatedRules)
         {
             UpdateAndReInitialize(updatedRules);
 
@@ -59,7 +59,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         public static List<CommandToBusinessRuleModel> GetCommandsToBusinesRules()
         {
             List<CommandToBusinessRuleModel> commands = new List<CommandToBusinessRuleModel>();
-            
+
             try
             {
                 var filename = CommandsToRulesFilename;
@@ -80,7 +80,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                             parameters.Add(keyVals[0], keyVals[1]);
                         }
                     }
-                    commands.Add(new CommandToBusinessRuleModel() { Command = tokens[0], BusinessRule = tokens[1], Parameters = parameters, Description = tokens[3]  });
+                    commands.Add(new CommandToBusinessRuleModel()
+                    {
+                        Command = tokens[0],
+                        BusinessRule = tokens[1],
+                        Parameters = parameters,
+                        Description = tokens[3]
+                    });
                 }
             }
             catch (Exception e)
@@ -90,6 +96,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             }
             return commands;
         }
+
         private static void UpdateAndReInitialize(List<AccountBusinessRuleMapModel> updatedRules)
         {
             try
@@ -126,7 +133,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             {
                 throw new FileNotFoundException(@"I can't find {businessRulesMapFile}");
             }
-            
+
             ReadInBusinessRules(businessRulesMapFile);
         }
 
@@ -174,17 +181,18 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                     {
                         if (businessRuleParameters.Length == 0)
                         {
-                            businessRuleParameters = $"{keyval.Key}={(string)keyval.Value}";
+                            businessRuleParameters = $"{keyval.Key}={(string) keyval.Value}";
                         }
                         else
                         {
-                            businessRuleParameters += $",{keyval.Key}={(string)keyval.Value}";
+                            businessRuleParameters += $",{keyval.Key}={(string) keyval.Value}";
                         }
                     }
                 }
                 /* Client-Portfolio-Account|Command|Rules|Parameters(comma separated key value pairs) */
 
-                outfile.Add($"{client}-{portfolio.ToUpper()}-{accountNumber}|{command}|{businessRule}|{businessRuleParameters}");
+                outfile.Add(
+                    $"{client}-{portfolio.ToUpper()}-{accountNumber}|{command}|{businessRule}|{businessRuleParameters}");
             }
 
             try
@@ -225,7 +233,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                             parametros.Add(keyVal[0], keyVal[1]);
                         }
                     }
-                     
+
                     RulesInFile.Add(new AccountBusinessRuleMapModel(
                         client: dpl[0],
                         portfolio: dpl[1].ToUpper(),
@@ -236,7 +244,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                         parameters: (tokens[1], parametros)
                     ));
                 }
-                
             }
         }
 

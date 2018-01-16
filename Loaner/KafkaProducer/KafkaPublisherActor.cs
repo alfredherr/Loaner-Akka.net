@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 namespace Loaner.KafkaProducer
 {
     #region Command classes
+
     // The message to be published
 
     // If a message fails then it is contained in the Resend cmd below
@@ -81,7 +82,7 @@ namespace Loaner.KafkaProducer
 
                     }
 */
-                    
+
                     if (task.IsCompletedSuccessfully)
                     {
                         Context.IncrementCounter("send-SUCCESS");
@@ -97,19 +98,11 @@ namespace Loaner.KafkaProducer
                     }
                     //                Console.WriteLine($"Partition: {task.Result.Partition}, Offset: {task.Result.Offset}");
                 });
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 Console.WriteLine($"Exception in Send: {e.StackTrace}");
             }
         }
     }
 }
-
-
-
-
-
-
-
-
-

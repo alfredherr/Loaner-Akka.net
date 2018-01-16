@@ -1,6 +1,6 @@
 ﻿namespace Loaner.BoundedContexts.MaintenanceBilling.DomainCommands
 {
-    public class SimulateBoardingOfAccounts  
+    public class SimulateBoardingOfAccounts
     {
         public SimulateBoardingOfAccounts(string clientName, string clientAccountsFilePath, string obligationsFilePath)
         {
@@ -11,6 +11,6 @@
 
         public string ClientName { get; }
         public string ClientAccountsFilePath { get; }
-        public string ObligationsFilePath { get; } 
+        public string ObligationsFilePath { get; }
     }
 }

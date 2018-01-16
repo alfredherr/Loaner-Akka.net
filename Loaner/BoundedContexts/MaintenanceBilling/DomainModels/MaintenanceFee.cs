@@ -1,5 +1,4 @@
-﻿
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
@@ -9,15 +8,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
     {
         public ObligationStatus Status { get; private set; }
         public List<FinancialTransaction> Transactions { get; private set; }
-        
-        public string ObligationNumber { get;  }
+
+        public string ObligationNumber { get; }
         public double CurrentBalance { get; private set; }
 
         public MaintenanceFee()
         {
-            
         }
-        
+
         [JsonConstructor]
         public MaintenanceFee(string obligationNumber, double openingBalance)
         {
@@ -25,12 +23,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
             CurrentBalance = openingBalance;
             Status = ObligationStatus.Active;
             Transactions = new List<FinancialTransaction>();
-            
         }
 
         public double PostTransaction(FinancialTransaction occurred)
         {
-            Transactions.Add(occurred);  
+            Transactions.Add(occurred);
             return UpdateCurrentBalance();
         }
 
@@ -50,7 +47,5 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
             Status = status;
             return this;
         }
-
-         
     }
 }

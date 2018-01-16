@@ -34,5 +34,4 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 
         void SetCallingCommandState((string Command, Dictionary<string, object> Parameters) commandState);
     }
- 
 }

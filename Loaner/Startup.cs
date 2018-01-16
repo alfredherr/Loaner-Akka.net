@@ -26,6 +26,7 @@
     public class Startup
     {
         private readonly IConfiguration _config;
+
         public Startup(IHostingEnvironment env)
         {
             env.ConfigureNLog("nlog.config");
@@ -69,13 +70,10 @@
                 ));
 
             DemoSystemSupervisor.Tell(new TellMeAboutYou("Starting Up"));
-
-
         }
-        
-        private void ConfigureKafkaProducerActors( Config config)
+
+        private void ConfigureKafkaProducerActors(Config config)
         {
-            
             var numAccountPublishers = Convert.ToInt32(config.GetString("Akka.NumAccountPublisherActor"));
             //var numPortfolioPublishers = Convert.ToInt32(config.GetString("Akka.NumPortfolioPublisherActor"));
             var brokerList = config.GetString("Kafka.BrokerList");
@@ -85,7 +83,7 @@
             //Console.WriteLine($"(kafka) Number of Portfolio Publishers: {numPortfolioPublishers}");
             Console.WriteLine($"(kafka) List of brokers: {brokerList}");
 
-           // Create the Kafka Producer object for use by the actual actors
+            // Create the Kafka Producer object for use by the actual actors
             var kafkaConfig = new Dictionary<string, object>()
             {
                 ["bootstrap.servers"] = brokerList,
@@ -101,7 +99,8 @@
             };
 
             // Create the Kafka Producer
-            MyKafkaProducer = new Producer<string, string>(kafkaConfig, new StringSerializer(Encoding.UTF8), new StringSerializer(Encoding.UTF8));
+            MyKafkaProducer = new Producer<string, string>(kafkaConfig, new StringSerializer(Encoding.UTF8),
+                new StringSerializer(Encoding.UTF8));
 
             // Subscribe to error, log and statistics
             MyKafkaProducer.OnError += (obj, error) =>
@@ -112,7 +111,7 @@
                 if (obj.GetType() == MyKafkaProducer.GetType())
                 {
                     Console.WriteLine(DateTime.Now.ToString("h:mm:ss tt") + $"- Type matches produucer");
-                    Producer<string, string> temp = (Producer<string, string>)obj;
+                    Producer<string, string> temp = (Producer<string, string>) obj;
                 }
             };
 
@@ -133,11 +132,12 @@
 
             DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
                 TimeSpan.FromSeconds(5), AccountStateFlushActor, new Flush(), ActorRefs.NoSender);
-            
+
             // Create the publisher actors for the AccountState
             var actorName = "AccountStatePublisherActor";
 
-            Props accountStatePublisherProps = Props.Create(() => new KafkaPublisherActor(AccountStateKafkaTopicName, MyKafkaProducer, actorName))
+            Props accountStatePublisherProps = Props.Create(() =>
+                    new KafkaPublisherActor(AccountStateKafkaTopicName, MyKafkaProducer, actorName))
                 .WithRouter(new RoundRobinPool(numAccountPublishers));
 
             AccountStatePublisherActor = DemoActorSystem.ActorOf(accountStatePublisherProps, actorName);
@@ -155,9 +155,8 @@
 
             //add NLog.Web
             app.AddNLogWeb();
-
         }
-    
+
 
         private static Config GetConfiguration()
         {
@@ -253,7 +252,7 @@
 
 
            ";
-             var conf = ConfigurationFactory.ParseString(hocon);
+            var conf = ConfigurationFactory.ParseString(hocon);
             return conf;
         }
     }

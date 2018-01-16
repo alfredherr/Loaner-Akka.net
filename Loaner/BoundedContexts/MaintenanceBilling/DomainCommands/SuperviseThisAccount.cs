@@ -2,7 +2,7 @@
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.DomainCommands
 {
-    public class SuperviseThisAccount : IDomainCommand  
+    public class SuperviseThisAccount : IDomainCommand
     {
         public SuperviseThisAccount()
         {
@@ -21,7 +21,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainCommands
         public string AccountNumber { get; }
         public string Portfolio { get; }
 
-       
 
         public DateTime RequestedOn()
         {

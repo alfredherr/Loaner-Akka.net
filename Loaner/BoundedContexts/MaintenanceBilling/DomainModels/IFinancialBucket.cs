@@ -3,6 +3,6 @@
     public interface IFinancialBucket
     {
         string Name { get; }
-        double Amount { get;  set; }        
+        double Amount { get; set; }
     }
 }

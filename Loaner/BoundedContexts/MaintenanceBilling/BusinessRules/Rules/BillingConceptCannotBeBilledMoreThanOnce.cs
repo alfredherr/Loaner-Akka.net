@@ -8,11 +8,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 {
     public class BillingConceptCannotBeBilledMoreThanOnce : IAccountBusinessRule
     {
-
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
         {
-           
             _eventsGenerated = new List<IDomainEvent>
             {
                 new AccountBusinessRuleValidationSuccess(
@@ -30,7 +28,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 
         private (string Command, Dictionary<string, object> Parameters) CommandState { get; set; }
 
-        public BillingConceptCannotBeBilledMoreThanOnce((string Command, Dictionary<string, object> Parameters) commandState)
+        public BillingConceptCannotBeBilledMoreThanOnce(
+            (string Command, Dictionary<string, object> Parameters) commandState)
         {
             CommandState = commandState;
         }
@@ -50,7 +49,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
             CommandState = commandState;
         }
 
-      
+
         public bool Success { get; private set; }
 
         public string GetResultDetails()
@@ -72,8 +71,5 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             return Success;
         }
-
-
-
     }
 }

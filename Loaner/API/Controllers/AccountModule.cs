@@ -17,31 +17,30 @@ namespace Loaner.API.Controllers
         public AccountModule() : base("/api/account")
         {
             Get("/{actorName}", async args =>
-             {
-                 try
-                 {
-                     var system = LoanerActors.DemoActorSystem
-                         .ActorSelection($"/user/demoSupervisor/*/{args.actorName}")
-                         .ResolveOne(TimeSpan.FromSeconds(3));
-                     if (system.Exception != null)
-                     {
-                         throw system.Exception;
-                     }
-                     var response = await Task.Run(
-                         () => system.Result.Ask<MyAccountStatus>(new TellMeYourStatus(), TimeSpan.FromSeconds(1))
-                         );
-                     return Response.AsJson(response.Message);
-                 }
-                 catch (ActorNotFoundException)
-                 {
-                     return new AccountStateViewModel($"{args.actorName} is not running at the moment");
-                 }
-                 catch (Exception e)
-                 {
-                     return new AccountStateViewModel($"{args.actorName} {e.Message}");
-
-                 }
-             });
+            {
+                try
+                {
+                    var system = LoanerActors.DemoActorSystem
+                        .ActorSelection($"/user/demoSupervisor/*/{args.actorName}")
+                        .ResolveOne(TimeSpan.FromSeconds(3));
+                    if (system.Exception != null)
+                    {
+                        throw system.Exception;
+                    }
+                    var response = await Task.Run(
+                        () => system.Result.Ask<MyAccountStatus>(new TellMeYourStatus(), TimeSpan.FromSeconds(1))
+                    );
+                    return Response.AsJson(response.Message);
+                }
+                catch (ActorNotFoundException)
+                {
+                    return new AccountStateViewModel($"{args.actorName} is not running at the moment");
+                }
+                catch (Exception e)
+                {
+                    return new AccountStateViewModel($"{args.actorName} {e.Message}");
+                }
+            });
 
             Get("/{actorName}/info", async args =>
             {
@@ -71,19 +70,18 @@ namespace Loaner.API.Controllers
                 catch (Exception e)
                 {
                     return new AccountStateViewModel($"{args.actorName} {e.Message}");
-
                 }
             });
             Get("/{actorName}/assessment", args =>
             {
                 InvoiceLineItem[] lineItems = new InvoiceLineItem[]
                 {
-                    new InvoiceLineItem(new Tax()),
-                    new InvoiceLineItem(new Dues()),
-                    new InvoiceLineItem(new Reserve())
+                    new InvoiceLineItem(new Tax(0)),
+                    new InvoiceLineItem(new Dues(0)),
+                    new InvoiceLineItem(new Reserve(0))
                 };
-                
-                
+
+
                 return lineItems;
             });
 
@@ -91,10 +89,9 @@ namespace Loaner.API.Controllers
             {
                 string account = args.actorName;
                 SimulateAssessmentModel assessment = this.Bind<SimulateAssessmentModel>();
-              
+
                 try
                 {
-                     
                     var domanCommand = new BillingAssessment(account, assessment.LineItems);
                     var system = LoanerActors.DemoActorSystem
                         .ActorSelection($"/user/demoSupervisor/*/{account}")
@@ -115,10 +112,8 @@ namespace Loaner.API.Controllers
                 catch (Exception e)
                 {
                     return new AccountStateViewModel($"{args.actorName} {e.Message}");
-
                 }
             });
-            
         }
     }
 }

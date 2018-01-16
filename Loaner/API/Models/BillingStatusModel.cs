@@ -11,36 +11,33 @@ namespace Loaner.API.Models
         {
             SummarizedBillingStatus = new Dictionary<string, int>();
         }
+
         public BillingStatusModel(PortfolioBillingStatus status) : this()
         {
-            BillingStatus = status.Billings ;
+            BillingStatus = status.Billings;
         }
 
-        private Dictionary<string, Dictionary<string, Tuple<double,double>>> BillingStatus { get; }
+        private Dictionary<string, Dictionary<string, Tuple<double, double>>> BillingStatus { get; }
 
         public int AccountsBilled { get; set; }
         public double AmountBilled { get; set; }
         public double BalanceAfterBilling { get; set; }
 
         public Dictionary<string, int> SummarizedBillingStatus { get; set; }
-   
+
         public void Summarize()
         {
             foreach (var billingStatusBilling in BillingStatus)
             {
-                 SummarizedBillingStatus.AddOrSet(billingStatusBilling.Key, billingStatusBilling.Value.Keys.Count);
-                    
+                SummarizedBillingStatus.AddOrSet(billingStatusBilling.Key, billingStatusBilling.Value.Keys.Count);
+
                 foreach (var account in billingStatusBilling.Value)
                 {
                     AccountsBilled++;
                     AmountBilled += account.Value.Item1;
                     BalanceAfterBilling += account.Value.Item2;
                 }
-                
             }
-            
         }
-
-        
     }
 }

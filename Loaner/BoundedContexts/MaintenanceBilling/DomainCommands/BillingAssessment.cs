@@ -12,14 +12,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainCommands
             _UniqueGuid = Guid.NewGuid();
         }
 
-        public BillingAssessment(List<InvoiceLineItem> lineItems) 
+        public BillingAssessment(List<InvoiceLineItem> lineItems)
         {
-           LineItems = lineItems ?? new List<InvoiceLineItem>();
+            LineItems = lineItems ?? new List<InvoiceLineItem>();
             _RequestedOn = DateTime.Now;
             _UniqueGuid = Guid.NewGuid();
         }
 
-        public BillingAssessment(string accountNumber, List<InvoiceLineItem> lineItems) 
+        public BillingAssessment(string accountNumber, List<InvoiceLineItem> lineItems)
         {
             AccountNumber = accountNumber;
             LineItems = lineItems ?? new List<InvoiceLineItem>();

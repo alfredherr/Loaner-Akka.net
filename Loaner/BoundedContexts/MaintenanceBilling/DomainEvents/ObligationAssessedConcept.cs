@@ -7,22 +7,22 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
     {
         public ObligationAssessedConcept()
         {
-            
             _UniqueGuid = Guid.NewGuid();
             _OccurredOn = DateTime.Now;
         }
-        public ObligationAssessedConcept(string obligationNumber, IFinancialBucket bucket) :this()  
+
+        public ObligationAssessedConcept(string obligationNumber, IFinancialBucket bucket) : this()
         {
             ObligationNumber = obligationNumber;
-            FinancialBucket = bucket;   
+            FinancialBucket = bucket;
         }
 
         public string ObligationNumber { get; }
         public IFinancialBucket FinancialBucket { get; }
-        
+
         private DateTime _OccurredOn { get; }
         private Guid _UniqueGuid { get; }
-        
+
         public DateTime OccurredOn()
         {
             return _OccurredOn;

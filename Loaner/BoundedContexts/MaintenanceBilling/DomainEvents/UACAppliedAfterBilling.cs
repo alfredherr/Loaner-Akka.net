@@ -4,7 +4,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
 {
     public class UacAppliedAfterBilling : IDomainEvent
     {
-        public UacAppliedAfterBilling(string accountNumber, string obligationNumber, double uacAmount) 
+        public UacAppliedAfterBilling(string accountNumber, string obligationNumber, double uacAmount)
         {
             _UniqueGuid = Guid.NewGuid();
             _OccurredOn = DateTime.Now;

@@ -16,7 +16,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainCommands
 
         public string PortfolioName { get; }
         public List<InvoiceLineItem> Items { get; }
-        
+
         private DateTime _RequestedOn { get; }
         private Guid _UniqueGuid { get; }
 

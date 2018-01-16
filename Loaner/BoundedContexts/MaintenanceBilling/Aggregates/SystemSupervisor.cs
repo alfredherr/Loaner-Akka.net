@@ -13,6 +13,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
     using System;
     using System.Collections.Generic;
     using System.Linq;
+
     public class SystemSupervisor : ReceivePersistentActor
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
@@ -21,7 +22,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
          * Actor's state = just a list of account under supervision
          */
         private Dictionary<string, IActorRef> _portfolios = new Dictionary<string, IActorRef>();
-        private Dictionary<string,Dictionary<string,Tuple<double,double>>> _portfolioBillings = new Dictionary<string, Dictionary<string, Tuple<double,double>>>();
+
+        private Dictionary<string, Dictionary<string, Tuple<double, double>>> _portfolioBillings =
+            new Dictionary<string, Dictionary<string, Tuple<double, double>>>();
+
         private DateTime _lastBootedOn;
 
         public SystemSupervisor()
@@ -34,17 +38,19 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<SimulateBoardingOfAccounts>(client => RunSimulator(client));
             Command<SuperviseThisPortfolio>(command => ProcessSupervision(command));
             Command<StartPortfolios>(command => StartPortfolios());
-            
+
             /* Commonly used commands */
             Command<TellMeYourStatus>(asking => GetMyStatus());
-            Command<TellMeAboutYou>(me => Console.WriteLine($"About me: I am {Self.Path.Name} Msg: {me.Me} I was last booted up on: {_lastBootedOn}"));
+            Command<TellMeAboutYou>(me =>
+                Console.WriteLine(
+                    $"About me: I am {Self.Path.Name} Msg: {me.Me} I was last booted up on: {_lastBootedOn}"));
             Command<TellMeYourPortfolioStatus>(msg => _log.Debug(msg.Message));
             Command<string>(noMessage => { });
-            
-            
+
+
             Command<ReportBillingProgress>(cmd => GetBillingProgress());
-            Command<RegisterPortolioBilling>(cmd => RegisterPortfolioBilling(cmd) );
-            
+            Command<RegisterPortolioBilling>(cmd => RegisterPortfolioBilling(cmd));
+
             /** Special handlers below; we can decide how to handle snapshot processin outcomes. */
             Command<SaveSnapshotSuccess>(success => PurgeOldSnapShots(success));
             Command<DeleteSnapshotsSuccess>(msg => { });
@@ -55,10 +61,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 msg => _log.Info($"Successfully cleared log after snapshot ({msg.ToString()})"));
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
+
         private void RegisterStartup()
         {
             _lastBootedOn = DateTime.Now;
         }
+
         private void PurgeOldSnapShots(SaveSnapshotSuccess success)
         {
             var snapshotSeqNr = success.Metadata.SequenceNr;
@@ -67,27 +75,27 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             DeleteMessages(snapshotSeqNr);
             DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
         }
+
         private void RegisterPortfolioBilling(RegisterPortolioBilling cmd)
         {
-            _portfolioBillings.AddOrSet(cmd.PortfolioName,cmd.AccountsBilled); 
+            _portfolioBillings.AddOrSet(cmd.PortfolioName, cmd.AccountsBilled);
             _log.Info($"Portfolio {cmd.PortfolioName} reporting {cmd.AccountsBilled.Count} billed accounts");
         }
 
 
         private void GetBillingProgress()
         {
-            Dictionary<string, Dictionary<string, Tuple<double,double>>>
-                result = new Dictionary<string, Dictionary<string, Tuple<double,double>>>();
-            int accountsCntr=0;
+            Dictionary<string, Dictionary<string, Tuple<double, double>>>
+                result = new Dictionary<string, Dictionary<string, Tuple<double, double>>>();
+            int accountsCntr = 0;
             foreach (var x in _portfolioBillings)
             {
-                result.Add(x.Key,x.Value);
+                result.Add(x.Key, x.Value);
                 x.Value.ForEach(_ => accountsCntr++);
-                
             }
             Sender.Tell(new PortfolioBillingStatus(result));
-            _log.Info($"ReplyWithBillingProgress to {Sender.Path.Name} with {result.Count} portfolios with a total of {accountsCntr.ToString()} billed accounts.");
-      
+            _log.Info(
+                $"ReplyWithBillingProgress to {Sender.Path.Name} with {result.Count} portfolios with a total of {accountsCntr.ToString()} billed accounts.");
         }
 
 
@@ -107,11 +115,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             Context.IncrementMessagesReceived();
         }
+
         private void RecoveryCounter()
         {
             Context.IncrementCounter("SystemRecovery");
         }
-        
+
         private void RunSimulator(SimulateBoardingOfAccounts client)
         {
             Monitor();
@@ -120,7 +129,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             var boardingActor = Context.ActorOf<BoardAccountActor>($"Client{clientName}");
             boardingActor.Tell(client);
             _log.Info($"Started the boarding of accounts for Client{clientName} {DateTime.Now} ");
-            
         }
 
         private Dictionary<string, string> DictionaryToStringList()
@@ -135,7 +143,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             Monitor();
             var immutPortfolios = _portfolios.Keys.ToList();
-            foreach (var portfolio in immutPortfolios )
+            foreach (var portfolio in immutPortfolios)
                 if (_portfolios[portfolio] == null)
                 {
                     var actor = InstantiateThisPortfolio(portfolio);
@@ -151,22 +159,22 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void GetMyStatus()
         {
             var tooMany = new Dictionary<string, string>();
-            tooMany.Add("sorry","Too many portfolios to list here");
+            tooMany.Add("sorry", "Too many portfolios to list here");
             Sender.Tell(new MySystemStatus($"{_portfolios.Count} portfolios started.",
                 (_portfolios.Count > 999) ? tooMany : DictionaryToStringList()));
         }
 
         private void ProcessSupervision(SuperviseThisPortfolio command)
         {
-            var portfolioName = command.PortfolioName.ToUpper();
+            var portfolioName = command.PortfolioName;
             Monitor();
             if (!_portfolios.ContainsKey(portfolioName))
             {
                 var @event = new PortfolioAddedToSupervision(portfolioName);
                 Persist(@event, s =>
                 {
-                    _portfolios.Add(portfolioName, null); 
-                    Sender.Tell(InstantiateThisPortfolio(portfolioName)); 
+                    _portfolios.Add(portfolioName, null);
+                    Sender.Tell(InstantiateThisPortfolio(portfolioName));
                 });
                 ApplySnapShotStrategy();
             }
@@ -181,24 +189,22 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             RecoveryCounter();
             if (string.IsNullOrEmpty(portfolioNumber))
             {
-                 throw new Exception("Why is this blank?");
+                throw new Exception("Why is this blank?");
             }
-           
-                if (_portfolios.ContainsKey(portfolioNumber))
-                {
-                    _log.Debug($"Supervisor already has {portfolioNumber} in state. No action taken");
-                }
-                else
-                {
-                    _portfolios.Add(portfolioNumber, null);
-                    _log.Debug($"Replayed event on {portfolioNumber}");
-                }
-            
+
+            if (_portfolios.ContainsKey(portfolioNumber))
+            {
+                _log.Debug($"Supervisor already has {portfolioNumber} in state. No action taken");
+            }
+            else
+            {
+                _portfolios.Add(portfolioNumber, null);
+                _log.Debug($"Replayed event on {portfolioNumber}");
+            }
         }
- 
+
         private IActorRef InstantiateThisPortfolio(string portfolioName)
         {
-            
             if (_portfolios.ContainsKey(portfolioName))
             {
                 var portfolioActor = Context.ActorOf(Props.Create<PortfolioActor>(), portfolioName);
@@ -209,6 +215,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             }
             throw new Exception($"Why are you trying to instantiate a portfolio not yet registered?");
         }
+
         private void ProcessSnapshot(SnapshotOffer offer)
         {
             Monitor();
@@ -222,6 +229,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             }
             _log.Info($"Snapshot recovered.");
         }
+
         public void ApplySnapShotStrategy()
         {
             if (LastSequenceNr != 0 && LastSequenceNr % LoanerActors.TakeSystemSupervisorSnapshotAt == 0)
@@ -232,11 +240,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 SaveSnapshot(state.ToArray());
                 //_log.Debug($"Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
                 Context.IncrementCounter("SnapShotTaken");
-                Console.WriteLine($"PortfolioActor: {DateTime.Now}\t{LastSequenceNr}\tProcessed another snapshot");
+                //Console.WriteLine($"PortfolioActor: {DateTime.Now}\t{LastSequenceNr}\tProcessed another snapshot");
             }
         }
     }
-
-   
-     
 }

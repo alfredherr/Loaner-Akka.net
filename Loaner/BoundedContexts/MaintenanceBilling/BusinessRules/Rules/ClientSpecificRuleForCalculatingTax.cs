@@ -11,13 +11,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 {
     public class ClientSpecificRuleForCalculatingTax : IAccountBusinessRule
     {
-
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
         {
             //Extract parameter Dues from Command
             double duesAmount = 0.00;
-            var com = (BillingAssessment)command;
+            var com = (BillingAssessment) command;
             foreach (var c in com.LineItems)
             {
                 if (c.Item.Name.Equals("Dues"))
@@ -34,7 +33,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                         AccountState.AccountNumber,
                         "ClientSpecificRuleForCalculatingTax requires a 'Dues' amount be provided when billing."
                     )
-                }; ;
+                };
+                ;
                 Success = false;
                 return;
             }
@@ -56,6 +56,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         private List<IDomainEvent> _eventsGenerated;
 
         private (string Command, Dictionary<string, object> Parameters) CommandState { get; set; }
+
         public ClientSpecificRuleForCalculatingTax((string Command, Dictionary<string, object> Parameters) commandState)
         {
             CommandState = commandState;
@@ -75,7 +76,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             CommandState = commandState;
         }
- 
+
         public bool Success { get; private set; }
 
         public string GetResultDetails()
@@ -97,8 +98,5 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             return Success;
         }
-
-
-
     }
 }

@@ -49,6 +49,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             CommandState = commandState;
         }
+
         public bool Success { get; private set; }
 
         public string GetResultDetails()
@@ -70,5 +71,5 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             return Success;
         }
-        }
+    }
 }

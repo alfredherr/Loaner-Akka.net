@@ -11,7 +11,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 {
     public class ApplyUacAfterBilling : IAccountBusinessRule
     {
-
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
         {
@@ -20,7 +19,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
             {
                 _eventsGenerated = new List<IDomainEvent>
                 {
-
                     new UacAppliedAfterBilling(
                         AccountState.AccountNumber,
                         AccountState.Obligations.FirstOrDefault(x => x.Value.Status == ObligationStatus.Active).Key,
@@ -35,13 +33,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                 {
                     new AccountBusinessRuleValidationSuccess(
                         AccountState.AccountNumber,
-                       $"No UAC was present @ {DateTime.Now} when applying rule 'ApplyUacAfterBilling'. No UAC action taken."
+                        $"No UAC was present @ {DateTime.Now} when applying rule 'ApplyUacAfterBilling'. No UAC action taken."
                     )
                 };
                 _detailsGenerated =
                     $"No UAC was present @ {DateTime.Now} when applying rule 'ApplyUacAfterBilling'. No UAC action taken.";
             }
-            
+
             Success = true;
         }
 
@@ -69,6 +67,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             CommandState = commandState;
         }
+
         public bool Success { get; private set; }
 
         public string GetResultDetails()
@@ -90,8 +89,5 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             return Success;
         }
-
-
-      
     }
 }

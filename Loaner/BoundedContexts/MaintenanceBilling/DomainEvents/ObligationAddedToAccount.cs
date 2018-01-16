@@ -5,8 +5,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
 {
     public class ObligationAddedToAccount : IDomainEvent
     {
-        
-        public ObligationAddedToAccount(string accountNumber, MaintenanceFee maintenanceFee)  
+        public ObligationAddedToAccount(string accountNumber, MaintenanceFee maintenanceFee)
         {
             _UniqueGuid = Guid.NewGuid();
             _OccurredOn = DateTime.Now;

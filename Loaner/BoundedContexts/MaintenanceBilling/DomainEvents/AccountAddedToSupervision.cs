@@ -8,7 +8,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
         {
             _UniqueGuid = Guid.NewGuid();
             _OccurredOn = DateTime.Now;
-            
         }
 
         public AccountAddedToSupervision(string accountNumber) : this()

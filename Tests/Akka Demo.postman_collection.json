@@ -1,7 +1,7 @@
 {
 	"info": {
 		"name": "Akka Demo",
-		"_postman_id": "94a90657-5c96-9f49-4350-fce6fe4aae72",
+		"_postman_id": "945bc1ec-18da-81d1-70c2-400897670890",
 		"description": "",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -62,12 +62,11 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/system/run",
+					"raw": "http://localhost/api/system/run",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"system",
@@ -102,12 +101,11 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/system/businessrules",
+					"raw": "http://localhost/api/system/businessrules",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"system",
@@ -187,17 +185,15 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/portfolio/PortfolioUPD/",
+					"raw": "http://localhost/api/portfolio/PortfolioISR",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"portfolio",
-						"PortfolioUPD",
-						""
+						"PortfolioISR"
 					]
 				}
 			},
@@ -290,16 +286,15 @@
 					"raw": "{\n\t\"LineItems\":\n\t[\n\t\t{\n\t\t    \"item\": 1,\n\t\t    \"units\": 10,\n\t\t    \"unitAmount\": 9.99,\n\t\t    \"totalAmount\": 99.90\n\t\t}\n    ]\n}"
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/account/51838716426/info",
+					"raw": "http://localhost/api/account/99851914288/info",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5000",
 					"path": [
 						"api",
 						"account",
-						"51838716426",
+						"99851914288",
 						"info"
 					]
 				}
@@ -349,15 +344,44 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "[\n    {\n        \"item\": {\n            \"name\": \"Tax\",\n            \"amount\": 10\n        }\n    },\n    {\n        \"item\": {\n            \"name\": \"Dues\",\n            \"amount\": 100\n        }\n    },\n    {\n        \"item\": {\n            \"name\": \"Reserve\",\n            \"amount\": 25\n        }\n    }\n]"
+					"raw": "[\r\n    {\r\n        \"item\": {\r\n            \"name\": \"Tax\",\r\n            \"amount\": 10\r\n        }\r\n    },\r\n    {\r\n        \"item\": {\r\n            \"name\": \"Dues\",\r\n            \"amount\": 100\r\n        }\r\n    },\r\n    {\r\n        \"item\": {\r\n            \"name\": \"Reserve\",\r\n            \"amount\": 25\r\n        }\r\n    }\r\n]"
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/portfolio/PortfolioISR/assessment",
+					"raw": "http://localhost/api/portfolio/PortfolioISR/assessment",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5000",
+					"path": [
+						"api",
+						"portfolio",
+						"PortfolioISR",
+						"assessment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Bil Portfolio Model",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"item\": {\n            \"name\": \"Tax\",\n            \"amount\": 10\n        }\n    },\n    {\n        \"item\": {\n            \"name\": \"Dues\",\n            \"amount\": 100\n        }\n    },\n    {\n        \"item\": {\n            \"name\": \"Reserve\",\n            \"amount\": 25\n        }\n    }\n]"
+				},
+				"url": {
+					"raw": "http://localhost/api/portfolio/PortfolioISR/assessment",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
 					"path": [
 						"api",
 						"portfolio",

@@ -23,8 +23,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
         private static int _accounSpunUp;
-        private readonly Dictionary<PortfolioName, Dictionary<AccountNumber, Balance>> _accountsInPortfolio = new Dictionary<PortfolioName, Dictionary<AccountNumber, Balance>>();
-        private readonly Dictionary<AccountNumber, List<MaintenanceFee>> _obligationsInFile = new Dictionary<AccountNumber, List<MaintenanceFee>>();
+
+        private readonly Dictionary<PortfolioName, Dictionary<AccountNumber, Balance>> _accountsInPortfolio =
+            new Dictionary<PortfolioName, Dictionary<AccountNumber, Balance>>();
+
+        private readonly Dictionary<AccountNumber, List<MaintenanceFee>> _obligationsInFile =
+            new Dictionary<AccountNumber, List<MaintenanceFee>>();
 
         public BoardAccountActor()
         {
@@ -40,8 +44,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         }
 
         private void StartUpHandler(SimulateBoardingOfAccounts client
-                                    ,string accountsFilePath
-                                    ,string obligationsFilePath)
+            , string accountsFilePath
+            , string obligationsFilePath)
         {
             Monitor();
             var supervisor = Context.Parent;
@@ -49,21 +53,22 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             _log.Info($"Procesing boarding command... ");
 
-            GetAccountsForClient(accountsFilePath,obligationsFilePath);
-            
+            GetAccountsForClient(accountsFilePath, obligationsFilePath);
+
             var props = new RoundRobinPool(72).Props(Props.Create<BoardAccountActor>());
             var router = Context.ActorOf(props, $"Client{client.ClientName}Router");
 
             foreach (var portfolioDic in _accountsInPortfolio)
             {
                 string portfolio = portfolioDic.Key.Instance;
-                var accounts  = portfolioDic.Value;
-                var porfolioActor  = supervisor.Ask<IActorRef>(new SuperviseThisPortfolio(portfolio),TimeSpan.FromSeconds(3)).Result;
+                var accounts = portfolioDic.Value;
+                var porfolioActor = supervisor
+                    .Ask<IActorRef>(new SuperviseThisPortfolio(portfolio), TimeSpan.FromSeconds(3)).Result;
                 _log.Info($"The portfolio name is: {porfolioActor.Path.Name}");
 
                 foreach (var account in accounts)
                 {
-                    if (_obligationsInFile.ContainsKey(account.Key) )
+                    if (_obligationsInFile.ContainsKey(account.Key))
                     {
                         //Pluck out all the obligations for this account, LINQ anyone?
                         var obligations = _obligationsInFile[account.Key];
@@ -72,7 +77,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                             _log.Info(
                                 $"({counter}) Telling router {router.Path.Name} to spin up account {account.Key.Instance} with initial balance of {account.Value}... ");
                         }
-                        router.Tell(new SpinUpAccountActor(portfolio, account.Key.Instance, obligations, porfolioActor));
+                        router.Tell(new SpinUpAccountActor(portfolio, account.Key.Instance, obligations,
+                            porfolioActor));
                     }
                     else
                     {
@@ -91,13 +97,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             accountActor.Tell(new CreateAccount(command.AccountNumber));
 
             command.Obligations.ForEach(x => accountActor.Tell(new AddObligationToAccount(command.AccountNumber, x)));
-             
-            accountActor.Tell(new AskToBeSupervised(command.Portfolio,command.Supervisor));
+
+            accountActor.Tell(new AskToBeSupervised(command.Portfolio, command.Supervisor));
             _accounSpunUp++;
-            if (_accounSpunUp  % 1000 == 0)
+            if (_accounSpunUp % 1000 == 0)
             {
                 Console.WriteLine($"Boarding: {DateTime.Now}\t{_accounSpunUp} accounts processed.");
-
             }
         }
 
@@ -113,7 +118,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     _log.Info($"There are {readText.Length} obligations in {obligationsFilePath}");
                     foreach (var row in readText)
                     {
-                        
                         if (row.Length > 11)
                         {
                             var line = row.Split('\t');
@@ -121,13 +125,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                             var accountNumber = new AccountNumber(line[1]);
                             string typeOfObligation = line[2];
                             double openningBalance;
-                            Double.TryParse( line[3],out openningBalance);
-                            
-                            MaintenanceFee o = new MaintenanceFee(obligationNumber,openningBalance);
-                            
+                            Double.TryParse(line[3], out openningBalance);
+
+                            MaintenanceFee o = new MaintenanceFee(obligationNumber, openningBalance);
+
                             if (_obligationsInFile.ContainsKey(accountNumber))
                             {
-                                List<MaintenanceFee> obligations = _obligationsInFile[accountNumber] ;
+                                List<MaintenanceFee> obligations = _obligationsInFile[accountNumber];
                                 obligations.Add(o);
                                 _obligationsInFile[accountNumber] = obligations;
                             }
@@ -135,10 +139,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                             {
                                 List<MaintenanceFee> obligations = new List<MaintenanceFee>();
                                 obligations.Add(o);
-                                _obligationsInFile[accountNumber] = obligations;     
+                                _obligationsInFile[accountNumber] = obligations;
                             }
-                            
-                           }
+                        }
                     }
                 }
                 _log.Info($"Successfully processing file {obligationsFilePath}");
@@ -154,7 +157,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             try
             {
-                
                 _log.Info($"Gonna try to open file {clientsFilePath}");
                 if (File.Exists(clientsFilePath))
                 {
@@ -165,11 +167,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                         if (row.Length > 11)
                         {
                             var line = row.Split('\t');
-                            var portfolioName = new PortfolioName( line[0] );
-                            var accountNumber = new AccountNumber( line[1] );
+                            var portfolioName = new PortfolioName(line[0]);
+                            var accountNumber = new AccountNumber(line[1]);
                             //string accountInfo   = line[2];
                             double balance;
-                            Double.TryParse(line[3],out balance);
+                            Double.TryParse(line[3], out balance);
                             var accountbalance = new Balance(balance);
                             if (_accountsInPortfolio.ContainsKey(portfolioName))
                             {
@@ -179,7 +181,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                             }
                             else
                             {
-                                var accounts = new Dictionary<AccountNumber,Balance>();
+                                var accounts = new Dictionary<AccountNumber, Balance>();
                                 accounts.Add(accountNumber, accountbalance);
                                 _accountsInPortfolio.Add(portfolioName, accounts);
                             }
@@ -194,7 +196,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             }
 
             GetObligationsForClient(obligationsFilePath);
-
         }
 
         private void Monitor()

@@ -20,6 +20,7 @@ namespace Loaner.API.Models
             this.AccountState = accountState;
             Message = $"State as of: {DateTime.Now}";
         }
+
         public AccountState AccountState { get; set; }
 
         public string Message { get; set; }

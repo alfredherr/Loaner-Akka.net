@@ -8,7 +8,6 @@
     {
         static void Main()
         {
-
             Console.WriteLine($"*****************************");
             Console.WriteLine($"**** Akka & DotNet Core  ****");
             Console.WriteLine($"*****************************");

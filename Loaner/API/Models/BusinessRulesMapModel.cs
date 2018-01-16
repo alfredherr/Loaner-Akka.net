@@ -9,7 +9,7 @@ namespace Loaner.API.Models
 {
     class BusinessRulesMapModel
     {
-       public List<AccountBusinessRuleMapModel> RulesMap { get; set; }
+        public List<AccountBusinessRuleMapModel> RulesMap { get; set; }
         public string Message { get; set; }
     }
 }

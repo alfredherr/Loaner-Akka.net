@@ -5,8 +5,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainCommands
 {
     public class AddObligationToAccount : IDomainCommand
     {
-      
-        public AddObligationToAccount(string accountNumber, MaintenanceFee maintenanceFee)  
+        public AddObligationToAccount(string accountNumber, MaintenanceFee maintenanceFee)
         {
             _RequestedOn = DateTime.Now;
             _UniqueGuid = Guid.NewGuid();
