@@ -45,7 +45,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                         AccountState.AccountNumber,
                         "AssessTaxAsPercentageOfDuesDuringBilling requires a 'Dues' amount be provided when billing."
                     )
-                };;
+                };
+                _detailsGenerated += "AssessTaxAsPercentageOfDuesDuringBilling requires a 'Dues' amount be provided when billing.";
                 Success = false;
                 return;
             }

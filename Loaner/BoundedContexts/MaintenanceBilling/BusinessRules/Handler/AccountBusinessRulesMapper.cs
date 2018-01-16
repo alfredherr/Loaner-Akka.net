@@ -184,7 +184,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                 }
                 /* Client-Portfolio-Account|Command|Rules|Parameters(comma separated key value pairs) */
 
-                outfile.Add($"{client}-{portfolio}-{accountNumber}|{command}|{businessRule}|{businessRuleParameters}");
+                outfile.Add($"{client}-{portfolio.ToUpper()}-{accountNumber}|{command}|{businessRule}|{businessRuleParameters}");
             }
 
             try
@@ -228,7 +228,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                      
                     RulesInFile.Add(new AccountBusinessRuleMapModel(
                         client: dpl[0],
-                        portfolio: dpl[1],
+                        portfolio: dpl[1].ToUpper(),
                         account: dpl[2],
                         allAccounts: all,
                         command: tokens[1],
