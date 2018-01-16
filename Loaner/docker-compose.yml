@@ -1,0 +1,31 @@
+version: "3.2"
+services:
+  akka-demo:
+    image: alfredherr/loaner
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost/api/system"]
+        interval: 1m30s
+        timeout: 10s
+        retries: 3
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.7"
+          memory: 2G
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        window: 120s
+    ports:
+      - "80:80"
+    networks:
+      - webnet
+    volumes:
+      - db-data:/demo
+
+networks:
+  webnet:
+
+volumes:
+  db-data:
