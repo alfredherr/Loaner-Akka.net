@@ -23,17 +23,21 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 
             //Extract parameter Dues from Command
             double duesAmount = 0.00;
+            bool foundAtLeastOne = false;
+
             var com = (BillingAssessment) command;
             foreach (var c in com.LineItems)
             {
+                Console.WriteLine($"In {this.GetType().Name} and this is the FinancialConcept name: {c.Item.Name} and amount: {c.Item.Amount}");
                 if (c.Item.Name.Equals("Dues"))
                 {
-                   duesAmount= c.Item.Amount;
+                    foundAtLeastOne = true;
+                    duesAmount = c.Item.Amount;
                     break;
                 }
             }
 
-            if ( duesAmount != 0.00)
+            if (!foundAtLeastOne)
             {
                 _eventsGenerated = new List<IDomainEvent>
                 {

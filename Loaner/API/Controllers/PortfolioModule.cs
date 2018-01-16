@@ -1,16 +1,18 @@
-﻿using System;
-using System.Threading.Tasks;
-using Akka.Actor;
-using Loaner.ActorManagement;
-using Loaner.API.Models;
-using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
-using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
-using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
-using Nancy;
-using Nancy.ModelBinding;
-
-namespace Loaner.API.Controllers
+﻿namespace Loaner.API.Controllers
 {
+
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using Akka.Actor;
+    using Loaner.ActorManagement;
+    using Models;
+    using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
+    using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
+    using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
+    using Nancy;
+    using Nancy.ModelBinding;
+
     public class PortfolioModule : NancyModule
     {
         public PortfolioModule() : base("/api/portfolio")
@@ -61,6 +63,20 @@ namespace Loaner.API.Controllers
                 return Response.AsJson(answer);
 
             });
+            
+            Get("/{actorName}/assessment", args =>
+            {
+                var model = new SimulateAssessmentModel();
+                model.LineItems = new List<InvoiceLineItem>
+                {
+                    new InvoiceLineItem(new Tax()),
+                    new InvoiceLineItem(new Dues()),
+                    new InvoiceLineItem(new Reserve())
+                };
+                return model;
+            });
+
+
             Post("/{portfolioName}/assessment", async args =>
             {
                 string portfolio = ((string)args.portfolioName).ToUpper();

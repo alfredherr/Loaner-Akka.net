@@ -20,26 +20,32 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                 GetBusinessRulesToApply(client, portfolioName, accountState, comnd) ??
                 throw new ArgumentNullException($"GetBusinessRulesToApply(accountState, comnd)");
 
-            Log.Debug($"Found {rules.Count} a total of rules for account {accountState.AccountNumber}");
+            Log.Debug($"Found {rules.Count} account business rules for account {accountState.AccountNumber}");
 
             BusinessRuleApplicationResultModel resultModel = new BusinessRuleApplicationResultModel();
+
+            AccountState pipedState = AccountState.Clone(accountState);
 
             foreach (IAccountBusinessRule reglaDeNegocio in rules)
             {
                 Log.Debug($"Found {reglaDeNegocio.GetType().Name} rule for account {accountState.AccountNumber}");
 
-                reglaDeNegocio.SetAccountState(accountState);
+                reglaDeNegocio.SetAccountState(pipedState);
 
                 reglaDeNegocio.RunRule(comnd);
 
                 if (reglaDeNegocio.RuleAppliedSuccessfuly())
                 {
+                    //Save the rule and results into the return model 'resultModel'.
                     resultModel.RuleProcessedResults.Add(reglaDeNegocio,
-                        $"Business Rule Applied. {reglaDeNegocio.GetResultDetails()}");
+                        $"Business Rule {reglaDeNegocio.GetType().Name} applied successfully to account {accountState.AccountNumber}. Details: { reglaDeNegocio.GetResultDetails()}");
 
+                    //Save all the events resulting from runnin this rule.
                     reglaDeNegocio.GetGeneratedEvents().ForEach(@event => resultModel.GeneratedEvents.Add(@event));
 
-                    resultModel.GeneratedState = reglaDeNegocio.GetGeneratedState();
+                    // Rule output -> next rule input (Pipes & Filters approach)
+                    // Replace pipedState wth the state resulting from running the rule.
+                    pipedState = AccountState.Clone(reglaDeNegocio.GetGeneratedState());
 
                     resultModel.Success = true;
 
@@ -53,7 +59,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                     resultModel.RuleProcessedResults.Add(reglaDeNegocio,
                         $"Business Rule Failed Application. {reglaDeNegocio.GetResultDetails()}");
 
-                    Log.Debug($"Business Rule {reglaDeNegocio.GetType().Name} application failed on account {accountState.AccountNumber} due to {reglaDeNegocio.GetResultDetails()}");
+                    Log.Debug($"Business Rule {reglaDeNegocio.GetType().Name} " +
+                              $"application failed on account {accountState.AccountNumber} " +
+                              $"due to {reglaDeNegocio.GetResultDetails()}");
 
                     return resultModel; //we stop processing any further rules.
                 }

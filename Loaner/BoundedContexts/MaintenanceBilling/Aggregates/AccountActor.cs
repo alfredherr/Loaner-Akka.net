@@ -186,6 +186,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 			 * Then, based on the outcome generated events.
 			 * In this example, we are simply going to accept it and updated our state.
 			 */
+             if(command is BillingAssessment )
+             {
+                 var c = (BillingAssessment) command;
+                string parameters = c.LineItems.Aggregate("",(working, next)=> working +";"+ next.Item.Name+"="+next.Item.Amount);
+                 _log.Debug($"{_accountState.AccountNumber}: " +
+                            $"Command {c.GetType().Name} with {c.LineItems.Count} line items: " +
+                            $"{parameters}");
+             }
 
             BusinessRuleApplicationResultModel resultModel = 
                     AccountBusinessRulesHandler.ApplyBusinessRules( _log, Self.Path.Parent.Parent.Name, Self.Path.Parent.Name ,_accountState, command);

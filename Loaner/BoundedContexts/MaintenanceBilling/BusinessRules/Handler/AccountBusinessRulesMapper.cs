@@ -203,7 +203,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             string[] readText = File.ReadAllLines(businessRulesMapFile);
             foreach (string s in readText)
             {
-                if (s.StartsWith("#"))
+                if (s.Trim().StartsWith("#") || s.Trim().Length == 0 || !s.Contains("|"))
                     continue;
 
                 var tokens = s.Split('|');
