@@ -72,17 +72,23 @@ namespace Loaner
                 ));
 
             DemoSystemSupervisor.Tell(new TellMeAboutYou("Starting Up"));
+
+            
+
         }
 
         private void ConfigureKafkaProducerActors(Config config)
         {
             var numAccountPublishers = Convert.ToInt32(config.GetString("Akka.NumAccountPublisherActor"));
-            //var numPortfolioPublishers = Convert.ToInt32(config.GetString("Akka.NumPortfolioPublisherActor"));
-            var brokerList = config.GetString("Kafka.BrokerList");
+            var numPortfolioPublishers = Convert.ToInt32(config.GetString("Akka.NumPortfolioPublisherActor"));
+
             AccountStateKafkaTopicName = config.GetString("Akka.AccountStateTopicName");
+            PortfolioStateKafkaTopicName = config.GetString("Akka.PortfolioStateTopicName");
+
+            var brokerList = config.GetString("Kafka.BrokerList");
 
             Console.WriteLine($"(kafka) Number of Account Publishers:   {numAccountPublishers}");
-            //Console.WriteLine($"(kafka) Number of Portfolio Publishers: {numPortfolioPublishers}");
+            Console.WriteLine($"(kafka) Number of Portfolio Publishers: {numPortfolioPublishers}");
             Console.WriteLine($"(kafka) List of brokers: {brokerList}");
 
             // Create the Kafka Producer object for use by the actual actors
@@ -130,19 +136,24 @@ namespace Loaner
             // Schedule the flush actor so we flush the producer on a regular basis
             Props publisherFlushProps = Props.Create(() => new KafkaPublisherFlushActor(MyKafkaProducer));
 
-            AccountStateFlushActor = DemoActorSystem.ActorOf(publisherFlushProps, "publisherFlushActor");
+            FlushActor = DemoActorSystem.ActorOf(publisherFlushProps, "publisherFlushActor");
 
             DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
-                TimeSpan.FromSeconds(5), AccountStateFlushActor, new Flush(), ActorRefs.NoSender);
+                TimeSpan.FromSeconds(5), FlushActor, new Flush(), ActorRefs.NoSender);
 
-            // Create the publisher actors for the AccountState
-            var actorName = "AccountStatePublisherActor";
-
+            //Create AccountState publisher
             Props accountStatePublisherProps = Props.Create(() =>
-                    new KafkaPublisherActor(AccountStateKafkaTopicName, MyKafkaProducer, actorName))
+                    new KafkaPublisherActor(AccountStateKafkaTopicName, MyKafkaProducer, "AccountStatePublisherActor"))
                 .WithRouter(new RoundRobinPool(numAccountPublishers));
 
-            AccountStatePublisherActor = DemoActorSystem.ActorOf(accountStatePublisherProps, actorName);
+            AccountStatePublisherActor = DemoActorSystem.ActorOf(accountStatePublisherProps, "AccountStatePublisherActor");
+
+            //Create Porfolio Publisher
+            Props portfolioStatePublisherProps = Props.Create(() =>
+                    new KafkaPublisherActor(PortfolioStateKafkaTopicName, MyKafkaProducer, "PortfolioStatePublisherActor"))
+                .WithRouter(new RoundRobinPool(numPortfolioPublishers));
+
+            PortfolioStatePublisherActor = DemoActorSystem.ActorOf(portfolioStatePublisherProps, "PortfolioStatePublisherActor");
         }
 
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)

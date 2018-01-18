@@ -53,6 +53,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             /** Special handlers below; we can decide how to handle snapshot processin outcomes. */
             Command<SaveSnapshotSuccess>(success => PurgeOldSnapShots(success));
+            
             Command<DeleteSnapshotsSuccess>(msg => { });
             Command<SaveSnapshotFailure>(
                 failure => _log.Error(
@@ -79,7 +80,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void RegisterPortfolioBilling(RegisterPortolioBilling cmd)
         {
             _portfolioBillings.AddOrSet(cmd.PortfolioName, cmd.AccountsBilled);
-            _log.Info($"Portfolio {cmd.PortfolioName} reporting {cmd.AccountsBilled.Count} billed accounts");
+            _log.Debug($"Portfolio {cmd.PortfolioName} reporting {cmd.AccountsBilled.Count} billed accounts");
         }
 
 
@@ -175,8 +176,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 {
                     _portfolios.Add(portfolioName, null);
                     Sender.Tell(InstantiateThisPortfolio(portfolioName));
+                    ApplySnapShotStrategy();
                 });
-                ApplySnapShotStrategy();
+                
             }
             else
             {
@@ -223,24 +225,29 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             //var snap = ((Newtonsoft.Json.Linq.JArray) offer.Snapshot).ToObject<string[]>();
             var snap = (string[]) offer.Snapshot;
 
-            foreach (var account in snap)
+            foreach (var portfolio in snap)
             {
-                _portfolios.Add(account, null);
+                _portfolios.Add(portfolio, null);
+                _log.Info($"{Self.Path.Name} Snapshot recovered portfolio: {portfolio}.");
             }
-            _log.Info($"Snapshot recovered.");
         }
 
         public void ApplySnapShotStrategy()
         {
-            if (LastSequenceNr != 0 && LastSequenceNr % LoanerActors.TakeSystemSupervisorSnapshotAt == 0)
+            if (LastSequenceNr  % LoanerActors.TakeSystemSupervisorSnapshotAt == 0)
             {
-                var state = new List<string>(); // Just need the name to kick it off?
-                foreach (var record in _portfolios.Keys)
-                    state.Add(record);
-                SaveSnapshot(state.ToArray());
-                //_log.Debug($"Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
-                Context.IncrementCounter("SnapShotTaken");
-                //Console.WriteLine($"PortfolioActor: {DateTime.Now}\t{LastSequenceNr}\tProcessed another snapshot");
+            var state = new List<string>(); // Just need the name to kick it off?
+
+            foreach (var record in _portfolios.Keys)
+            {
+                state.Add(record);
+            }
+
+            SaveSnapshot(state.ToArray());
+
+            _log.Info($"SystemSupervisor Snapshot taken of {state.Count} portolios. LastSequenceNr is {LastSequenceNr}.");
+
+            Context.IncrementCounter("SnapShotTaken");
             }
         }
     }

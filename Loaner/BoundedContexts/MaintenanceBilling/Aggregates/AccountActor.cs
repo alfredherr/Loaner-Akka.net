@@ -23,6 +23,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         /* This Actor's State */
         private AccountState _accountState = new AccountState();
 
+        private readonly AccountBusinessRulesHandler _rulesRunner = new AccountBusinessRulesHandler();
+
+
         private DateTime _lastBootedOn;
 
         public AccountActor()
@@ -63,8 +66,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 Sender.Tell(
                     new MyAccountStatus($"{Self.Path.Name} I am alive! I was last booted up on {_lastBootedOn}")));
             Command<TellMeYourInfo>(asking => Sender.Tell(new MyAccountStatus("", AccountState.Clone(_accountState))));
+            
             Command<DeleteMessagesSuccess>(
-                msg => _log.Info($"Successfully cleared log after snapshot ({msg.ToString()})"));
+                msg => _log.Debug($"Successfully cleared log after snapshot ({msg.ToString()})"));
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
 
@@ -102,11 +106,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             // Process all business rules
             ApplyBusinessRules(command);
-
+            double total = command.LineItems.Aggregate(0.0,(accomulator,next ) => accomulator + next.Item.Amount);
             // Let parent portfolio know my current balances
             Context.Parent.Tell(
                 new RegisterMyAccountBilling(_accountState.AccountNumber,
-                    command.LineItems.Select(x => x.Item.Amount).Sum(),
+                    total,
                     _accountState.CurrentBalance)
             );
 
@@ -127,7 +131,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void ApplySnapShot(SnapshotOffer offer)
         {
             _accountState = (AccountState) offer.Snapshot;
-            _log.Debug($"Snapshot recovered.");
+            //_log.Info($"{Self.Path.Name} Snapshot recovered.");
         }
 
         private void ApplyPastEvent(string eventname, IDomainEvent domainEvent)
@@ -201,9 +205,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             }
 
             BusinessRuleApplicationResultModel resultModel =
-                AccountBusinessRulesHandler.ApplyBusinessRules(_log, Self.Path.Parent.Parent.Name,
+                _rulesRunner.ApplyBusinessRules(_log, Self.Path.Parent.Parent.Name,
                     Self.Path.Parent.Name, _accountState, command);
-            _log.Info(
+            _log.Debug(
                 $"There were {resultModel.GeneratedEvents.Count} events for {command} command. And it was {resultModel.Success}");
             if (resultModel.Success)
             {
@@ -214,7 +218,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 {
                     Persist(@event, s =>
                     {
-                        _log.Info(
+                        _log.Debug(
                             $"Processing event {@event.GetType().Name} on account {_accountState.AccountNumber} ");
                         _accountState = _accountState.ApplyEvent(@event);
                         ApplySnapShotStrategy();
@@ -226,10 +230,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         /*Example of how snapshotting can be custom to the actor, in this case per 'Account' events*/
         public void ApplySnapShotStrategy()
         {
-            if (LastSequenceNr != 0 && LastSequenceNr % LoanerActors.TakeAccountSnapshotAt == 0)
+            if (LastSequenceNr  % LoanerActors.TakeAccountSnapshotAt == 0)
             {
                 SaveSnapshot(_accountState);
-                // _log.Debug($"Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
+                _log.Debug($"{_accountState.AccountNumber} Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
                 Context.IncrementCounter("SnapShotTaken");
             }
         }

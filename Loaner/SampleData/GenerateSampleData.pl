@@ -14,24 +14,25 @@ my %unique=();
 my $portfolio = "ABC";
 print STDOUT "The first portfolio is: $portfolio\n";
 my $portfolio_splitter = 0;
-for(my $i = 0; $i < $NumberOfRecords ; $i++ ){
+for(my $i = 1; $i <= $NumberOfRecords ; $i++ ){
     my $number = '';
     for (1..$Length) {
         $number .= $Chars[int rand @Chars];
     }
    
-     if(++$portfolio_splitter % $RecordsPerPortfolio == 0){
+     if($portfolio_splitter != 0 &&  $portfolio_splitter % $RecordsPerPortfolio == 0){
          $portfolio = join('', map +(q(A)..q(Z))[rand(26)], 1..3);
          print STDOUT "$portfolio_splitter new portfolio: $portfolio\n";
      }
     if(exists $unique{$number}){
         $unique{$number}++;    
     }else{
-        print CLIENT join("\t","Portfolio$portfolio",$number,join('', map +(q(A)..q(Z))[rand(26)], 1..10), "246.00"),"\n";
+        print CLIENT join("\t","PORTFOLIO$portfolio",$number,join('', map +(q(A)..q(Z))[rand(26)], 1..10), "246.00"),"\n";
         print OBLIGATIONS join("\t",$obligationCounter++,$number,"Maintenance","123.00"),"\n";
         print OBLIGATIONS join("\t",$obligationCounter++,$number,"Loan","123.00"),"\n";
         $unique{$number}++;
     }    
+     $portfolio_splitter++;
 
 }
 close(CLIENT);

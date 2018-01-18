@@ -1,19 +1,20 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Akka.Event;
-using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
-using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Exceptions;
-using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
-using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules;
-using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Akka.Event;
+    using Aggregates.Models;
+    using Models;
+    using DomainCommands;
+
     // ReSharper disable once ClassNeverInstantiated.Global
     public class AccountBusinessRulesHandler
     {
-        public static BusinessRuleApplicationResultModel ApplyBusinessRules(ILoggingAdapter logger, string client,
+         private readonly AccountBusinessRulesMapper _poorMansDB = new AccountBusinessRulesMapper();
+
+        public BusinessRuleApplicationResultModel ApplyBusinessRules(ILoggingAdapter logger, string client,
             string portfolioName,
             AccountState accountState, IDomainCommand comnd)
         {
@@ -55,7 +56,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                         $"Business Rule {reglaDeNegocio.GetType().Name} applied successfully to account {accountState.AccountNumber}. Details: {reglaDeNegocio.GetResultDetails()}");
 
                     //Save all the events resulting from runnin this rule.
-                    reglaDeNegocio.GetGeneratedEvents().ForEach(@event => resultModel.GeneratedEvents.Add(@event));
+                    var events = reglaDeNegocio.GetGeneratedEvents().ToList();
+                    foreach (var @event in events)
+                    {
+                        resultModel.GeneratedEvents.Add(@event);
+                    }
+                    
 
                     // Rule output -> next rule input (Pipes & Filters approach)
                     // Replace pipedState wth the state resulting from running the rule.
@@ -87,7 +93,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             return resultModel;
         }
 
-        public static List<IAccountBusinessRule> GetBusinessRulesToApply(string client, string portfolioName,
+        private List<IAccountBusinessRule> GetBusinessRulesToApply(string client, string portfolioName,
             AccountState accountState,
             IDomainCommand command)
         {
@@ -97,7 +103,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             // In future We would also want to pass in the command so we filter the search to just the rules 
             // associated to the command
             var rulesFound =
-                AccountBusinessRulesMapper.GetAccountBusinessRulesForCommand(client, portfolioName,
+                _poorMansDB.GetAccountBusinessRulesForCommand(client, portfolioName,
                     accountState.AccountNumber,
                     command);
             //rulesFound.ForEach(x =>

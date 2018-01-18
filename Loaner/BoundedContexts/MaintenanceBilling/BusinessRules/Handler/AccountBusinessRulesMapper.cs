@@ -1,4 +1,6 @@
-﻿namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
+﻿using System.Collections.Immutable;
+
+namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
     using System;
     using System.Collections.Generic;
@@ -11,18 +13,18 @@
 
     public class AccountBusinessRulesMapper
     {
-        private static AccountBusinessRulesMapper _rulesMapperInstance;
+        private  AccountBusinessRulesMapper _rulesMapperInstance;
 
-        public static List<IAccountBusinessRule>
+        public List<IAccountBusinessRule>
             GetAccountBusinessRulesForCommand(string client, string porfolio, string accountNumber,
                 IDomainCommand command)
         {
-            if (AccountBusinessRulesMapper._rulesMapperInstance == null)
+            if (_rulesMapperInstance == null)
             {
                 Initialize();
             }
 
-            List<IAccountBusinessRule> rulesFound = (_rulesMapperInstance.RulesInFile
+                var rules = (_rulesMapperInstance.RulesInFile
                 .Where(ruleMap =>
                     // Look for rules associated to this command              
                         ruleMap.Command.GetType().Name.Equals(command.GetType().Name) &&
@@ -33,14 +35,16 @@
                          // or all accounts under all portfolios for this client
                          ruleMap.Client.Equals(client) && ruleMap.Portfolio.Equals("*") && ruleMap.ForAllAccounts)
                 )
-                .Select(ruleMap => ruleMap.BusinessRule)).ToList();
+                .Select(ruleMap => ruleMap.BusinessRule)).ToImmutableList();
+
+            List<IAccountBusinessRule> rulesFound = rules.ToList() ;
 
             return rulesFound;
         }
 
-        public static List<AccountBusinessRuleMapModel> ListAllAccountBusinessRules()
+        public  List<AccountBusinessRuleMapModel> ListAllAccountBusinessRules()
         {
-            if (AccountBusinessRulesMapper._rulesMapperInstance == null)
+            if (_rulesMapperInstance == null)
             {
                 Initialize();
             }
@@ -48,7 +52,7 @@
             return _rulesMapperInstance.RulesInFile;
         }
 
-        public static List<AccountBusinessRuleMapModel> UpdateAccountBusinessRules(
+        public  List<AccountBusinessRuleMapModel> UpdateAccountBusinessRules(
             List<AccountBusinessRuleMapModel> updatedRules)
         {
             UpdateAndReInitialize(updatedRules);
@@ -56,7 +60,7 @@
             return _rulesMapperInstance.RulesInFile;
         }
 
-        public static List<CommandToBusinessRuleModel> GetCommandsToBusinesRules()
+        public  List<CommandToBusinessRuleModel> GetCommandsToBusinesRules()
         {
             List<CommandToBusinessRuleModel> commands = new List<CommandToBusinessRuleModel>();
 
@@ -97,7 +101,7 @@
             return commands;
         }
 
-        private static void UpdateAndReInitialize(List<AccountBusinessRuleMapModel> updatedRules)
+        private  void UpdateAndReInitialize(List<AccountBusinessRuleMapModel> updatedRules)
         {
             try
             {
@@ -111,7 +115,7 @@
             }
         }
 
-        private static void Initialize()
+        private  void Initialize()
         {
             try
             {
@@ -125,6 +129,10 @@
             }
         }
 
+        public AccountBusinessRulesMapper()
+        {
+            Initialize();
+        }
 
         public AccountBusinessRulesMapper(string businessRulesMapFile)
         {

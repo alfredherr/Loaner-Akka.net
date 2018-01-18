@@ -1,3 +1,4 @@
+using Akka.Persistence;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
 
@@ -39,7 +40,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             /* Example of custom error handling, also using messages */
             Receive<FailedToLoadAccounts>(m => Self.Tell(typeof(Stop)));
             Receive<FailedToLoadObligations>(m => Self.Tell(typeof(Stop)));
-            //Receive<SaveSnapshotSuccess>(m => _log.Info($"snapshot taken {m.Metadata.PersistenceId}") );
+            Receive<SaveSnapshotSuccess>(m => { });
+            Receive<DeleteMessagesSuccess>(m => { });
+
             ReceiveAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
 
@@ -55,7 +58,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             GetAccountsForClient(accountsFilePath, obligationsFilePath);
 
-            var props = new RoundRobinPool(72).Props(Props.Create<BoardAccountActor>());
+            Console.WriteLine($"There are {Environment.ProcessorCount} logical processors. Running {Environment.ProcessorCount * 4} boarding actor routees");
+
+            var props = new RoundRobinPool(Environment.ProcessorCount * 3).Props(Props.Create<BoardAccountActor>());
             var router = Context.ActorOf(props, $"Client{client.ClientName}Router");
 
             foreach (var portfolioDic in _accountsInPortfolio)
