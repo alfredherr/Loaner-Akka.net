@@ -22,6 +22,8 @@ namespace Loaner.KafkaProducer
         ActorSelection thisActor = null;
         private readonly ILoggingAdapter _log = Context.GetLogger();
         private DateTime _lastBootedOn;
+        private int _messagesSent = 0;
+        private int _messagesReSent = 0;
 
         public KafkaPublisherActor(string topicName, Producer<string, string> producer, string actorName)
         {
@@ -48,6 +50,10 @@ namespace Loaner.KafkaProducer
             string json = JsonConvert.SerializeObject(cmd.Msg);
             Send(cmd.Key, json);
 
+            _messagesSent++;
+
+            //_log.Info($"{Self.Path.Name} Sending message {_messagesSent} to kafka");
+
             // Increment a counter by 1
             Context.IncrementCounter("PublishMsg");
         }
@@ -58,6 +64,9 @@ namespace Loaner.KafkaProducer
         {
             Send(cmd.Key, cmd.Msg);
 
+            _messagesReSent++;
+
+            //_log.Info($"{Self.Path.Name} ReSending message {_messagesReSent} to kafka");
             // Update telemetry
             Context.IncrementCounter("ResendMsg");
         }
@@ -70,22 +79,9 @@ namespace Loaner.KafkaProducer
                 var deliveryReport = producer.ProduceAsync(_topicName, msgKey, json);
                 deliveryReport.ContinueWith(task =>
                 {
-/*
-                    if (task.Result.Error.HasError)
-                    {
-                        // Update telemetery
-                        DogStatsd.Increment("send-ERROR");
-
-                        // TODO Check for the type of error. Local timeout is certainly one that can occur, in which case resend. Check others as 
-                        // may be a resend is a bad thing.
-                        thisActor.Tell(new Resend(msgKey, json));
-
-                    }
-*/
-
                     if (task.IsCompletedSuccessfully)
                     {
-                        Context.IncrementCounter("send-SUCCESS");
+                        //Context.IncrementCounter("send-SUCCESS");
                         var key = task.Result.Key;
                         if (key.EndsWith("999999"))
                         {
@@ -96,12 +92,11 @@ namespace Loaner.KafkaProducer
                             Console.WriteLine($"Sent key: {task.Result.Key}");
                         }
                     }
-                    //                Console.WriteLine($"Partition: {task.Result.Partition}, Offset: {task.Result.Offset}");
                 });
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Exception in Send: {e.StackTrace}");
+                Console.WriteLine($"Exception in Send: {e.Message}");
             }
         }
     }

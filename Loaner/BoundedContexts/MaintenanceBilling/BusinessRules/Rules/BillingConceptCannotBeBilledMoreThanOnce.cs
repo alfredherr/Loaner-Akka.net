@@ -15,7 +15,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
             {
                 new AccountBusinessRuleValidationSuccess(
                     AccountState.AccountNumber,
-                    "BillingConceptCannotBeBilledMoreThanOnce"
+                    "AccountBusinessRuleValidationSuccess on BillingConceptCannotBeBilledMoreThanOnce"
                 )
             };
             _detailsGenerated = "THIS WORKED";

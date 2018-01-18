@@ -8,16 +8,22 @@ namespace Loaner.ActorManagement
         public static ActorSystem DemoActorSystem;
         public static IActorRef DemoSystemSupervisor = ActorRefs.Nobody;
 
+
         public static IActorRef AccountStatePublisherActor = ActorRefs.Nobody;
-        public static IActorRef AccountStateFlushActor = ActorRefs.Nobody;
+        public static IActorRef FlushActor = ActorRefs.Nobody;
         public static string AccountStateKafkaTopicName;
+
+        public static IActorRef PortfolioStatePublisherActor = ActorRefs.Nobody;
+        public static IActorRef PortfolioStateFlushActor = ActorRefs.Nobody;
+        public static string PortfolioStateKafkaTopicName;
+
         public static Producer<string, string> MyKafkaProducer;
 
         public static string CommandsToRulesFilename;
         public static string BusinessRulesFilename;
 
         public const int TakeSystemSupervisorSnapshotAt = 1;
-        public const int TakePortolioSnapshotAt = 1;
+        public const int TakePortolioSnapshotAt = 10000;
         public const int TakeAccountSnapshotAt = 1;
     }
 }

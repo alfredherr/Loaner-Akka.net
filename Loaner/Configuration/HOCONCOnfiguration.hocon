@@ -17,7 +17,7 @@ akka.actor.debug.lifecycle = on
 akka.actor.debug.unhandled = on
 
 
-akka.loglevel = DEBUG
+akka.loglevel = INFO
 
 akka.loggers=["Akka.Logger.NLog.NLogLogger, Akka.Logger.NLog"]
      
@@ -56,17 +56,21 @@ akka.loggers=["Akka.Logger.NLog.NLogLogger, Akka.Logger.NLog"]
 #akka.persistence.snapshot-store.sqlite.connection-string = "Data Source=../../../akka_demo.db"
 
 ### Jonfile Snapshot ###
-		        akka.persistence.snapshot-store.jonfile.class = "SnapShotStore.FileSnapshotStore3, SnapShotStore"
+akka.persistence.snapshot-store.jonfile.class = "SnapShotStore.FileSnapshotStore3, SnapShotStore"
 akka.persistence.snapshot-store.jonfile.max-load-attempts=19
 akka.persistence.snapshot-store.jonfile.dir = "C:\\temp"
 akka.persistence.snapshot-store.jonfile.plugin-dispatcher = "akka.actor.default-dispatcher"
 akka.persistence.snapshot-store.plugin = "akka.persistence.snapshot-store.jonfile"
+akka.persistence.max-concurrent-recoveries = 50
+akka.persistence.journal-plugin.recovery-event-timeout = 90s
+akka.persistence.journal-plugin-fallback.recovery-event-timeout = 90s
 
 ### Kafka Config ####
 Akka.NumAccountPublisherActor = 10 
 Akka.NumPortfolioPublisherActor = 10 
-Akka.AccountStateTopicName = "jontest103" 
-Kafka.BrokerList = "docker01.concordservicing.com:29092,docker02.concordservicing.com:29092,docker03.concordservicing.com:29092"
+Akka.AccountStateTopicName = "AccountState" 
+Akka.PortfolioStateTopicName = "PortfolioState" 
+Kafka.BrokerList = "docker07.concordservicing.com:29092,docker08.concordservicing.com:29092,docker09.concordservicing.com:29092"
 
 ### StatsD Config ##
 Akka.StatsDServer = "docker04"

@@ -21,13 +21,17 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                     .Obligations
                     .Where(x => x.Value.Status == ObligationStatus.Active)
                     .Select(y => y.Value).First();
+            if (command is BillingAssessment b)
+            {
+                LineItems = b.LineItems ?? new List<InvoiceLineItem>();
+            }
 
             if (maintenanceFeeToUse != null)
             {
                 foreach (var item in LineItems)
                 {
                     var @event =
-                        new ObligationAssessedConcept(maintenanceFeeToUse.ObligationNumber, item.Item);
+                        new AccountBusinessRuleValidationSuccess(maintenanceFeeToUse.ObligationNumber, "AccountBusinessRuleValidationSuccess on AnObligationMustBeActiveForBilling");
                     _eventsGenerated.Add(@event);
                 }
 

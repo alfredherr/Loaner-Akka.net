@@ -47,7 +47,7 @@ namespace Loaner.API.Controllers
                 });
                 return Response.AsJson(answer);
             });
-            Get("/businessrules", async args => { return AccountBusinessRulesMapper.GetCommandsToBusinesRules(); });
+            Get("/businessrules", async args => { return new AccountBusinessRulesMapper().GetCommandsToBusinesRules(); });
 
             Post("/businessrules", async args =>
             {
@@ -55,7 +55,7 @@ namespace Loaner.API.Controllers
                 string text = reader.ReadToEnd();
                 var newRules = JsonConvert.DeserializeObject<AccountBusinessRuleMapModel[]>(text);
 
-                var proof = AccountBusinessRulesMapper.UpdateAccountBusinessRules(updatedRules: newRules.ToList());
+                var proof = new AccountBusinessRulesMapper().UpdateAccountBusinessRules(updatedRules: newRules.ToList());
 
                 return new BusinessRulesMapModel() {Message = $"Info as of: {DateTime.Now}", RulesMap = proof};
             });
