@@ -58,7 +58,8 @@ akka.loggers=["Akka.Logger.NLog.NLogLogger, Akka.Logger.NLog"]
 ### Jonfile Snapshot ###
 akka.persistence.snapshot-store.jonfile.class = "SnapShotStore.FileSnapshotStore3, SnapShotStore"
 akka.persistence.snapshot-store.jonfile.max-load-attempts=19
-akka.persistence.snapshot-store.jonfile.dir = "/demo/db"
+#akka.persistence.snapshot-store.jonfile.dir = "/demo/db"
+akka.persistence.snapshot-store.jonfile.dir = "C:\\Temp"
 akka.persistence.snapshot-store.jonfile.plugin-dispatcher = "akka.actor.default-dispatcher"
 akka.persistence.snapshot-store.plugin = "akka.persistence.snapshot-store.jonfile"
 akka.persistence.max-concurrent-recoveries = 50
@@ -78,8 +79,10 @@ Akka.StatsDPort   = 8125
 Akka.StatsDPrefix = "akka-demo" 
 
 ### Business Rules Config ###
-Akka.BusinessRulesFilename = "/demo/business_rules_map.rules"
-Akka.CommandsToRulesFilename = "/demo/commands_to_rules.rules"
+#Akka.BusinessRulesFilename = "/demo/business_rules_map.rules"
+#Akka.CommandsToRulesFilename = "/demo/commands_to_rules.rules"
+Akka.BusinessRulesFilename = "c:\\Temp\\business_rules_map.rules"
+Akka.CommandsToRulesFilename = "c:\\Temp\\commands_to_rules.rules"
 
 
 ### Akka Clustering Config ###
