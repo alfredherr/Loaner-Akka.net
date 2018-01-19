@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using Loaner.KafkaProducer.Commands;
 
 namespace Loaner
 {

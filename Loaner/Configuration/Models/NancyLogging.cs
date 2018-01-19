@@ -1,4 +1,4 @@
-﻿namespace Loaner.Configuration
+﻿namespace Loaner.Configuration.Models
 {
     public class NancyLogging
     {

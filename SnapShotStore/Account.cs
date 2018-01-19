@@ -1,5 +1,4 @@
-﻿using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
 namespace SnapShotStore
 {
@@ -9,35 +8,6 @@ namespace SnapShotStore
         {
             AccountID = accountID;
         }
-
-        public string AccountID { get; private set; }
-        public string CompanyIDCustomerID { get; set; }
-        public string AccountTypeID { get; set; }
-        public string PrimaryAccountCodeID { get; set; }
-        public int PortfolioID { get; set; }
-        public string ContractDate { get; set; }
-        public string DelinquencyHistory { get; set; }
-        public string LastPaymentAmount { get; set; }
-        public string LastPaymentDate { get; set; }
-        public string SetupDate { get; set; }
-        public string CouponNumber { get; set; }
-        public string AlternateAccountNumber { get; set; }
-        public string Desc1 { get; set; }
-        public string Desc2 { get; set; }
-        public string Desc3 { get; set; }
-        public string ConversionAccountID { get; set; }
-        public string SecurityQuestionsAnswered { get; set; }
-        public string LegalName { get; set; }
-        public string RandomText0 { get; set; }
-        public string RandomText1 { get; set; }
-        public string RandomText2 { get; set; }
-        public string RandomText3 { get; set; }
-        public string RandomText4 { get; set; }
-        public string RandomText5 { get; set; }
-        public string RandomText6 { get; set; }
-        public string RandomText7 { get; set; }
-        public string RandomText8 { get; set; }
-        public string RandomText9 { get; set; }
 
         protected Account(SerializationInfo info, StreamingContext context)
         {
@@ -71,8 +41,37 @@ namespace SnapShotStore
             RandomText9 = info.GetString("RandomText9");
         }
 
+        public string AccountID { get; }
+        public string CompanyIDCustomerID { get; set; }
+        public string AccountTypeID { get; set; }
+        public string PrimaryAccountCodeID { get; set; }
+        public int PortfolioID { get; set; }
+        public string ContractDate { get; set; }
+        public string DelinquencyHistory { get; set; }
+        public string LastPaymentAmount { get; set; }
+        public string LastPaymentDate { get; set; }
+        public string SetupDate { get; set; }
+        public string CouponNumber { get; set; }
+        public string AlternateAccountNumber { get; set; }
+        public string Desc1 { get; set; }
+        public string Desc2 { get; set; }
+        public string Desc3 { get; set; }
+        public string ConversionAccountID { get; set; }
+        public string SecurityQuestionsAnswered { get; set; }
+        public string LegalName { get; set; }
+        public string RandomText0 { get; set; }
+        public string RandomText1 { get; set; }
+        public string RandomText2 { get; set; }
+        public string RandomText3 { get; set; }
+        public string RandomText4 { get; set; }
+        public string RandomText5 { get; set; }
+        public string RandomText6 { get; set; }
+        public string RandomText7 { get; set; }
+        public string RandomText8 { get; set; }
+        public string RandomText9 { get; set; }
 
-        public bool Equals (Account acc)
+
+        public bool Equals(Account acc)
         {
             // Compare only a few things
             if (!AccountID.Equals(acc.AccountID)) return false;
@@ -82,9 +81,6 @@ namespace SnapShotStore
             return true;
         }
     }
-
-
-
 
 
     /*

@@ -1,5 +1,6 @@
 ﻿using System;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainModels.Serizalizers.Json;
+using Loaner.Configuration.Models;
 using Nancy;
 using Nancy.Bootstrapper;
 using Nancy.Configuration;

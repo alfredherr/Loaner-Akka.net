@@ -1,51 +1,21 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using Akka;
-using Akka.Actor;
 using Akka.Event;
 using Akka.Persistence;
-
+using SnapShotStore.Messages;
 
 namespace SnapShotStore
 {
     #region Command and Message classes
-    public class SomeMessage
-    {
-    }
-
-    public class DisplayState
-    {
-    }
-
-
-    public class CompareState
-    {
-        public CompareState(Account acc)
-        {
-            Acc = acc;
-        }
-
-        public Account Acc { get; private set; }
-    }
 
     #endregion
 
-    class TestActor : ReceivePersistentActor
+    internal class TestActor : ReceivePersistentActor
     {
-        private ILoggingAdapter _log;
+        private readonly ILoggingAdapter _log;
 
         // The actor state to be persisted
         private Account Acc;
         private string AccountId;
-        public override string PersistenceId
-        {
-            get
-            {
-                return (string)AccountId;
-            }
-        }
 
         public TestActor(Account acc)
         {
@@ -54,7 +24,7 @@ namespace SnapShotStore
             // Store the actor state 
             Acc = acc;
             AccountId = acc.AccountID;
-            
+
             Setup();
         }
 
@@ -66,9 +36,10 @@ namespace SnapShotStore
             Setup();
         }
 
+        public override string PersistenceId => AccountId;
+
         private void Setup()
         {
-
             // Display the configuration for the dispatcher
             // Get the configuration
 //            Console.WriteLine("Name={0}", Context.Self.Path);
@@ -90,7 +61,6 @@ namespace SnapShotStore
         }
 
 
-
         private void SnapshotSuccess(SaveSnapshotSuccess cmd)
         {
             _log.Debug("Processing SnapShotSuccess command, ID={0}", Acc.AccountID);
@@ -98,7 +68,8 @@ namespace SnapShotStore
 
         private void SnapshotFailure(SaveSnapshotFailure cmd)
         {
-            _log.Debug("Processing SnapShotFailure command, ID={0}, cause={1} \nStacktrace={2}", Acc.AccountID, cmd.Cause.Message, cmd.Cause.StackTrace);
+            _log.Debug("Processing SnapShotFailure command, ID={0}, cause={1} \nStacktrace={2}", Acc.AccountID,
+                cmd.Cause.Message, cmd.Cause.StackTrace);
         }
 
         private void Process(SomeMessage msg)
@@ -117,13 +88,9 @@ namespace SnapShotStore
 
         private void RecoverSnapshot(SnapshotOffer offer)
         {
-            Acc = (Account)offer.Snapshot;
+            Acc = (Account) offer.Snapshot;
             AccountId = Acc.AccountID;
             _log.Debug("Finished Processing RecoverSnapshot, ID={0}", Acc.AccountID);
         }
-
-
-
-
     }
 }

@@ -1,57 +1,24 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using Akka;
+using System.IO;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Persistence;
-
+using SnapShotStore.Messages;
 
 namespace SnapShotStore
 {
     #region Command and Message classes
-    public class GenerateAccounts
-    {
-        public GenerateAccounts(string filename, int numAccountsToGenerate)
-        {
-            Filename = filename;
-            NumAccountsToGenerate = numAccountsToGenerate;        }
 
-        public string Filename { get; private set; }
-        public int NumAccountsToGenerate { get; private set; }
-
-    }
-
-    public class DisplayStatistics
-    {
-    }
-
-    public class PersistState
-    {
-    }
-
-    public class SendMsgs
-    {
-    }
     #endregion
 
-    class AccountGenerator : ReceivePersistentActor
+    internal class AccountGenerator : ReceivePersistentActor
     {
-        private ILoggingAdapter _log;
+        private readonly ILoggingAdapter _log;
 
         // The actor state to be persisted
         private List<string> AccountList;
-        IActorRef[] irefs;
-
-
-        public override string PersistenceId
-        {
-            get
-            {
-                return "AccountGenerator";
-            }
-        }
+        private IActorRef[] irefs;
 
         public AccountGenerator()
         {
@@ -69,13 +36,15 @@ namespace SnapShotStore
             Command<GenerateAccounts>(msg => Generate(msg));
         }
 
+
+        public override string PersistenceId => "AccountGenerator";
+
         protected override void PreStart()
         {
             _log.Debug("PreStart()");
 
             if (AccountList == null) AccountList = new List<string>(1000000);
         }
-
 
 
         private void SnapshotSuccess(SaveSnapshotSuccess cmd)
@@ -104,46 +73,42 @@ namespace SnapShotStore
         {
             _log.Debug("Send - Begin sending account actors a message to cause them to change their state");
 
-            for (int i = 0; i < irefs.Length; i++)
-            {
-                irefs[i].Tell(new SomeMessage());
-            }
+            for (var i = 0; i < irefs.Length; i++) irefs[i].Tell(new SomeMessage());
 
             _log.Debug("Send - End of sending account actor msgs");
-
         }
 
         private void RecoverSnapshot(SnapshotOffer offer)
         {
             _log.Debug("AccountGenerator - Processing RecoverSnapshot");
-            AccountList = (List<string>)offer.Snapshot;
+            AccountList = (List<string>) offer.Snapshot;
         }
 
         private void Generate(GenerateAccounts msg)
         {
             // Create the accounts 
-            List<Account> accounts = CreateAccounts(msg);
+            var accounts = CreateAccounts(msg);
 
             // Only create the actors that we need to
             int i;
             irefs = new IActorRef[msg.NumAccountsToGenerate];
 
             // Start the actors that have previously been created
-            for (i=0; i < msg.NumAccountsToGenerate && i < AccountList.Count; i++)
+            for (i = 0; i < msg.NumAccountsToGenerate && i < AccountList.Count; i++)
             {
-                Props testActorProps = Props.Create(() => new TestActor(AccountList[i]));
+                var testActorProps = Props.Create(() => new TestActor(AccountList[i]));
 
                 // Spread the actors across the systems to see if we get better performance
                 irefs[i] = Context.ActorOf(testActorProps, "testActor-" + i);
             }
 
-            int started = i;
+            var started = i;
             _log.Info("Generate - started {0} previously created actors", i);
 
             // Create any new actors that are needed
             for (; i < msg.NumAccountsToGenerate; i++)
             {
-                Props testActorProps = Props.Create(() => new TestActor(accounts[i]));
+                var testActorProps = Props.Create(() => new TestActor(accounts[i]));
                 // Spread the actors across the systems to see if we get better performance
                 irefs[i] = Context.ActorOf(testActorProps, "testActor-" + i);
 
@@ -211,22 +176,19 @@ namespace SnapShotStore
         }
 
 
-
-
         private List<Account> CreateAccounts(GenerateAccounts msg)
         {
             _log.Debug("AccountGenerator - Processing GenerateAccounts");
 
-            int counter = 0;
+            var counter = 0;
             string line;
-            List<Account> list = new List<Account>(msg.NumAccountsToGenerate);
+            var list = new List<Account>(msg.NumAccountsToGenerate);
 
             try
             {
-
                 // Read the file and display it line by line.  
-                System.IO.StreamReader file =
-                    new System.IO.StreamReader(msg.Filename);
+                var file =
+                    new StreamReader(msg.Filename);
 
                 _log.Debug("AccountGenerator - Start Account Generation");
 
@@ -238,13 +200,13 @@ namespace SnapShotStore
                         continue; // skip the headers in the file
                     }
 
-                    string[] tokens = line.Split(',');
-                    Account account = new Account(tokens[0]);
+                    var tokens = line.Split(',');
+                    var account = new Account(tokens[0]);
 
                     account.CompanyIDCustomerID = tokens[1];
                     account.AccountTypeID = tokens[2];
                     account.PrimaryAccountCodeID = tokens[3];
-                    account.PortfolioID = Int32.Parse(tokens[4]);
+                    account.PortfolioID = int.Parse(tokens[4]);
                     account.ContractDate = tokens[5];
                     account.DelinquencyHistory = tokens[6];
                     account.LastPaymentAmount = tokens[7];
@@ -258,15 +220,33 @@ namespace SnapShotStore
                     account.ConversionAccountID = tokens[15];
                     account.SecurityQuestionsAnswered = tokens[16];
                     account.LegalName = tokens[17];
-                    account.RandomText0 = Guid.NewGuid() + "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" + Guid.NewGuid();
-                    account.RandomText1 = Guid.NewGuid() + "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" + Guid.NewGuid();
-                    account.RandomText3 = Guid.NewGuid() + "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" + Guid.NewGuid();
-                    account.RandomText4 = Guid.NewGuid() + "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" + Guid.NewGuid();
-                    account.RandomText5 = Guid.NewGuid() + "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" + Guid.NewGuid();
-                    account.RandomText6 = Guid.NewGuid() + "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" + Guid.NewGuid();
-                    account.RandomText7 = Guid.NewGuid() + "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" + Guid.NewGuid();
-                    account.RandomText8 = Guid.NewGuid() + "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" + Guid.NewGuid();
-                    account.RandomText9 = Guid.NewGuid() + "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" + Guid.NewGuid();
+                    account.RandomText0 = Guid.NewGuid() +
+                                          "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" +
+                                          Guid.NewGuid();
+                    account.RandomText1 = Guid.NewGuid() +
+                                          "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" +
+                                          Guid.NewGuid();
+                    account.RandomText3 = Guid.NewGuid() +
+                                          "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" +
+                                          Guid.NewGuid();
+                    account.RandomText4 = Guid.NewGuid() +
+                                          "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" +
+                                          Guid.NewGuid();
+                    account.RandomText5 = Guid.NewGuid() +
+                                          "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" +
+                                          Guid.NewGuid();
+                    account.RandomText6 = Guid.NewGuid() +
+                                          "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" +
+                                          Guid.NewGuid();
+                    account.RandomText7 = Guid.NewGuid() +
+                                          "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" +
+                                          Guid.NewGuid();
+                    account.RandomText8 = Guid.NewGuid() +
+                                          "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" +
+                                          Guid.NewGuid();
+                    account.RandomText9 = Guid.NewGuid() +
+                                          "SOme random lot of text that is front and ended with a guid to make it uique and fairly long so it taxes the actor creation mechanism to determine if it takes too long" +
+                                          Guid.NewGuid();
 
                     // Store the Account in the List
                     list.Add(account);
@@ -278,18 +258,15 @@ namespace SnapShotStore
                 _log.Debug("AccountGenerator - Finish Account Generation");
 
                 file.Close();
-
             }
             catch (Exception e)
             {
-                Console.WriteLine("ERROR opening the faile that holds the data for the accounts. Filename={0}. Error={1}. Stacktrace={2}", msg.Filename, e.Message, e.StackTrace);
+                Console.WriteLine(
+                    "ERROR opening the faile that holds the data for the accounts. Filename={0}. Error={1}. Stacktrace={2}",
+                    msg.Filename, e.Message, e.StackTrace);
             }
 
             return list;
         }
     }
-
-
-
-
 }

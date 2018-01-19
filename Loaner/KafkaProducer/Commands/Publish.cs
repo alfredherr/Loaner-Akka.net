@@ -1,4 +1,4 @@
-﻿namespace Loaner.KafkaProducer
+﻿namespace Loaner.KafkaProducer.Commands
 {
     public class Publish
     {

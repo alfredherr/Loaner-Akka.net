@@ -1,4 +1,6 @@
-﻿namespace Loaner.Configuration
+﻿using Loaner.Configuration.Models;
+
+namespace Loaner.Configuration
 {
     public class AppConfiguration : IAppConfiguration
     {

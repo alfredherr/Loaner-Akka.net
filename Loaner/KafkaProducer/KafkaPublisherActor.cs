@@ -3,6 +3,7 @@ using Akka.Actor;
 using Akka.Event;
 using Akka.Monitoring;
 using Confluent.Kafka;
+using Loaner.KafkaProducer.Commands;
 using Newtonsoft.Json;
 
 namespace Loaner.KafkaProducer
