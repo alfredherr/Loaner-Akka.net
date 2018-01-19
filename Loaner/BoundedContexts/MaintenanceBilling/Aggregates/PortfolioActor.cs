@@ -3,6 +3,7 @@
 using System.Reflection;
 using Akka.Dispatch;
 using Loaner.KafkaProducer;
+using Loaner.KafkaProducer.Commands;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {

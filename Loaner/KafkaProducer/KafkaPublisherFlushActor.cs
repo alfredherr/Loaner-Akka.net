@@ -1,6 +1,7 @@
 ﻿using Akka.Actor;
 using Confluent.Kafka;
 using Akka.Monitoring;
+using Loaner.KafkaProducer.Commands;
 
 namespace Loaner.KafkaProducer
 {

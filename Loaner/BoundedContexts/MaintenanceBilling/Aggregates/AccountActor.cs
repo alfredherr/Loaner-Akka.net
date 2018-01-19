@@ -13,6 +13,7 @@ using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 using Loaner.KafkaProducer;
+using Loaner.KafkaProducer.Commands;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {
