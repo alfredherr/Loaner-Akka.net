@@ -1,12 +1,12 @@
-﻿namespace SnapShotStore.Messages
+﻿namespace SnapShotStore
 {
     public class RestoreSnapshot
     {
         public RestoreSnapshot(string id)
         {
-            ID = id;
+            this.ID = id;
         }
 
-        public string ID { get; }
+        public string ID { get; private set; }
     }
 }

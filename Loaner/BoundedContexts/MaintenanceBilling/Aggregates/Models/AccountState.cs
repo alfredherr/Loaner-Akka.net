@@ -9,6 +9,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 {
     public class AccountState
     {
+
         /**
          * Only two ways to initiate an Account State
          * All modifications to it must be immutable and done by the ApplyEvent() handler
@@ -126,7 +127,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                 AccountStatus,
                 Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog($"AccountBusinessRuleValidationSuccess on {occurred.Message}",
+                AuditLog.Add(new StateLog("AccountBusinessRuleValidationSuccess", $"AccountBusinessRuleValidationSuccess on {occurred.Message}",
                         occurred.UniqueGuid(),
                         occurred.OccurredOn()
                     )
@@ -142,7 +143,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             var newState = new AccountState(AccountNumber, CurrentBalance + (-1 * occurred.UacAmountApplied),
                 AccountStatus, Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("ObligationAssessedConcept", occurred.UniqueGuid(), occurred.OccurredOn())));
+                AuditLog.Add(new StateLog("UacAppliedAfterBilling", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
             //Console.WriteLine($"ObligationAssessedConcept: {occurred}");
             //Console.WriteLine($"New AccountState: {newState}");
 
@@ -157,7 +158,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             var newState = new AccountState(AccountNumber, CurrentBalance + occurred.TaxAmountApplied,
                 AccountStatus, Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("ObligationAssessedConcept", occurred.UniqueGuid(), occurred.OccurredOn())));
+                AuditLog.Add(new StateLog("TaxAppliedDuringBilling", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
             //Console.WriteLine($"ObligationAssessedConcept: {occurred}");
             //Console.WriteLine($"New AccountState: {newState}");
 
@@ -180,7 +181,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             return new AccountState(AccountNumber, CurrentBalance,
                 AccountStatus, Obligations,
                 LoadSimulation().ToImmutableDictionary(),
-                AuditLog.Add(new StateLog("SomeOneSaidHiToMe", occurred.UniqueGuid(), occurred.OccurredOn())));
+                AuditLog.Add(new StateLog("SomeOneSaidHiToMe",occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
         }
 
         private AccountState ApplyEvent(SuperSimpleSuperCoolDomainEventFoundByRules occurred)
@@ -188,18 +189,19 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             return new AccountState(AccountNumber, CurrentBalance,
                 AccountStatus, Obligations,
                 LoadSumulation(SimulatedFields, "1", "My state has been updated, see..."),
-                AuditLog.Add(new StateLog("SuperSimpleSuperCoolEventFoundByRules", occurred.UniqueGuid(),
+                AuditLog.Add(new StateLog("SuperSimpleSuperCoolEventFoundByRules", occurred.Message, occurred.UniqueGuid(),
                     occurred.OccurredOn())));
         }
 
         private AccountState ApplyEvent(ObligationAssessedConcept occurred)
         {
+            Console.WriteLine($"{AccountNumber}:{occurred.FinancialBucket};{occurred.FinancialBucket.Amount}");
             var trans = new FinancialTransaction(occurred.FinancialBucket, occurred.FinancialBucket.Amount);
             Obligations[occurred.ObligationNumber]?.PostTransaction(trans);
             var newState = new AccountState(AccountNumber, CurrentBalance + occurred.FinancialBucket.Amount,
                 AccountStatus, Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("ObligationAssessedConcept", occurred.UniqueGuid(), occurred.OccurredOn())));
+                AuditLog.Add(new StateLog("ObligationAssessedConcept", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
             //Console.WriteLine($"ObligationAssessedConcept: {occurred}");
             //Console.WriteLine($"New AccountState: {newState}");
 
@@ -211,7 +213,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             return new AccountState(AccountNumber, occurred.CurrentBalance,
                 AccountStatus, Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("AccountCurrentBalanceUpdated", occurred.UniqueGuid(),
+                AuditLog.Add(new StateLog("AccountCurrentBalanceUpdated", occurred.Message, occurred.UniqueGuid(),
                     occurred.OccurredOn())));
         }
 
@@ -220,7 +222,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             return new AccountState(AccountNumber, CurrentBalance,
                 occurred.AccountStatus, Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("AccountStatusChanged", occurred.UniqueGuid(), occurred.OccurredOn())));
+                AuditLog.Add(new StateLog("AccountStatusChanged", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
         }
 
         private AccountState ApplyEvent(AccountCancelled occurred)
@@ -228,7 +230,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             return new AccountState(AccountNumber, CurrentBalance,
                 occurred.AccountStatus, Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("AccountCancelled", occurred.UniqueGuid(), occurred.OccurredOn())));
+                AuditLog.Add(new StateLog("AccountCancelled", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
         }
 
         private AccountState ApplyEvent(ObligationAddedToAccount occurred)
@@ -237,7 +239,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                 AccountStatus,
                 Obligations.Add(occurred.MaintenanceFee.ObligationNumber, occurred.MaintenanceFee),
                 SimulatedFields,
-                AuditLog.Add(new StateLog("ObligationAddedToAccount", occurred.UniqueGuid(), occurred.OccurredOn())));
+                AuditLog.Add(new StateLog("ObligationAddedToAccount", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
         }
 
         private AccountState ApplyEvent(ObligationSettledConcept occurred)
@@ -247,14 +249,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             return new AccountState(AccountNumber, CurrentBalance,
                 AccountStatus, Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("ObligationSettledConcept", occurred.UniqueGuid(), occurred.OccurredOn())));
+                AuditLog.Add(new StateLog("ObligationSettledConcept", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
         }
 
         private AccountState ApplyEvent(AccountCreated occurred)
         {
             return new AccountState(occurred.AccountNumber,
                 LoadSimulation(),
-                AuditLog.Add(new StateLog("AccountCreated", occurred.UniqueGuid(), occurred.OccurredOn())));
+                AuditLog.Add(new StateLog("AccountCreated", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
         }
 
         /* Helpers */

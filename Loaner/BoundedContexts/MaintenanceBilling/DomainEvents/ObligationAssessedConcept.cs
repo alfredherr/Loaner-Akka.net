@@ -11,11 +11,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
             _OccurredOn = DateTime.Now;
         }
 
-        public ObligationAssessedConcept(string obligationNumber, IFinancialBucket bucket) : this()
+        public ObligationAssessedConcept(string obligationNumber, IFinancialBucket bucket, string message="") : this()
         {
             ObligationNumber = obligationNumber;
             FinancialBucket = bucket;
+            Message = message;
         }
+        public string Message { get; set; }
 
         public string ObligationNumber { get; }
         public IFinancialBucket FinancialBucket { get; }

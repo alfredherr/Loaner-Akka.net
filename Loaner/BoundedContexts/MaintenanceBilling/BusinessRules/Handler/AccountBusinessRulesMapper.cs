@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
@@ -37,8 +38,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                 )
                 .Select(ruleMap => ruleMap.BusinessRule)).ToImmutableList();
 
-            List<IAccountBusinessRule> rulesFound = rules.ToList() ;
+            List<IAccountBusinessRule> rulesFound = new List<IAccountBusinessRule>();
 
+            //And lastly add the command rule itself
+            rulesFound.Add(new BillingAssessmentRule() );
+            rulesFound.AddRange(rules.ToList());
             return rulesFound;
         }
 

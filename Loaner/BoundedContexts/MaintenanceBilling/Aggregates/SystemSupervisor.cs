@@ -245,7 +245,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             SaveSnapshot(state.ToArray());
 
-            _log.Info($"SystemSupervisor Snapshot taken of {state.Count} portolios. LastSequenceNr is {LastSequenceNr}.");
+            _log.Info($"SystemSupervisor Snapshot taken of {state.Count} portfolios. LastSequenceNr is {LastSequenceNr}.");
 
             Context.IncrementCounter("SnapShotTaken");
             }

@@ -1,4 +1,4 @@
-﻿namespace SnapShotStore.Messages
+﻿namespace SnapShotStore
 {
     public class PersistState
     {

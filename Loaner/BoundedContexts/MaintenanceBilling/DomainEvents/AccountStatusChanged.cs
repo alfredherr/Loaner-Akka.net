@@ -11,12 +11,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
             _OccurredOn = DateTime.Now;
         }
 
-        public AccountStatusChanged(string accountNumber, AccountStatus status) : this()
+        public AccountStatusChanged(string accountNumber, AccountStatus status, string message="") : this()
         {
+            Message = message;
             AccountStatus = status;
             AccountNumber = accountNumber;
         }
-
+        public string Message { get; set; }
         public AccountStatus AccountStatus { get; }
         public string AccountNumber { get; }
         private DateTime _OccurredOn { get; }

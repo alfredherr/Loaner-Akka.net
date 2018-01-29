@@ -108,6 +108,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             // Process all business rules
             ApplyBusinessRules(command);
             double total = command.LineItems.Aggregate(0.0,(accomulator,next ) => accomulator + next.Item.Amount);
+            
+
             // Let parent portfolio know my current balances
             Context.Parent.Tell(
                 new RegisterMyAccountBilling(_accountState.AccountNumber,

@@ -1,4 +1,6 @@
-﻿using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization;
+using System.Collections.Generic;
 
 namespace SnapShotStore
 {
@@ -9,39 +11,7 @@ namespace SnapShotStore
             AccountID = accountID;
         }
 
-        protected Account(SerializationInfo info, StreamingContext context)
-        {
-            AccountID = info.GetString("AccountID");
-            CompanyIDCustomerID = info.GetString("CompanyIDCustomerID");
-            AccountTypeID = info.GetString("AccountTypeID");
-            PrimaryAccountCodeID = info.GetString("PrimaryAccountCodeID");
-            PortfolioID = info.GetInt32("PortfolioID");
-            ContractDate = info.GetString("ContractDate");
-            DelinquencyHistory = info.GetString("DelinquencyHistory");
-            LastPaymentAmount = info.GetString("LastPaymentAmount");
-            LastPaymentDate = info.GetString("LastPaymentDate");
-            SetupDate = info.GetString("SetupDate");
-            CouponNumber = info.GetString("CouponNumber");
-            AlternateAccountNumber = info.GetString("AlternateAccountNumber");
-            Desc1 = info.GetString("Desc1");
-            Desc2 = info.GetString("Desc2");
-            Desc3 = info.GetString("Desc3");
-            ConversionAccountID = info.GetString("ConversionAccountID");
-            SecurityQuestionsAnswered = info.GetString("SecurityQuestionsAnswered");
-            LegalName = info.GetString("LegalName");
-            RandomText0 = info.GetString("RandomText0");
-            RandomText1 = info.GetString("RandomText1");
-            RandomText2 = info.GetString("RandomText2");
-            RandomText3 = info.GetString("RandomText3");
-            RandomText4 = info.GetString("RandomText4");
-            RandomText5 = info.GetString("RandomText5");
-            RandomText6 = info.GetString("RandomText6");
-            RandomText7 = info.GetString("RandomText7");
-            RandomText8 = info.GetString("RandomText8");
-            RandomText9 = info.GetString("RandomText9");
-        }
-
-        public string AccountID { get; }
+        public string AccountID { get; private set; }
         public string CompanyIDCustomerID { get; set; }
         public string AccountTypeID { get; set; }
         public string PrimaryAccountCodeID { get; set; }
@@ -69,39 +39,53 @@ namespace SnapShotStore
         public string RandomText7 { get; set; }
         public string RandomText8 { get; set; }
         public string RandomText9 { get; set; }
+        public Dictionary<string, string> LargeAccount1 { get; set; }
+        public List<float> LargeAccount2 { get; set; }
+        public long[] LongValues { get; set; }
+        /*
+                protected Account(SerializationInfo info, StreamingContext context)
+                {
+                    AccountID = info.GetString("AccountID");
+                    CompanyIDCustomerID = info.GetString("CompanyIDCustomerID");
+                    AccountTypeID = info.GetString("AccountTypeID");
+                    PrimaryAccountCodeID = info.GetString("PrimaryAccountCodeID");
+                    PortfolioID = info.GetInt32("PortfolioID");
+                    ContractDate = info.GetString("ContractDate");
+                    DelinquencyHistory = info.GetString("DelinquencyHistory");
+                    LastPaymentAmount = info.GetString("LastPaymentAmount");
+                    LastPaymentDate = info.GetString("LastPaymentDate");
+                    SetupDate = info.GetString("SetupDate");
+                    CouponNumber = info.GetString("CouponNumber");
+                    AlternateAccountNumber = info.GetString("AlternateAccountNumber");
+                    Desc1 = info.GetString("Desc1");
+                    Desc2 = info.GetString("Desc2");
+                    Desc3 = info.GetString("Desc3");
+                    ConversionAccountID = info.GetString("ConversionAccountID");
+                    SecurityQuestionsAnswered = info.GetString("SecurityQuestionsAnswered");
+                    LegalName = info.GetString("LegalName");
+                    RandomText0 = info.GetString("RandomText0");
+                    RandomText1 = info.GetString("RandomText1");
+                    RandomText2 = info.GetString("RandomText2");
+                    RandomText3 = info.GetString("RandomText3");
+                    RandomText4 = info.GetString("RandomText4");
+                    RandomText5 = info.GetString("RandomText5");
+                    RandomText6 = info.GetString("RandomText6");
+                    RandomText7 = info.GetString("RandomText7");
+                    RandomText8 = info.GetString("RandomText8");
+                    RandomText9 = info.GetString("RandomText9");
+                }
 
 
-        public bool Equals(Account acc)
-        {
-            // Compare only a few things
-            if (!AccountID.Equals(acc.AccountID)) return false;
-            if (!CouponNumber.Equals(acc.CouponNumber)) return false;
-            if (!RandomText0.Equals(acc.RandomText0)) return false;
+                public bool Equals (Account acc)
+                {
+                    // Compare only a few things
+                    if (!AccountID.Equals(acc.AccountID)) return false;
+                    if (!CouponNumber.Equals(acc.CouponNumber)) return false;
+                    if (!RandomText0.Equals(acc.RandomText0)) return false;
 
-            return true;
-        }
+                    return true;
+                }
+            }
+        */
     }
-
-
-    /*
-
-    "AccountID" string(15)  NOT NULL ,
-    "CompanyIDCustomerID" string(26)  NOT NULL ,
-    "AccountTypeID" string(6)  NOT NULL ,
-    "PrimaryAccountCodeID" string(6)  NOT NULL ,
-    "PortfolioID" int  NOT NULL ,
-    "ContractDate" date  NOT NULL ,
-    "DelinquencyHistory" string(max)  NOT NULL ,
-    "LastPaymentAmount" money  NOT NULL ,
-    "LastPaymentDate" date  NOT NULL ,
-    "SetupDate" date  NOT NULL ,
-    "CouponNumber" int  NOT NULL ,
-    "AlternateAccountNumber" string(20)  NOT NULL ,
-    "Desc1" string(6)  NOT NULL ,
-    "Desc2" string(6)  NOT NULL ,
-    "Desc3" string(6)  NOT NULL ,
-    "ConversionAccountID" string(30)  NOT NULL ,
-    "SecurityQuestionsAnswered" bit  NOT NULL ,
-    "LegalName" string(1000)  NOT NULL ,
-     */
 }

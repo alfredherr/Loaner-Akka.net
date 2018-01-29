@@ -14,12 +14,14 @@ my %unique=();
 my $portfolio = "ABC";
 print STDOUT "The first portfolio is: $portfolio\n";
 my $portfolio_splitter = 0;
+my $account_number = 10000000000;
 for(my $i = 1; $i <= $NumberOfRecords ; $i++ ){
     my $number = '';
-    for (1..$Length) {
-        $number .= $Chars[int rand @Chars];
-    }
-   
+    #for (1..$Length) {
+    #    $number .= $Chars[int rand @Chars];
+    #}
+    $number = $account_number++;
+
      if($portfolio_splitter != 0 &&  $portfolio_splitter % $RecordsPerPortfolio == 0){
          $portfolio = join('', map +(q(A)..q(Z))[rand(26)], 1..3);
          print STDOUT "$portfolio_splitter new portfolio: $portfolio\n";

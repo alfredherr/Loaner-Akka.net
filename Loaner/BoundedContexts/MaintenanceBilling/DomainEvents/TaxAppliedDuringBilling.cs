@@ -15,13 +15,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
             TaxAmountApplied = taxAmount;
         }
 
-        public TaxAppliedDuringBilling(string accountNumber, string obligationNumber, double taxAmount) : this()
+        public TaxAppliedDuringBilling(string accountNumber, string obligationNumber, double taxAmount, string message="") : this()
         {
             TaxAmountApplied = taxAmount;
             AccountNumber = accountNumber;
             ObligationNumber = obligationNumber;
+            Message = message;
         }
-
+        public string Message { get; set; }
         public string AccountNumber { get; }
         public string ObligationNumber { get; }
         private DateTime _OccurredOn { get; }

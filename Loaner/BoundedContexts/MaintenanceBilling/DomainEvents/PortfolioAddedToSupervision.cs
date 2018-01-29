@@ -10,11 +10,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
             _OccurredOn = DateTime.Now;
         }
 
-        public PortfolioAddedToSupervision(string portfolioName) : this()
+        public PortfolioAddedToSupervision(string portfolioName, string message="") : this()
         {
             PortfolioNumber = portfolioName;
+            Message = message;
         }
-
+        public string Message { get; set; }
         public string PortfolioNumber { get; set; }
         private DateTime _OccurredOn { get; }
         private Guid _UniqueGuid { get; }

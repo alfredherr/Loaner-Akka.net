@@ -16,6 +16,20 @@
 akka.actor.debug.lifecycle = on
 akka.actor.debug.unhandled = on
 
+ 
+my-boarding-dispatcher {
+    type = TaskDispatcher
+    throughput = 10000
+}
+akka.actor.deployment {
+ 
+	/ClientRaintreeRouter {
+        dispatcher = my-boarding-dispatcher
+    }
+	/ClientRAINTREE {
+        dispatcher = my-boarding-dispatcher
+    }
+}
 
 akka.loglevel = INFO
 
@@ -63,8 +77,9 @@ akka.persistence.snapshot-store.jonfile.dir = "C:\\Temp"
 akka.persistence.snapshot-store.jonfile.plugin-dispatcher = "akka.actor.default-dispatcher"
 akka.persistence.snapshot-store.plugin = "akka.persistence.snapshot-store.jonfile"
 akka.persistence.max-concurrent-recoveries = 50
-akka.persistence.journal-plugin.recovery-event-timeout = 90s
-akka.persistence.journal-plugin-fallback.recovery-event-timeout = 90s
+akka.persistence.journal-plugin.recovery-event-timeout = 1201s
+akka.persistence.journal-plugin-fallback.recovery-event-timeout = 1200s
+max-snapshot-size=400000
 
 ### Kafka Config ####
 Akka.NumAccountPublisherActor = 10 

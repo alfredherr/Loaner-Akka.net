@@ -25,7 +25,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                     break;
                 }
             }
-            if (duesAmount != 0.00)
+            if (duesAmount <= 0.00)
             {
                 _eventsGenerated = new List<IDomainEvent>
                 {

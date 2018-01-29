@@ -15,7 +15,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
             Message = message;
         }
 
-        public AccountBusinessRuleValidationFailure(string accountNumber, string message) : this()
+        public AccountBusinessRuleValidationFailure(string accountNumber, string message = "") : this()
         {
             Message = message;
             AccountNumber = accountNumber;

@@ -42,7 +42,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Receive<FailedToLoadObligations>(m => Self.Tell(typeof(Stop)));
             Receive<SaveSnapshotSuccess>(m => { });
             Receive<DeleteMessagesSuccess>(m => { });
-
+            Receive<DeleteSnapshotsSuccess>(msg => { });
             ReceiveAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
 
@@ -54,7 +54,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             var supervisor = Context.Parent;
             var counter = 0;
 
-            _log.Info($"Procesing boarding command... ");
+            _log.Info($"Processing boarding command... ");
 
             GetAccountsForClient(accountsFilePath, obligationsFilePath);
 

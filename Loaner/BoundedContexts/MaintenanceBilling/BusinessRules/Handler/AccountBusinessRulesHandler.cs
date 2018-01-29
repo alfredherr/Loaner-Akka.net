@@ -26,17 +26,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 
             log.Debug($"Found {rules.Count} account business rules for account {accountState.AccountNumber}");
 
-            //if (comnd is BillingAssessment c)
-            //{
-            //    var buckets = c.LineItems.Aggregate("", (x, y) => $"{x} \n name:{y.Item.Name} amount:{y.Item.Amount}");
-            //    log.Debug(
-            //        $"{accountState.AccountNumber} has been asked to bill financial concepts {buckets}");
-            //}
-            //else
-            //{
-            //    throw new Exception($"what is {comnd.GetType().Name}");
-            //}
-
             BusinessRuleApplicationResultModel resultModel = new BusinessRuleApplicationResultModel();
 
             AccountState pipedState = AccountState.Clone(accountState);

@@ -90,7 +90,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         }
         private void ReportDebugInfo(ReportDebugInfo msg)
         {
-            var active = _accounts.Aggregate(0, (x, y) => x + ( (y.Value == null || y.Value == ActorRefs.Nobody) ? 0 : 1) );
+            var active = _accounts.Aggregate(0, (x, y) => x + ( (y.Value == null || y.Value.Equals(ActorRefs.Nobody)) ? 0 : 1) );
             _log.Info(
                 $"DebugInfo: {Self.Path.Name} has {_accounts.Count} accounts under supervision " + 
                 $"of which, {active} are active " +
