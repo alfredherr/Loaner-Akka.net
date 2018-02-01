@@ -16,9 +16,8 @@
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseKestrel()
                 .UseStartup<Startup>()
-                //.UseNLog()
+		        .UseUrls("http://*:5050")
                 .Build();
-
             host.Run();
         }
     }

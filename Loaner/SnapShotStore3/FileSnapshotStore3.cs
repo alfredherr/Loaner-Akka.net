@@ -1,22 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.Serialization;
-using Akka.Persistence.Snapshot;
-using Akka.Persistence.Serialization;
-using Akka.Persistence;
-using System.Threading.Tasks;
-using Akka.Event;
-using Akka.Dispatch;
-using Akka.Serialization;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Collections;
-using System.Threading;
 using System.Collections.Concurrent;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Akka.Dispatch;
+using Akka.Event;
+using Akka.Persistence;
+using Akka.Persistence.Snapshot;
 
-namespace SnapShotStore
+namespace Loaner.SnapShotStore3
 {
     /* STUFF TO DO
      * 1. Check that the sequence of event is correct. Snapshot offer does not seem to work
@@ -27,14 +22,14 @@ namespace SnapShotStore
      * 
      */
 
-    class FileSnapshotStore3 : SnapshotStore
+    public class FileSnapshotStore3 : SnapshotStore
     {
         // Counters for debug
         long _loadasync = 0;
         long _load = 0;
         long _saveasync = 0;
         long _save = 0;
-        int _smeMaxLength = 0;
+        //int _smeMaxLength = 0;
         int _readSME = 0;
 
         // Locks to prevent thread collision

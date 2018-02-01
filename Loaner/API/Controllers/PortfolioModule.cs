@@ -1,8 +1,6 @@
 ﻿using System.Dynamic;
-using System.IO;
 using System.Linq;
 using Hyperion.Extensions;
-using Newtonsoft.Json;
 
 namespace Loaner.API.Controllers
 {
@@ -18,22 +16,7 @@ namespace Loaner.API.Controllers
     using Nancy;
     using Nancy.ModelBinding;
 
-    
-        public static class DynamicModelBinder
-        {
-            public static dynamic ToDynamic(this NancyContext context)
-            {
-                var serializer = new JsonSerializer();
-                using (var sr = new StreamReader(context.Request.Body))
-                {
-                    using (var jsonTextReader = new JsonTextReader(sr))
-                    {
-                        return serializer.Deserialize(jsonTextReader);
-                    }
-                }
-            }
-        }
-    
+
     public class PortfolioModule : NancyModule
     {
         public PortfolioModule() : base("/api/portfolio")

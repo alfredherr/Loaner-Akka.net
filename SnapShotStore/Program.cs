@@ -32,7 +32,7 @@ namespace SnapShotStore
             }
             catch (Exception e)
             {
-                //Console.WriteLine("ERROR trying to obtain value for Env var: ENV NUM_ACTORS & FILENAME. Exception msg={0}", e.Message);
+                Console.WriteLine("ERROR trying to obtain value for Env var: ENV NUM_ACTORS & FILENAME. Exception msg={0}", e.Message);
                 //return;
             }
 

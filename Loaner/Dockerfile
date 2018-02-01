@@ -13,4 +13,6 @@ RUN dotnet publish -c Release -o out
 FROM microsoft/dotnet:runtime
 WORKDIR /app
 COPY --from=build-env /app/out ./
+COPY --from=build-env /app/ ./
+EXPOSE 80
 ENTRYPOINT ["dotnet", "Loaner.dll"]

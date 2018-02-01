@@ -8,16 +8,6 @@ namespace Loaner.Configuration
     using Newtonsoft.Json;
 
 
-    public class CustomJavaScriptSerializer : JavaScriptSerializer
-    {
-        public CustomJavaScriptSerializer()
-        {
-            this.RegisterConverters(new[]{new CustomFinancialBucketConverter()});
-        }
-    }
-    
-
-
     public class CustomFinancialBucketConverter : JavaScriptConverter
     {
      
