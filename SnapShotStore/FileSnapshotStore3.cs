@@ -27,7 +27,7 @@ namespace Loaner.SnapShotStore3
      * 
      */
 
-    public class FileSnapshotStore3 : SnapshotStore
+    class FileSnapshotStore3 : SnapshotStore
     {
         // Counters for debug
         long _loadasync = 0;
@@ -73,15 +73,14 @@ namespace Loaner.SnapShotStore3
 
         // Create the map to the items held in the snapshot store
         private const int INITIAL_SIZE = 1000000;
-        private ConcurrentDictionary<string, SnapshotMapEntry> SnapshotMap = new ConcurrentDictionary<string, SnapshotMapEntry>(NUM_READ_THREADS + 1, INITIAL_SIZE);
+        private ConcurrentDictionary<string, SnapshotMapEntry> SnapshotMap = new ConcurrentDictionary<string, SnapshotMapEntry>(NUM_READ_THREADS+1, INITIAL_SIZE);
 
         // Structure to hold the read streams, one per read thread
         private FileStream[] _readStreams = new FileStream[NUM_READ_THREADS];
 
         public FileSnapshotStore3()
         {
-            try
-            {
+            try { 
                 // Get the configuration
                 var config = Context.System.Settings.Config.GetConfig("akka.persistence.snapshot-store.jonfile");
                 _maxLoadAttempts = config.GetInt("max-load-attempts");
@@ -128,7 +127,7 @@ namespace Loaner.SnapShotStore3
                 _log.Error("Error opening the snapshot store file, error: {0}", e.StackTrace);
                 throw e;
             }
-        }
+        }       
 
         protected override Task DeleteAsync(SnapshotMetadata metadata)
         {
@@ -185,8 +184,7 @@ namespace Loaner.SnapShotStore3
                 int streamId = getReadStream();
 
                 return RunWithStreamDispatcher(() => Load(streamId, metadata));
-            }
-            catch (Exception e)
+            } catch (Exception e)
             {
                 _log.Error("ERROR in LoadAsync(). Message={0}\nStacktrace={1}", e.Message, e.StackTrace);
                 return null;
@@ -206,8 +204,7 @@ namespace Loaner.SnapShotStore3
             {
                 _currentStreamId = 0;
                 return _currentStreamId;
-            }
-            else
+            } else
             {
                 return ++_currentStreamId;
             }
@@ -313,7 +310,7 @@ namespace Loaner.SnapShotStore3
             // Get the snapshot map entry to locate where in the file the snapshot is stored
             if (!SnapshotMap.TryGetValue(metadata.PersistenceId, out SnapshotMapEntry sme)) return null;
 
-            //            _log.Debug("Load() - persistenceId={0}\t pos={1}\t length={2}", metadata.PersistenceId, sme.Position, sme.Length);
+//            _log.Debug("Load() - persistenceId={0}\t pos={1}\t length={2}", metadata.PersistenceId, sme.Position, sme.Length);
 
             // Find the id in the map to get the position within the file
             SelectedSnapshot snapshot = null;
@@ -466,8 +463,7 @@ namespace Loaner.SnapShotStore3
                                 _log.Error("Failed to update sme in map. PersistenceId={0}", sme.Metadata.PersistenceId);
                             }
                         }
-                    }
-                    else
+                    } else
                     {
                         // No point in continuing if there was a problem reading a snapshot map entry form the file
                         break;
@@ -685,100 +681,100 @@ namespace Loaner.SnapShotStore3
 
             return null;
         }
-        /*
-                private SnapshotMapEntry ReadSME(FileStream stream)
+/*
+        private SnapshotMapEntry ReadSME(FileStream stream)
+        {
+            _readSME++;
+            try
+            {
+                var pos = stream.Position;
+
+                // Get the Snapshot Map Entry attributes from the file
+                var lengthBuffer = new byte[SIZE_OF_PERSISTENCE_ID_LENGTH];
+
+                // Determine the size of the PersistenceId
+                stream.Read(lengthBuffer, 0, lengthBuffer.Length);
+                int length = (lengthBuffer[0] << 24 | (lengthBuffer[1] & 0xFF) << 16 | (lengthBuffer[2] & 0xFF) << 8 | (lengthBuffer[3] & 0xFF));
+                var buffer = new byte[length + SIZE_OF_SEQ_NUM + SIZE_OF_DATE_TIME + SIZE_OF_SNAPSHOT_LENGTH + SIZE_OF_SNAPSHOT_POSITION + SIZE_OF_DELETED];
+
+                // Check to see if the length read is greate than written, only works if keep the SW running and do not STOP
+                // TODO remove this after debug
+                if (length > 1000)
                 {
-                    _readSME++;
-                    try
-                    {
-                        var pos = stream.Position;
-
-                        // Get the Snapshot Map Entry attributes from the file
-                        var lengthBuffer = new byte[SIZE_OF_PERSISTENCE_ID_LENGTH];
-
-                        // Determine the size of the PersistenceId
-                        stream.Read(lengthBuffer, 0, lengthBuffer.Length);
-                        int length = (lengthBuffer[0] << 24 | (lengthBuffer[1] & 0xFF) << 16 | (lengthBuffer[2] & 0xFF) << 8 | (lengthBuffer[3] & 0xFF));
-                        var buffer = new byte[length + SIZE_OF_SEQ_NUM + SIZE_OF_DATE_TIME + SIZE_OF_SNAPSHOT_LENGTH + SIZE_OF_SNAPSHOT_POSITION + SIZE_OF_DELETED];
-
-                        // Check to see if the length read is greate than written, only works if keep the SW running and do not STOP
-                        // TODO remove this after debug
-                        if (length > 1000)
-                        {
-                            // Something is terribly wrong !!
-                            _log.Error("Read an SME entry from the file that is longer than something written. Length read = {0}, max length written = {1}, bytes representing length = {2}",
-                                length, _smeMaxLength, lengthBuffer);
-                        }
-
-                        // Get the PersistenceID string from the file
-                        var bytesRead = stream.Read(buffer, 0, buffer.Length);
-                        var persistenceId = Encoding.ASCII.GetString(buffer, 0, length);
-
-                        int offset = length;
-                        long sequenceNum = buffer[offset] << 56 |
-                            (buffer[offset+1] & 0xFF) << 48 |
-                            (buffer[offset+2] & 0xFF) << 40 |
-                            (buffer[offset+3] & 0xFF) << 32 |
-                            (buffer[offset+4] & 0xFF) << 24 |
-                            (buffer[offset+5] & 0xFF) << 16 |
-                            (buffer[offset+6] & 0xFF) << 8 |
-                            (buffer[offset+7] & 0xFF);
-
-                        offset = length + SIZE_OF_SEQ_NUM;
-                        long datetime = buffer[offset] << 56 |
-                            (buffer[offset++] & 0xFF) << 48 |
-                            (buffer[offset++] & 0xFF) << 40 |
-                            (buffer[offset++] & 0xFF) << 32 |
-                            (buffer[offset++] & 0xFF) << 24 |
-                            (buffer[offset++] & 0xFF) << 16 |
-                            (buffer[offset++] & 0xFF) << 8 |
-                            (buffer[offset++] & 0xFF);
-
-                        long position = buffer[offset++] << 56 |
-                            (buffer[offset++] & 0xFF) << 48 |
-                            (buffer[offset++] & 0xFF) << 40 |
-                            (buffer[offset++] & 0xFF) << 32 |
-                            (buffer[offset++] & 0xFF) << 24 |
-                            (buffer[offset++] & 0xFF) << 16 |
-                            (buffer[offset++] & 0xFF) << 8 |
-                            (buffer[offset++] & 0xFF);
-                        if (position < 0)
-                        {
-                            Console.WriteLine("WTF");
-                        }
-                        int snapshotLength =
-                            (buffer[offset++] & 0xFF) << 24 |
-                            (buffer[offset++] & 0xFF) << 16 |
-                            (buffer[offset++] & 0xFF) << 8 |
-                            (buffer[offset++] & 0xFF);
-
-                        bool deleted = (buffer[offset++] == 1) ? true : false;
-
-        //                _log.Debug("READ-SME\tPersistenceId={0}\tsequenceNum={1}\tdateTime={2}\tposition={3}\tsnapshotLength={4}\tdeleted={5}",
-        //                    persistenceId, sequenceNum, datetime, position, snapshotLength, deleted);
-                        _log.Debug("READ-SME ENTRY\t PersistenceId={0}\t pos={1}\t length={2}", persistenceId, pos, buffer.Length + lengthBuffer.Length);
-
-                        // Check to see if the length read is greater than written, only works if keep the SW running and do not STOP
-                        // TODO remove this after debug
-                        if (length > 1000)
-                        {
-                            // Something is terribly wrong !!
-                            _log.Error("Read an SME entry from the file that is longer than something written. Length read = {0}, PersistenceId={1}",
-                                length, persistenceId);
-                        }
-
-                        return new SnapshotMapEntry(new SnapshotMetadata(persistenceId, sequenceNum, DateTime.FromBinary(datetime)), position, snapshotLength, deleted);
-
-                    }
-                    catch (Exception e)
-                    {
-                        _log.Error("Error reading SME, msg = {0}, location = {1}",
-                            e.Message, e.StackTrace);
-                    }
-
-                    return null;
+                    // Something is terribly wrong !!
+                    _log.Error("Read an SME entry from the file that is longer than something written. Length read = {0}, max length written = {1}, bytes representing length = {2}",
+                        length, _smeMaxLength, lengthBuffer);
                 }
-        */
+
+                // Get the PersistenceID string from the file
+                var bytesRead = stream.Read(buffer, 0, buffer.Length);
+                var persistenceId = Encoding.ASCII.GetString(buffer, 0, length);
+
+                int offset = length;
+                long sequenceNum = buffer[offset] << 56 |
+                    (buffer[offset+1] & 0xFF) << 48 |
+                    (buffer[offset+2] & 0xFF) << 40 |
+                    (buffer[offset+3] & 0xFF) << 32 |
+                    (buffer[offset+4] & 0xFF) << 24 |
+                    (buffer[offset+5] & 0xFF) << 16 |
+                    (buffer[offset+6] & 0xFF) << 8 |
+                    (buffer[offset+7] & 0xFF);
+
+                offset = length + SIZE_OF_SEQ_NUM;
+                long datetime = buffer[offset] << 56 |
+                    (buffer[offset++] & 0xFF) << 48 |
+                    (buffer[offset++] & 0xFF) << 40 |
+                    (buffer[offset++] & 0xFF) << 32 |
+                    (buffer[offset++] & 0xFF) << 24 |
+                    (buffer[offset++] & 0xFF) << 16 |
+                    (buffer[offset++] & 0xFF) << 8 |
+                    (buffer[offset++] & 0xFF);
+
+                long position = buffer[offset++] << 56 |
+                    (buffer[offset++] & 0xFF) << 48 |
+                    (buffer[offset++] & 0xFF) << 40 |
+                    (buffer[offset++] & 0xFF) << 32 |
+                    (buffer[offset++] & 0xFF) << 24 |
+                    (buffer[offset++] & 0xFF) << 16 |
+                    (buffer[offset++] & 0xFF) << 8 |
+                    (buffer[offset++] & 0xFF);
+                if (position < 0)
+                {
+                    Console.WriteLine("WTF");
+                }
+                int snapshotLength =
+                    (buffer[offset++] & 0xFF) << 24 |
+                    (buffer[offset++] & 0xFF) << 16 |
+                    (buffer[offset++] & 0xFF) << 8 |
+                    (buffer[offset++] & 0xFF);
+
+                bool deleted = (buffer[offset++] == 1) ? true : false;
+
+//                _log.Debug("READ-SME\tPersistenceId={0}\tsequenceNum={1}\tdateTime={2}\tposition={3}\tsnapshotLength={4}\tdeleted={5}",
+//                    persistenceId, sequenceNum, datetime, position, snapshotLength, deleted);
+                _log.Debug("READ-SME ENTRY\t PersistenceId={0}\t pos={1}\t length={2}", persistenceId, pos, buffer.Length + lengthBuffer.Length);
+
+                // Check to see if the length read is greater than written, only works if keep the SW running and do not STOP
+                // TODO remove this after debug
+                if (length > 1000)
+                {
+                    // Something is terribly wrong !!
+                    _log.Error("Read an SME entry from the file that is longer than something written. Length read = {0}, PersistenceId={1}",
+                        length, persistenceId);
+                }
+
+                return new SnapshotMapEntry(new SnapshotMetadata(persistenceId, sequenceNum, DateTime.FromBinary(datetime)), position, snapshotLength, deleted);
+
+            }
+            catch (Exception e)
+            {
+                _log.Error("Error reading SME, msg = {0}, location = {1}",
+                    e.Message, e.StackTrace);
+            }
+
+            return null;
+        }
+*/
     }
 }
 

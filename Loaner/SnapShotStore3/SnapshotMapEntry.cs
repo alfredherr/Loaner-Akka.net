@@ -11,7 +11,7 @@ namespace Loaner.SnapShotStore3
     /// start of the file in bytes.</param>
     /// <param name="length">The length of the snapshot. Required when reading back the snapshot from the file</param>
     /// <param name="deleted">Marks the map entry as being deleted and ready for reclamation</param>
-    class SnapshotMapEntry
+    public class SnapshotMapEntry
     {
         public SnapshotMapEntry (SnapshotMetadata metadata, long position, int length, bool deleted)
         {
