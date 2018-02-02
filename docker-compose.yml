@@ -1,0 +1,27 @@
+version: "3.2"
+services:
+  akka-lighthouse:
+    image: alfredherr/lighthouse:1.0
+    container_name: lighthouse
+    ports:
+      - "81:8181"
+      - "4053:4053"
+    volumes:
+      - "/Users/alfredherr/Projects/Demo2/Demo/Loaner/demo:/demo"
+    extra_hosts:
+      - "lighthouse:127.0.0.1"
+      - "akkaclient:192.168.1.138" 
+  akka-demo:
+    image: alfredherr/loaner:1.2
+    container_name: loaner
+    depends_on:
+      - "akka-lighthouse"
+    command: ["./wait-for-it.sh", "locahost:81", "--", "echo", "Lighthouse is up!"]
+    ports:
+      - "80:8080"
+      - "7777:7777"
+    volumes:
+      - "/Users/alfredherr/Projects/Demo2/Demo/Loaner/demo:/demo"
+    extra_hosts:
+      - "akkaclient:127.0.0.1"
+      - "lighthouse:192.168.1.138"
