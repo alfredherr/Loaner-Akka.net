@@ -13,6 +13,10 @@ RUN dotnet publish -c Release -o out
 FROM microsoft/dotnet:runtime
 WORKDIR /app
 
+# Set timezone to Phoenix
+RUN echo "America/Phoenix" > /etc/timezone
+RUN dpkg-reconfigure -f noninteractive tzdata
+
 COPY --from=build-env /app/out ./
 COPY --from=build-env /app/ ./
 
