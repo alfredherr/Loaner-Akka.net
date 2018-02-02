@@ -84,11 +84,11 @@ namespace Loaner.KafkaProducer
                     {
                         //Context.IncrementCounter("send-SUCCESS");
                         var key = task.Result.Key;
-                        if (key.EndsWith("999999"))
+                        if (key.EndsWith("999"))
                         {
                             Console.WriteLine($"Complete key: {task.Result.Key}");
                         }
-                        else if (key.EndsWith("0000"))
+                        else if (key.EndsWith("000"))
                         {
                             Console.WriteLine($"Sent key: {task.Result.Key}");
                         }

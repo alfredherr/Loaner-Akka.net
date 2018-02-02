@@ -53,8 +53,8 @@ namespace Loaner.Configuration
             switch (jsonObject)
             {
                 case IFinancialBucket bucket:
-                    Console.WriteLine(
-                        $"FinancialBucketConverter: will attempt to Serialize {bucket.GetType().Name}.");
+                    //Console.WriteLine(
+                    //    $"FinancialBucketConverter: will attempt to Serialize {bucket.GetType().Name}.");
                     var json = new Dictionary<string, object>
                     {
                         ["name"] = bucket.Name,

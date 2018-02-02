@@ -24,7 +24,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels.Serizalizers.Js
         {
             var jsonObject = JObject.Load(reader);
             var funancialBucket = default(IFinancialBucket);
-            Console.WriteLine($"FinancialBucketConverter: will attempt to deserialize {jsonObject.ToString()}.");
+            //Console.WriteLine($"FinancialBucketConverter: will attempt to deserialize {jsonObject.ToString()}.");
 
             var bucketAmount = jsonObject["Amount"].Value<double>();
 

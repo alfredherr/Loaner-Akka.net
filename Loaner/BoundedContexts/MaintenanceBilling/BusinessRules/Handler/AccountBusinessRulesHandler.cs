@@ -12,7 +12,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
     // ReSharper disable once ClassNeverInstantiated.Global
     public class AccountBusinessRulesHandler
     {
-         private readonly AccountBusinessRulesMapper _poorMansDB = new AccountBusinessRulesMapper();
+         private readonly AccountBusinessRulesMapper _poorMansDB;// = new AccountBusinessRulesMapper();
 
         public BusinessRuleApplicationResultModel ApplyBusinessRules(ILoggingAdapter logger, string client,
             string portfolioName,
@@ -86,7 +86,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             AccountState accountState,
             IDomainCommand command)
         {
-            //When ApplyEvent is a SettleFinancialConcept?orWhatever command
+            
+	    _poorMansDB = new AccountBusinessRulesMapper();
+            
+	    //When ApplyEvent is a SettleFinancialConcept?orWhatever command
             // get the rules to apply to this account for this particular command
             // and the order in which they need to be applied
             // In future We would also want to pass in the command so we filter the search to just the rules 
