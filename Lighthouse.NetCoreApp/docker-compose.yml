@@ -1,0 +1,20 @@
+﻿version: "3.2"
+services:
+  akka-lighthouse:
+    image: alfredherr/lighthouse:1.0
+    hostname: lighthouse
+    container_name: lighthouse
+    ports:
+      - "81:8181"
+      - "4053:4053"
+    volumes:
+      - "/demo:/demo"
+    extra_hosts:
+      - "lighthouse:127.0.0.1"
+      - "akkaclient:192.168.1.138" 
+    networks:
+      - bridge2
+
+networks:
+  bridge2:
+    external: true

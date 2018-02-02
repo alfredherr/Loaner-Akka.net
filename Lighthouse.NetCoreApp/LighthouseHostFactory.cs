@@ -88,7 +88,7 @@ akka.remote.dot-netty.tcp.port = {1}", ipAddress, port))
 			                    applied-adapters = []
 			                    transport-protocol = tcp
 			                    #will be populated with a dynamic host-name at runtime if left uncommented
-			                    public-hostname = ""lighthouse""
+                                            public-hostname = ""lighthouse""
 			                    hostname = ""lighthouse""
 			                    port = 4053
 		                    }
@@ -96,7 +96,9 @@ akka.remote.dot-netty.tcp.port = {1}", ipAddress, port))
 											
 	                    cluster {
 		                    #will inject this node as a self-seed node at run-time
-		                    seed-nodes = [] #manually populate other seed nodes here, i.e. ""akka.tcp://lighthouse@127.0.0.1:4053"", ""akka.tcp://lighthouse@127.0.0.1:4044""
+		                    # manually populate other seed nodes here, i.e.
+                                    # ""akka.tcp://lighthouse@127.0.0.1:4053"", ""akka.tcp://lighthouse@127.0.0.1:4044""
+		                    seed-nodes = []
 		                    roles = [lighthouse]
 	                    }
                     }

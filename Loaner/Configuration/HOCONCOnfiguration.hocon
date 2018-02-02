@@ -89,7 +89,7 @@ Akka.PortfolioStateTopicName = "PortfolioState"
 Kafka.BrokerList = "docker07.concordservicing.com:29092,docker08.concordservicing.com:29092,docker09.concordservicing.com:29092"
 
 ### StatsD Config ##
-Akka.StatsDServer = "localhost"
+Akka.StatsDServer = "docker08.concordservicing.com"
 Akka.StatsDPort   = 8125  
 Akka.StatsDPrefix = "akka-demo" 
 
@@ -103,7 +103,7 @@ Akka.CommandsToRulesFilename = "/demo/CommandToBusinessRuleMap.txt"
 ### Akka Clustering Config ###
 akka.actor.provider = "Akka.Cluster.ClusterActorRefProvider, Akka.Cluster"
 akka.remote.log-remote-lifecycle-events = INFO
-akka.remote.dot-netty.tcp.hostname = "akkaclient"
+akka.remote.dot-netty.tcp.hostname = "loaner"
 akka.remote.dot-netty.tcp.port = 7777
 akka.cluster.seed-nodes = ["akka.tcp://demoSystem@lighthouse:4053"] 
 akka.cluster.roles = [concord]
