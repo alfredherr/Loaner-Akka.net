@@ -143,7 +143,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             RulesInFile = new List<AccountBusinessRuleMapModel>();
             if (!File.Exists(businessRulesMapFile))
             {
-                throw new FileNotFoundException(@"I can't find {businessRulesMapFile}");
+                throw new FileNotFoundException($"I can't find {businessRulesMapFile}");
             }
 
             ReadInBusinessRules(businessRulesMapFile);
@@ -154,7 +154,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             RulesInFile = new List<AccountBusinessRuleMapModel>();
             if (!File.Exists(businessRulesMapFile))
             {
-                throw new FileNotFoundException(@"I can't find {businessRulesMapFile}");
+                throw new FileNotFoundException($"I can't find {businessRulesMapFile}");
             }
             WriteOutBusinessRules(businessRulesMapFile, updatedRules);
             ReadInBusinessRules(businessRulesMapFile);

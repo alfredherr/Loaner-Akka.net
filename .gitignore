@@ -1,5 +1,5 @@
 
-
+demo/
 !**/packages/build/
 !*.[Cc]ache/
 publish/

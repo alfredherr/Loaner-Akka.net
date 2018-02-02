@@ -14,5 +14,5 @@ FROM microsoft/dotnet:runtime
 WORKDIR /app
 COPY --from=build-env /app/out ./
 COPY --from=build-env /app/ ./
-EXPOSE 80
+EXPOSE 8080 7777
 ENTRYPOINT ["dotnet", "Loaner.dll"]

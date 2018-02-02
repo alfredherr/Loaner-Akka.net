@@ -88,8 +88,8 @@ akka.remote.dot-netty.tcp.port = {1}", ipAddress, port))
 			                    applied-adapters = []
 			                    transport-protocol = tcp
 			                    #will be populated with a dynamic host-name at runtime if left uncommented
-			                    #public-hostname = ""POPULATE STATIC IP HERE""
-			                    hostname = ""0.0.0.0""
+			                    public-hostname = ""lighthouse""
+			                    hostname = ""lighthouse""
 			                    port = 4053
 		                    }
 	                    }     
