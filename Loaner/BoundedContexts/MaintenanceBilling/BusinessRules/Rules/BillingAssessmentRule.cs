@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 {
@@ -11,7 +13,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
     {
         private AccountState AccountState { get; set; }
         private string _detailsGenerated;
-        private List<IDomainEvent> _eventsGenerated;
+        private List<IDomainEvent> _eventsGenerated = new List<IDomainEvent>();
         private (string Command, Dictionary<string, object> Parameters) CommandState { get; set; }
 
         /* Rule logic goes here. */
@@ -19,23 +21,20 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             //User CommandState to get list of passed in options. 
             // and COMMAND to merge the specifics of the command
-            var billing = command as BillingAssessment;
-            if (billing != null)
+            if (command is BillingAssessment billing)
                 foreach (var billLine in billing.LineItems)
                 {
-                    _eventsGenerated = new List<IDomainEvent>
-                    {
-                        new ObligationAssessedConcept(
-                            AccountState.AccountNumber,
+                    _eventsGenerated.Add(new ObligationAssessedConcept(
+                            AccountState.Obligations.FirstOrDefault(x => x.Value.Status == ObligationStatus.Active).Key,
                             billLine.Item
                         )
-                    };
+                    );
                     _detailsGenerated = "THIS WORKED";
                     Success = true;
                 }
             else
             {
-                throw new Exception($"Why is the list of lineItems empty?");
+                throw new Exception($"I don't know how to handle commands of type {command.GetType().Name}");
             }
             
         }
