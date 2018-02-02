@@ -15,6 +15,7 @@ using System.Text;
 using System.Collections;
 using System.Threading;
 using System.Collections.Concurrent;
+using SnapShotStore;
 
 namespace Loaner.SnapShotStore3
 {

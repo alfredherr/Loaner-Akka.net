@@ -12,9 +12,6 @@ services:
       - "7777:7777"
     volumes:
       - "/demo:/demo"
-#    extra_hosts:
-#      - "loaner:127.0.0.1"
-#      - "lighthouse:192.168.1.138"
   lighthouse:
     image: alfredherr/lighthouse:1.2
     hostname: lighthouse
@@ -24,6 +21,3 @@ services:
       - "4053:4053"
     volumes:
       - "/demo:/demo"
-#    extra_hosts:
-#      - "lighthouse:127.0.0.1"
-#      - "loaner:192.168.1.138" 
