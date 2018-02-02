@@ -1,0 +1,29 @@
+version: "3.2"
+services:
+  loaner:
+    image: alfredherr/loaner:1.2
+    hostname: loaner
+    container_name: loaner
+    depends_on:
+      - "lighthouse"
+    command: ["bash","./wait-a-sec.sh"]
+    ports:
+      - "80:8080"
+      - "7777:7777"
+    volumes:
+      - "/demo:/demo"
+#    extra_hosts:
+#      - "loaner:127.0.0.1"
+#      - "lighthouse:192.168.1.138"
+  lighthouse:
+    image: alfredherr/lighthouse:1.2
+    hostname: lighthouse
+    container_name: lighthouse
+    ports:
+      - "81:8181"
+      - "4053:4053"
+    volumes:
+      - "/demo:/demo"
+#    extra_hosts:
+#      - "lighthouse:127.0.0.1"
+#      - "loaner:192.168.1.138" 

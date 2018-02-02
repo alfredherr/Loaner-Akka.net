@@ -148,8 +148,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                             }
                         }
                     }
+                    _log.Info($"Successfully processing file {obligationsFilePath}");
+            
                 }
-                _log.Info($"Successfully processing file {obligationsFilePath}");
+                _log.Error($"The file '{obligationsFilePath}' does not exist!");
+            
             }
             catch (Exception e)
             {

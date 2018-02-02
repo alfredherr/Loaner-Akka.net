@@ -47,9 +47,9 @@ namespace Loaner.API.Controllers
                 });
                 return Response.AsJson(answer);
             });
-            Get("/businessrules", async args => { return new AccountBusinessRulesMapper().GetCommandsToBusinesRules(); });
+            Get("/businessrules",  args => { return new AccountBusinessRulesMapper().GetCommandsToBusinesRules(); });
 
-            Post("/businessrules", async args =>
+            Post("/businessrules",  args =>
             {
                 var reader = new StreamReader(this.Request.Body);
                 string text = reader.ReadToEnd();

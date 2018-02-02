@@ -1,5 +1,7 @@
-﻿using Akka.Actor;
+﻿using System.Runtime.InteropServices.ComTypes;
+using Akka.Actor;
 using Confluent.Kafka;
+using Loaner.SnapShotStore3;
 
 namespace Loaner.ActorManagement
 {
@@ -25,5 +27,10 @@ namespace Loaner.ActorManagement
         public const int TakeSystemSupervisorSnapshotAt = 1;
         public const int TakePortolioSnapshotAt = 10000; // this must be the number of records you want to load per portfolio (so it only snapshots once)
         public const int TakeAccountSnapshotAt = 1;
+    }
+
+    public class Test
+    {
+        public FileSnapshotStore3 store { get; set; }
     }
 }

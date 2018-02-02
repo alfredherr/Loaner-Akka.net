@@ -1,15 +1,23 @@
-FROM microsoft/dotnet:1.1.2-sdk
+FROM microsoft/dotnet:sdk AS build-env
+WORKDIR /app
 
-WORKDIR /AkkaDotNetCoreDocker
+# copy csproj and restore as distinct layers
+COPY Lighthouse.NetCoreApp.csproj ./
+RUN dotnet restore
 
-#Copy all the source files and junk over to the container
-COPY . .
-#Just to make sure, show me
-run ls -lt
-#Now restore .net packages
-RUN dotnet restore -r ubuntu-x86  
-#Cut the release
-RUN dotnet publish -c Release Lighthouse.NetCoreApp.csproj  
-#How to run it
-ENTRYPOINT dotnet "/AkkaDotNetCoreDocker/bin/Release/netcoreapp1.1/Lighthouse.NetCoreApp.dll" 
+# copy everything else and build
+COPY . ./
+RUN dotnet publish -c Release -o out
 
+# build runtime image
+FROM microsoft/dotnet:runtime
+WORKDIR /app
+
+# Set timezone to Phoenix
+RUN echo "America/Phoenix" > /etc/timezone
+RUN dpkg-reconfigure -f noninteractive tzdata
+
+COPY --from=build-env /app/out ./
+COPY --from=build-env /app/ ./
+EXPOSE 8181 4053
+ENTRYPOINT ["dotnet", "Lighthouse.NetCoreApp.dll"]

@@ -3,13 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.NetCoreApp", "Lighthouse.NetCoreApp\Lighthouse.NetCoreApp.csproj", "{26DD5ACB-4ACA-48BC-9EB6-3175949DF2C8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lighthouse.NetCoreApp", "Lighthouse.NetCoreApp\Lighthouse.NetCoreApp.csproj", "{26DD5ACB-4ACA-48BC-9EB6-3175949DF2C8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Loaner", "Loaner\Loaner.csproj", "{C5CC8D38-1FF7-462F-B872-E8E8F4C56BA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Loaner", "Loaner\Loaner.csproj", "{C5CC8D38-1FF7-462F-B872-E8E8F4C56BA5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SnapShotStore", "SnapShotStore\SnapShotStore.csproj", "{DD5111C6-6CE1-49CD-A128-3E71D1BDEB6A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kafka_actors", "kafka_actors\kafka_actors.csproj", "{D348D2FA-833C-443C-BEC3-C194B1ACFE39}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kafka_actors", "kafka_actors\kafka_actors.csproj", "{D348D2FA-833C-443C-BEC3-C194B1ACFE39}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnapShotStore", "SnapShotStore\SnapShotStore.csproj", "{5F4D34B3-3E39-4A4F-B234-CB9470D283DE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{63543AD9-A2FF-4B04-9099-E40584E9D830}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,14 +30,14 @@ Global
 		{C5CC8D38-1FF7-462F-B872-E8E8F4C56BA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5CC8D38-1FF7-462F-B872-E8E8F4C56BA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5CC8D38-1FF7-462F-B872-E8E8F4C56BA5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DD5111C6-6CE1-49CD-A128-3E71D1BDEB6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DD5111C6-6CE1-49CD-A128-3E71D1BDEB6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DD5111C6-6CE1-49CD-A128-3E71D1BDEB6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DD5111C6-6CE1-49CD-A128-3E71D1BDEB6A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D348D2FA-833C-443C-BEC3-C194B1ACFE39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D348D2FA-833C-443C-BEC3-C194B1ACFE39}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D348D2FA-833C-443C-BEC3-C194B1ACFE39}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D348D2FA-833C-443C-BEC3-C194B1ACFE39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F4D34B3-3E39-4A4F-B234-CB9470D283DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F4D34B3-3E39-4A4F-B234-CB9470D283DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F4D34B3-3E39-4A4F-B234-CB9470D283DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F4D34B3-3E39-4A4F-B234-CB9470D283DE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

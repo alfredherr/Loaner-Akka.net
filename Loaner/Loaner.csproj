@@ -51,9 +51,7 @@
   <ItemGroup>
     <Folder Include="ActorManagement\" />
     <Folder Include="wwwroot\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SnapShotStore\SnapShotStore.csproj" />
+    <Folder Include="SnapShotStore3\" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="wwwroot\">

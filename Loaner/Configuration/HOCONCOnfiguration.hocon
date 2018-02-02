@@ -70,10 +70,10 @@ akka.loggers=["Akka.Logger.NLog.NLogLogger, Akka.Logger.NLog"]
 #akka.persistence.snapshot-store.sqlite.connection-string = "Data Source=../../../akka_demo.db"
 
 ### Jonfile Snapshot ###
-akka.persistence.snapshot-store.jonfile.class = "SnapShotStore.FileSnapshotStore3, SnapShotStore"
+akka.persistence.snapshot-store.jonfile.class = "Loaner.SnapShotStore3.FileSnapshotStore3, Loaner"
 akka.persistence.snapshot-store.jonfile.max-load-attempts=19
-#akka.persistence.snapshot-store.jonfile.dir = "/demo/db"
-akka.persistence.snapshot-store.jonfile.dir = "C:\\Temp"
+akka.persistence.snapshot-store.jonfile.dir = "/demo/db"
+#akka.persistence.snapshot-store.jonfile.dir = "C:\\Temp"
 akka.persistence.snapshot-store.jonfile.plugin-dispatcher = "akka.actor.default-dispatcher"
 akka.persistence.snapshot-store.plugin = "akka.persistence.snapshot-store.jonfile"
 akka.persistence.max-concurrent-recoveries = 50
@@ -89,21 +89,24 @@ Akka.PortfolioStateTopicName = "PortfolioState"
 Kafka.BrokerList = "docker07.concordservicing.com:29092,docker08.concordservicing.com:29092,docker09.concordservicing.com:29092"
 
 ### StatsD Config ##
-Akka.StatsDServer = "docker04"
+Akka.StatsDServer = "docker08.concordservicing.com"
 Akka.StatsDPort   = 8125  
 Akka.StatsDPrefix = "akka-demo" 
 
 ### Business Rules Config ###
-#Akka.BusinessRulesFilename = "/demo/business_rules_map.rules"
-#Akka.CommandsToRulesFilename = "/demo/commands_to_rules.rules"
-Akka.BusinessRulesFilename = "c:\\Temp\\business_rules_map.rules"
-Akka.CommandsToRulesFilename = "c:\\Temp\\commands_to_rules.rules"
+Akka.BusinessRulesFilename = "/demo/BusinessRulesMap.txt"
+Akka.CommandsToRulesFilename = "/demo/CommandToBusinessRuleMap.txt"
+#Akka.BusinessRulesFilename = "c:\\Temp\\business_rules_map.rules"
+#Akka.CommandsToRulesFilename = "c:\\Temp\\commands_to_rules.rules"
 
 
 ### Akka Clustering Config ###
 akka.actor.provider = "Akka.Cluster.ClusterActorRefProvider, Akka.Cluster"
 akka.remote.log-remote-lifecycle-events = INFO
-akka.remote.dot-netty.tcp.hostname = "127.0.0.1"
-akka.remote.dot-netty.tcp.port = 0
-akka.cluster.seed-nodes = ["akka.tcp://demoSystem@127.0.0.1:4053"] 
+akka.remote.dot-netty.tcp.hostname = "loaner"
+akka.remote.dot-netty.tcp.port = 7777
+akka.cluster.seed-nodes = ["akka.tcp://demoSystem@lighthouse:4053"] 
 akka.cluster.roles = [concord]
+
+
+
