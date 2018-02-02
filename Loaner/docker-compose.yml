@@ -3,11 +3,6 @@ services:
   akka-demo:
     image: alfredherr/loaner:1.2
     container_name: loaner
-    healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:8080/api/system"]
-        interval: 1m30s
-        timeout: 10s
-        retries: 3
     ports:
       - "80:8080"
       - "7777:7777"
