@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Monitoring;
@@ -83,15 +84,12 @@ namespace Loaner.KafkaProducer
                     if (task.IsCompletedSuccessfully)
                     {
                         //Context.IncrementCounter("send-SUCCESS");
-                        var key = task.Result.Key;
-                        if (key.EndsWith("999"))
+                        var key = BigInteger.Parse(task.Result.Key);
+                        if (key % 1000 == 0)
                         {
-                            Console.WriteLine($"Complete key: {task.Result.Key}");
+                            Console.WriteLine($"Sent key: {task.Result.Key} to kafka @ {DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss")}");
                         }
-                        else if (key.EndsWith("000"))
-                        {
-                            Console.WriteLine($"Sent key: {task.Result.Key}");
-                        }
+                        
                     }
                 });
             }
