@@ -1,7 +1,7 @@
 version: "3.2"
 services:
   loaner:
-    image: alfredherr/loaner:1.4
+    image: alfredherr/loaner
     hostname: loaner
     container_name: loaner
     depends_on:
@@ -13,7 +13,7 @@ services:
     volumes:
       - "/demo:/demo"
   lighthouse:
-    image: alfredherr/lighthouse:1.3
+    image: alfredherr/lighthouse
     hostname: lighthouse
     container_name: lighthouse
     ports:
