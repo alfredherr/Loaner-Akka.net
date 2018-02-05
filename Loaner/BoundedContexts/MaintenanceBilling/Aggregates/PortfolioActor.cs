@@ -232,7 +232,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             tooMany.Add("sorry", "Too many accounts to list here");
             Sender.Tell(new TellMeYourPortfolioStatus(
                 $"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",
-                (_accounts.Count > 10000) ? tooMany : DictionaryToStringList()));
+                (_accounts.Count > 300_000) ? tooMany : DictionaryToStringList()));
         }
 
         private void ProcessSupervision(SuperviseThisAccount command)

@@ -39,7 +39,7 @@ namespace Loaner.API.Controllers
                 await Task.Run(() =>
                 {
                     answer = portfolioActor.Result
-                        .Ask<TellMeYourPortfolioStatus>(new TellMeYourStatus(), TimeSpan.FromSeconds(30)).Result;
+                        .Ask<TellMeYourPortfolioStatus>(new TellMeYourStatus(), TimeSpan.FromSeconds(50)).Result;
                     return Response.AsJson(new SupervisedAccounts(answer.Message, answer.Accounts));
                 });
                 return Response.AsJson(new SupervisedAccounts(answer.Message, answer.Accounts));
@@ -69,7 +69,7 @@ namespace Loaner.API.Controllers
                 return Response.AsJson(answer);
             });
 
-            Get("/{actorName}/assessment", args =>
+            Get("/{portfolioName}/assessment", args =>
             {
                 var model = new SimulateAssessmentModel();
                 model.LineItems = new List<InvoiceLineItem>

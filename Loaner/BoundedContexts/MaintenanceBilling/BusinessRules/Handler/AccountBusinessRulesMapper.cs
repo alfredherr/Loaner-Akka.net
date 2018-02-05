@@ -40,9 +40,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 
             List<IAccountBusinessRule> rulesFound = new List<IAccountBusinessRule>();
 
+            // TODO need to make this dynamic using replection
             //And lastly add the command rule itself
             rulesFound.Add(new BillingAssessmentRule() );
+
             rulesFound.AddRange(rules.ToList());
+            
             return rulesFound;
         }
 
