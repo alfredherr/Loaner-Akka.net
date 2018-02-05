@@ -38,7 +38,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<SimulateBoardingOfAccounts>(client => RunSimulator(client));
             Command<SuperviseThisPortfolio>(command => ProcessSupervision(command));
             Command<StartPortfolios>(command => StartPortfolios());
-
+            Command<MySystemStatus>(cmd => Console.WriteLine(cmd.Message));
+            
             /* Commonly used commands */
             Command<TellMeYourStatus>(asking => GetMyStatus());
             Command<TellMeAboutYou>(me =>

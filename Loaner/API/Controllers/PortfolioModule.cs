@@ -140,7 +140,7 @@ namespace Loaner.API.Controllers
                     answer = portfolioActor
                         .Result
                         .Ask<TellMeYourPortfolioStatus>(new AssessWholePortfolio(portfolio, assessment.LineItems),
-                            TimeSpan.FromSeconds(5))
+                            TimeSpan.FromSeconds(50))
                         .Result;
                     return Response.AsJson(new SupervisedAccounts(answer.Message, answer.Accounts));
                 });

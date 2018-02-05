@@ -1,13 +1,13 @@
 ﻿<!DOCTYPE html>
 <html>
 <body>
-    <h1>Available routes:</h1>
+    <h1>Available routes for service:</h1>
     <table>
         <thead>
             <tr>
                 <th>Method</th>
                 <th>URL</th>
-                <th>Name</th>
+                <th>Name<th>
             </tr>
         </thead>
         <tbody>
