@@ -75,9 +75,17 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void PublishToKafka(PublishAccountStateToKafka msg)
         {
-            var key = _accountState.AccountNumber;
-            AccountStatePublisherActor.Tell(new Publish(key, _accountState));
-            _log.Debug($"Sending kafka message for account {key}");
+            var kafkaAccountModel = new AccountStateKafka();
+            kafkaAccountModel.ID = long.Parse(_accountState.AccountNumber);
+            kafkaAccountModel.AccountStatus = _accountState.AccountStatus;
+            kafkaAccountModel.AsOfDate = DateTime.Now;
+            kafkaAccountModel.CurrentBalance = (decimal) _accountState.CurrentBalance;
+            kafkaAccountModel.DaysDelinquent = 0;
+            kafkaAccountModel.LastPaymentAmount = 0;
+            kafkaAccountModel.PortfolioID = PortfolioActor.GetPorfolioNameHash(Self.Path.Parent.Name);
+            kafkaAccountModel.UserID = 0;
+            AccountStatePublisherActor.Tell(new Publish(kafkaAccountModel.ID.ToString(), kafkaAccountModel));
+            _log.Debug($"Sending kafka message for account {kafkaAccountModel}");
         }
 
         private void PurgeOldSnapShots(SaveSnapshotSuccess success)

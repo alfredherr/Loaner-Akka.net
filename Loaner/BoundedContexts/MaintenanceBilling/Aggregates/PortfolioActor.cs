@@ -108,7 +108,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             };
             double total = 0.00;
             portfolioSate.TotalBalance = (decimal)_billings.Aggregate(total, ( x, y ) =>  y.Value.Item2  + x);
-            portfolioSate.ID = GetPorfolioNameHash();
+            portfolioSate.ID = GetPorfolioNameHash(Self.Path.Name);
 
             var key = portfolioSate.Name;
             PortfolioStatePublisherActor.Tell(new Publish(key, portfolioSate));
@@ -116,9 +116,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         }
 
-        private long GetPorfolioNameHash()
+        public static long GetPorfolioNameHash(string portfolioName)
         {
-            string input = Self.Path.Name;
+            string input = portfolioName;
             var s1 = input.Substring(0, input.Length / 2);
             var s2 = input.Substring(input.Length / 2);
 

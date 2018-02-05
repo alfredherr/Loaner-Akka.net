@@ -2,10 +2,10 @@
 {
     public enum AccountStatus
     {
-        Created,
-        Active,
+        Active=0,
         Inactive,
         Cancelled,
+        Created,
         Boarded,
         Upgraded,
         Removed,
