@@ -91,8 +91,8 @@ namespace Loaner.API.Controllers
                     billingSummary = new BillingStatusModel(answer);
                     billingSummary.Summarize();
                     Console.WriteLine($"Responded to API with {billingSummary.AccountsBilled} accounts billed");
-                    Console.WriteLine($"Responded to API with ${billingSummary.AmountBilled} billed");
-                    Console.WriteLine($"Responded to API with ${billingSummary.BalanceAfterBilling} ending balance");
+                    Console.WriteLine($"Responded to API with ${string.Format("{0:C}",billingSummary.AmountBilled)} billed");
+                    Console.WriteLine($"Responded to API with ${string.Format("{0:C}",billingSummary.BalanceAfterBilling)} ending balance");
                 });
                 return Response.AsJson(billingSummary ?? new BillingStatusModel());
             });
