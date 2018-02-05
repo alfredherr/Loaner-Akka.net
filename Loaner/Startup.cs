@@ -73,8 +73,7 @@ namespace Loaner
                 ));
 
             DemoSystemSupervisor.Tell(new TellMeAboutYou("Starting Up"));
-
-            
+            DemoSystemSupervisor.Tell(new StartPortfolios());
 
         }
 
@@ -103,7 +102,7 @@ namespace Loaner
                 ["default.topic.config"] = new Dictionary<string, object>()
                 {
                     ["acks"] = -1,
-                    ["message.timeout.ms"] = 60000,
+                    ["message.timeout.ms"] = 60_000,
                 }
             };
 
