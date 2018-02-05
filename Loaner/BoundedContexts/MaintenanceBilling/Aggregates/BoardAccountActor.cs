@@ -105,7 +105,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             accountActor.Tell(new AskToBeSupervised(command.Portfolio, command.Supervisor));
             
-            if (++_accounSpunUp % 1000 == 1)
+            if (++_accounSpunUp % 1000 == 0)
             {
                 Console.WriteLine($"Boarding: {DateTime.Now}\t{_accounSpunUp} accounts processed.");
             }
