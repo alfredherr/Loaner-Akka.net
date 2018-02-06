@@ -78,7 +78,7 @@ namespace Loaner.API.Controllers
                     new InvoiceLineItem(new Dues(0)),
                     new InvoiceLineItem(new Reserve(0))
                 };
-                return model;
+                return Response.AsJson(model);
             });
 
         
@@ -128,7 +128,7 @@ namespace Loaner.API.Controllers
 
                 var portfolioActor = LoanerActors.DemoActorSystem
                     .ActorSelection($"/user/demoSupervisor/{portfolio}")
-                    .ResolveOne(TimeSpan.FromSeconds(3));
+                    .ResolveOne(TimeSpan.FromSeconds(10));
 
                 if (portfolioActor.Exception != null)
                 {

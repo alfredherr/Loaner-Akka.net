@@ -162,13 +162,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void AssessAllAccounts(AssessWholePortfolio cmd)
         {
             Monitor();
-            foreach (var account in _accounts)
-            {
-                BillingAssessment bill = new BillingAssessment(account.Key, cmd.Items);
-                account.Value.Tell(bill);
-            }
+            //foreach (var account in _accounts)
+            //{
+            //    BillingAssessment bill = new BillingAssessment(account.Key, cmd.Items);
+            //    account.Value.Tell(bill);
+            //}
             Sender.Tell(new TellMeYourPortfolioStatus($"Your request was sent to all {_accounts.Count} accounts",
-                DictionaryToStringList()));
+                null));
         }
 
         public override string PersistenceId => Self.Path.Name;
