@@ -104,27 +104,15 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             {
                 AccountCount = _accounts.Count,
                 AsOfDate = DateTime.Now,
-                Name = Self.Path.Name
+                PortfolioName = Self.Path.Name
             };
             double total = 0.00;
-            portfolioSate.TotalBalance = (decimal)_billings.Aggregate(total, ( x, y ) =>  y.Value.Item2  + x);
-            portfolioSate.ID = GetPorfolioNameHash(Self.Path.Name);
-
-            var key = portfolioSate.Name;
+            portfolioSate.TotalBalance = (decimal)_billings.Aggregate(total, ( x, y ) =>  y.Value.Item1  + x);
+          
+            var key = portfolioSate.PortfolioName;
             PortfolioStatePublisherActor.Tell(new Publish(key, portfolioSate));
             _log.Debug($"Sending kafka message for portfolio {key}");
 
-        }
-
-        public static long GetPorfolioNameHash(string portfolioName)
-        {
-            string input = portfolioName;
-            var s1 = input.Substring(0, input.Length / 2);
-            var s2 = input.Substring(input.Length / 2);
-
-            var x = ((long)s1.GetHashCode()) << 0x20 | s2.GetHashCode();
-            return x;
-            
         }
 
         private void PurgeOldSnapShots(SaveSnapshotSuccess success)
@@ -140,16 +128,20 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             _billings.AddOrSet(cmd.AccountNumber, Tuple.Create(cmd.AmountBilled, cmd.AccountBalanceAfterBilling));
 
-            var viewble = new Dictionary<string, Tuple<double, double>>();
-            foreach (var a in _billings)
+            //Report to parent (Client/SystemSupervisor) every 10k accounts
+            if (_billings.Count % 10000 == 0)
             {
-                viewble.Add(a.Key, a.Value);
+                var viewble = new Dictionary<string, Tuple<double, double>>();
+                foreach (var a in _billings)
+                {
+                    viewble.Add(a.Key, a.Value);
+                }
+                Context.Parent.Tell(new RegisterPortolioBilling(Self.Path.Name, viewble));
+                _log.Debug(
+                    $"{Self.Path.Name} sent {Context.Parent.Path.Name} portfolio billing message containing {viewble.Count} billed accounts ");
             }
 
-            Context.Parent.Tell(new RegisterPortolioBilling(Self.Path.Name, viewble));
-            _log.Debug(
-                $"{Self.Path.Name} sent {Context.Parent.Path.Name} portfolio billing message containing {viewble.Count} billed accounts ");
-
+            
             Self.Tell(new PublishPortfolioStateToKafka());
         }
 
@@ -162,11 +154,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void AssessAllAccounts(AssessWholePortfolio cmd)
         {
             Monitor();
-            //foreach (var account in _accounts)
-            //{
-            //    BillingAssessment bill = new BillingAssessment(account.Key, cmd.Items);
-            //    account.Value.Tell(bill);
-            //}
+            foreach (var account in _accounts)
+            {
+                BillingAssessment bill = new BillingAssessment(account.Key, cmd.Items);
+                account.Value.Tell(bill);
+            }
             Sender.Tell(new TellMeYourPortfolioStatus($"Your request was sent to all {_accounts.Count} accounts",
                 null));
         }
@@ -228,11 +220,20 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void GetMyStatus()
         {
-            var tooMany = new Dictionary<string, string>();
-            tooMany.Add("sorry", "Too many accounts to list here");
+            var portfolioSate = new PortfolioState
+            {
+                AccountCount = _accounts.Count,
+                AsOfDate = DateTime.Now,
+                PortfolioName = Self.Path.Name
+            };
+            double total = 0.00;
+            portfolioSate.TotalBalance = (decimal)_billings.Aggregate(total, ( x, y ) =>  y.Value.Item1  + x);
+          
+            var key = portfolioSate.PortfolioName;
+            
+            
             Sender.Tell(new TellMeYourPortfolioStatus(
-                $"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",
-                (_accounts.Count > 300_000) ? tooMany : DictionaryToStringList()));
+                $"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",portfolioSate));
         }
 
         private void ProcessSupervision(SuperviseThisAccount command)

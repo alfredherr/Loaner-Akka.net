@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages
 {
@@ -6,23 +7,26 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages
     {
         public TellMeYourPortfolioStatus()
         {
-            Accounts = new Dictionary<string, string>();
+
             Message = "";
+            PortfolioState = new PortfolioState();
+
         }
 
         public TellMeYourPortfolioStatus(string message)
         {
             Message = message;
-            Accounts = new Dictionary<string, string>();
+            PortfolioState = new PortfolioState();
         }
 
-        public TellMeYourPortfolioStatus(string message, Dictionary<string, string> accounts)
+        public TellMeYourPortfolioStatus(string message, PortfolioState portfolioState)
         {
             Message = message;
-            Accounts = accounts;
+            PortfolioState = portfolioState;
+
         }
 
         public string Message { get; }
-        public Dictionary<string, string> Accounts { get; }
+        public PortfolioState PortfolioState { get; }
     }
 }

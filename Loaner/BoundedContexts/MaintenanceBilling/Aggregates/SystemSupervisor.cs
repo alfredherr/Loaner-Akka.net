@@ -137,7 +137,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             var viewble = new Dictionary<string, string>();
             foreach (var a in _portfolios)
-                viewble.Add(a.Key, a.Value?.ToString() ?? "Not Instantiated");
+                viewble.Add(a.Key.ToLowerInvariant(), a.Value?.ToString() ?? "Not Instantiated");
             return viewble;
         }
 
@@ -162,7 +162,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             var tooMany = new Dictionary<string, string>();
             tooMany.Add("sorry", "Too many portfolios to list here");
-            Sender.Tell(new MySystemStatus($"{_portfolios.Count} portfolios started.",
+            Sender.Tell(new MySystemStatus($"{_portfolios.Count} portfolio(s) started.",
                 (_portfolios.Count > 999) ? tooMany : DictionaryToStringList()));
         }
 

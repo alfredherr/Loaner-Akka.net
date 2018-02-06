@@ -10,14 +10,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages
             string portfolio,
             string accountNumber,
             List<MaintenanceFee> oligations,
-            IActorRef supervisor)
+            IActorRef supervisor, AccountBoardingModel boardingModel)
         {
             Portfolio = portfolio;
             AccountNumber = accountNumber;
             Obligations = oligations;
             Supervisor = supervisor;
+            BoardingModel = boardingModel;
         }
 
+        public AccountBoardingModel BoardingModel { get; }
         public string Portfolio { get; }
         public string AccountNumber { get; }
         public List<MaintenanceFee> Obligations { get; }

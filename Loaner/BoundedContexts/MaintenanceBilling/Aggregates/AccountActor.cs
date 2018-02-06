@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Akka.Actor;
 using Akka.Event;
@@ -75,16 +76,22 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void PublishToKafka(PublishAccountStateToKafka msg)
         {
-            var kafkaAccountModel = new AccountStateKafka();
-            kafkaAccountModel.ID = long.Parse(_accountState.AccountNumber);
-            kafkaAccountModel.AccountStatus = _accountState.AccountStatus;
-            kafkaAccountModel.AsOfDate = DateTime.Now;
-            kafkaAccountModel.CurrentBalance = (decimal) _accountState.CurrentBalance;
-            kafkaAccountModel.DaysDelinquent = 0;
-            kafkaAccountModel.LastPaymentAmount = 0;
-            kafkaAccountModel.PortfolioID = PortfolioActor.GetPorfolioNameHash(Self.Path.Parent.Name);
-            kafkaAccountModel.UserID = 0;
-            AccountStatePublisherActor.Tell(new Publish(kafkaAccountModel.ID.ToString(), kafkaAccountModel));
+            
+            var kafkaAccountModel = new AccountStateKafka
+            ( 
+             accountNumber: _accountState.AccountNumber,
+              userName: _accountState.UserName,
+              portfolioNumber: Self.Path.Parent.Name,
+              currentBalance: (decimal) _accountState.CurrentBalance,
+              accountStatus: _accountState.AccountStatus,
+              asOfDate: DateTime.Now,
+              lastPaymentDate: _accountState.LastPaymentDate,
+              lastPaymentAmount: (decimal) _accountState.LastPaymentAmount,
+              daysDelinquent: (int) DateTime.Now.Subtract(_accountState.LastPaymentDate).Days,
+              accountInventory: _accountState.Inventroy
+            );
+               
+             AccountStatePublisherActor.Tell(new Publish(kafkaAccountModel.AccountNumber, kafkaAccountModel));
             _log.Debug($"Sending kafka message for account {kafkaAccountModel}");
         }
 
@@ -183,7 +190,15 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                  * we want to use behaviours here to make sure we don't allow the account to be created 
                  * once it has been created -- Become AccountBoarded perhaps?
                   */
-                var @event = new AccountCreated(command.AccountNumber);
+                var @event = new AccountCreated
+                (
+                    accountNumber: command.AccountNumber,
+                    openingBalance: command.BoardingModel.OpeningBalance,
+                    inventory: command.BoardingModel.Inventory,
+                    userName: command.BoardingModel.UserName,
+                    lastPaymentDate: command.BoardingModel.LastPaymentDate,
+                    lastPaymentAmount: command.BoardingModel.LastPaymentAmount
+                );
                 Persist(@event, s =>
                 {
                     _accountState = _accountState.ApplyEvent(@event);
@@ -224,7 +239,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             {
                 /* I may want to do old vs new state comparisons for other reasons
 				 *  but ultimately we just update the state.. */
-                var events = resultModel.GeneratedEvents;
+                List<IDomainEvent> events = resultModel.GeneratedEvents;
                 foreach (var @event in events)
                 {
                     Persist(@event, s =>

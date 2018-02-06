@@ -34,12 +34,22 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
         */
         private AccountState(string accountNumber,
             ImmutableDictionary<string, string> simulation,
-            ImmutableList<StateLog> log)
+            ImmutableList<StateLog> log,
+            double openingBalance,
+            string inventory,
+            string userName,
+            double lastPaymentAmount,
+            DateTime lastPaymentDate)
         {
             SimulatedFields = simulation;
             AccountNumber = accountNumber;
             AuditLog = log;
             Obligations = ImmutableDictionary.Create<string, MaintenanceFee>();
+            OpeningBalance = openingBalance;
+            Inventroy = inventory;
+            UserName = userName;
+            LastPaymentAmount = lastPaymentAmount;
+            LastPaymentDate = lastPaymentDate;
         }
 
         private AccountState(string accountNumber,
@@ -69,6 +79,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             AuditLog = log;
             SimulatedFields = simulation;
         }
+
+
+        public string UserName { get;   }
+
+        public string Inventroy { get;  }
+
+        public double OpeningBalance { get;  }
 
 
         public string AccountNumber { get; }
@@ -254,10 +271,30 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 
         private AccountState ApplyEvent(AccountCreated occurred)
         {
-            return new AccountState(occurred.AccountNumber,
-                LoadSimulation(),
-                AuditLog.Add(new StateLog("AccountCreated", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
+            var newState = new AccountState(
+                accountNumber: occurred.AccountNumber,
+                //accountStatus: AccountStatus.Boarded,
+                simulation: LoadSimulation(),
+                log: AuditLog.Add(
+                    new StateLog("AccountCreated",
+                        occurred.Message,
+                        occurred.UniqueGuid(),
+                        occurred.OccurredOn()
+                    )
+                ),
+                openingBalance: occurred.OpeningBalance,
+                inventory: occurred.Inventory,
+                userName: occurred.UserName, 
+                lastPaymentAmount: occurred.LastPaymentAmount,
+                lastPaymentDate: occurred.LastPaymentDate
+            );
+           
+                
+            return newState;
         }
+        
+        public double LastPaymentAmount { get; }
+        public DateTime LastPaymentDate { get; }
 
         /* Helpers */
         private static ImmutableDictionary<string, string> LoadSimulation()

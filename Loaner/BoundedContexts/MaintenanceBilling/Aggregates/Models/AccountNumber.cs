@@ -1,6 +1,6 @@
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 {
-    internal class AccountNumber
+    public class AccountNumber
     {
         public AccountNumber(string accountNumber)
         {
