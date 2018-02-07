@@ -27,58 +27,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
         }
 
 
-        /**
-         * 
-         * Private constructors, only to be used by the ApplyEvent method 
-         * 
-        */
-        /**private AccountState(
-            string accountNumber,
-            double currentBalance,
-            ImmutableDictionary<string, string> simulation,
-            ImmutableList<StateLog> log,
-            double openingBalance,
-            string inventory,
-            string userName,
-            double lastPaymentAmount,
-            DateTime lastPaymentDate)
-        {
-            CurrentBalance = currentBalance;
-            SimulatedFields = simulation;
-            AccountNumber = accountNumber;
-            AuditLog = log;
-            Obligations = ImmutableDictionary.Create<string, MaintenanceFee>();
-            OpeningBalance = openingBalance;
-            Inventroy = inventory;
-            UserName = userName;
-            LastPaymentAmount = lastPaymentAmount;
-            LastPaymentDate = lastPaymentDate;
-        }**/
-
-        /**private AccountState(
-            string accountNumber,
-            double currentBalance,
-            AccountStatus accountStatus,
-            ImmutableDictionary<string, MaintenanceFee> obligations,
-            ImmutableDictionary<string, string> simulation,
-            double openingBalance,
-            string inventory,
-            string userName,
-            double lastPaymentAmount,
-            DateTime lastPaymentDate)
-        {
-            AccountNumber = accountNumber;
-            CurrentBalance = currentBalance;
-            AccountStatus = accountStatus;
-            Obligations = obligations;
-            SimulatedFields = simulation;
-            Inventroy = inventory;
-            UserName = userName;
-            LastPaymentAmount = lastPaymentAmount;
-            LastPaymentDate = lastPaymentDate;
-            OpeningBalance = openingBalance;
-        }**/
-
         private AccountState(string accountNumber,
             double currentBalance,
             AccountStatus accountStatus,
@@ -199,9 +147,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                 lastPaymentAmount: LastPaymentAmount,
                 lastPaymentDate: LastPaymentDate
             );
-            //Console.WriteLine($"ObligationAssessedConcept: {occurred}");
-            //Console.WriteLine($"New AccountState: {newState}");
-
+            
+            
             return newState;
         }
 
@@ -223,9 +170,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                 userName: UserName,
                 lastPaymentAmount: LastPaymentAmount,
                 lastPaymentDate: LastPaymentDate);
-            //Console.WriteLine($"ObligationAssessedConcept: {occurred}");
-            //Console.WriteLine($"New AccountState: {newState}");
-
+           
             return newState;
         }
 
@@ -432,10 +377,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             return state;
         }
 
+
         public override string ToString()
         {
-            return
-                $"[AccountState: Obligations={Obligations}, AccountNumber={AccountNumber}, CurrentBalance={CurrentBalance}, DebugInfo={AuditLog}, SimulatedFields={SimulatedFields}]";
+            return $"{nameof(UserName)}: {UserName}, {nameof(Inventroy)}: {Inventroy}, {nameof(OpeningBalance)}: {OpeningBalance}, {nameof(AccountNumber)}: {AccountNumber}, {nameof(CurrentBalance)}: {CurrentBalance}, {nameof(AccountStatus)}: {AccountStatus}, {nameof(AuditLog)}: {AuditLog}, {nameof(SimulatedFields)}: {SimulatedFields}, {nameof(Obligations)}: {Obligations}, {nameof(LastPaymentAmount)}: {LastPaymentAmount}, {nameof(LastPaymentDate)}: {LastPaymentDate}";
         }
     }
 }
