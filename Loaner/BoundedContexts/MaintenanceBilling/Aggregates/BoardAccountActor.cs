@@ -20,28 +20,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
       * We are sumulating the boarding of accounts from scratch. 
      */
 
-    public class AccountBoardingModel
-    {
-       
-        public AccountBoardingModel(string portfolioName, AccountNumber accountNumber, double openingBalance, string inventory, string userName, DateTime lastPaymentDate, double lastPaymentAmount)
-        {
-            PortfolioName = portfolioName;
-            AccountNumber = accountNumber;
-            OpeningBalance = openingBalance;
-            Inventory = inventory;
-            UserName = userName;
-            LastPaymentDate = lastPaymentDate;
-            LastPaymentAmount = lastPaymentAmount;
-        }
-        public double LastPaymentAmount { get; }
-        public DateTime LastPaymentDate { get; }
-        public string PortfolioName { get;  }
-        public AccountNumber AccountNumber { get; }
-        public double OpeningBalance { get;  }
-        public string Inventory { get;  }
-        public string UserName { get;  }
-              
-    }
     public class BoardAccountActor : ReceiveActor
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
@@ -261,6 +239,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                                 accounts.Add(accountNumber, accountBoarded);
                                 _accountsInPortfolio.Add(portfolioName, accounts);
                             }
+
+                            
                         }
                     }
                     _log.Info($"Successfully processing file {clientsFilePath}");

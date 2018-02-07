@@ -37,5 +37,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
         {
             return _UniqueGuid;
         }
+
+        public override string ToString()
+        {
+            return $"{nameof(LastPaymentAmount)}: {LastPaymentAmount}, {nameof(LastPaymentDate)}: {LastPaymentDate}, {nameof(OpeningBalance)}: {OpeningBalance}, {nameof(Inventory)}: {Inventory}, {nameof(UserName)}: {UserName}, {nameof(Message)}: {Message}, {nameof(_OccurredOn)}: {_OccurredOn}, {nameof(AccountNumber)}: {AccountNumber}, {nameof(_UniqueGuid)}: {_UniqueGuid}";
+        }
     }
 }

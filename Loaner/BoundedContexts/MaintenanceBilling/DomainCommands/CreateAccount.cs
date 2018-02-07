@@ -1,5 +1,6 @@
 ﻿using System;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.DomainCommands
 {

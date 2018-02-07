@@ -32,7 +32,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
          * Private constructors, only to be used by the ApplyEvent method 
          * 
         */
-        private AccountState(string accountNumber,
+        /**private AccountState(
+            string accountNumber,
+            double currentBalance,
             ImmutableDictionary<string, string> simulation,
             ImmutableList<StateLog> log,
             double openingBalance,
@@ -41,6 +43,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             double lastPaymentAmount,
             DateTime lastPaymentDate)
         {
+            CurrentBalance = currentBalance;
             SimulatedFields = simulation;
             AccountNumber = accountNumber;
             AuditLog = log;
@@ -50,27 +53,43 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             UserName = userName;
             LastPaymentAmount = lastPaymentAmount;
             LastPaymentDate = lastPaymentDate;
-        }
+        }**/
 
-        private AccountState(string accountNumber,
+        /**private AccountState(
+            string accountNumber,
             double currentBalance,
             AccountStatus accountStatus,
             ImmutableDictionary<string, MaintenanceFee> obligations,
-            ImmutableDictionary<string, string> simulation)
+            ImmutableDictionary<string, string> simulation,
+            double openingBalance,
+            string inventory,
+            string userName,
+            double lastPaymentAmount,
+            DateTime lastPaymentDate)
         {
             AccountNumber = accountNumber;
             CurrentBalance = currentBalance;
             AccountStatus = accountStatus;
             Obligations = obligations;
             SimulatedFields = simulation;
-        }
+            Inventroy = inventory;
+            UserName = userName;
+            LastPaymentAmount = lastPaymentAmount;
+            LastPaymentDate = lastPaymentDate;
+            OpeningBalance = openingBalance;
+        }**/
 
         private AccountState(string accountNumber,
             double currentBalance,
             AccountStatus accountStatus,
             ImmutableDictionary<string, MaintenanceFee> obligations,
             ImmutableDictionary<string, string> simulation,
-            ImmutableList<StateLog> log)
+            ImmutableList<StateLog> log,
+            double openingBalance,
+            string inventory,
+            string userName,
+            double lastPaymentAmount,
+            DateTime lastPaymentDate)
         {
             AccountNumber = accountNumber;
             CurrentBalance = currentBalance;
@@ -78,6 +97,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             Obligations = obligations;
             AuditLog = log;
             SimulatedFields = simulation;
+            Inventroy = inventory;
+            UserName = userName;
+            LastPaymentAmount = lastPaymentAmount;
+            LastPaymentDate = lastPaymentDate;
+            OpeningBalance = openingBalance;
         }
 
 
@@ -85,8 +109,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 
         public string Inventroy { get;  }
 
-        public double OpeningBalance { get;  }
-
+        public double OpeningBalance { get; }
 
         public string AccountNumber { get; }
 
@@ -148,7 +171,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                         occurred.UniqueGuid(),
                         occurred.OccurredOn()
                     )
-                )
+                ),
+                openingBalance: OpeningBalance,
+                inventory: Inventroy,
+                userName: UserName,
+                lastPaymentAmount: LastPaymentAmount,
+                lastPaymentDate: LastPaymentDate
             );
         }
 
@@ -157,10 +185,20 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             var trans = new FinancialTransaction(new Tax() {Amount = occurred.UacAmountApplied},
                 occurred.UacAmountApplied);
             Obligations[occurred.ObligationNumber]?.PostTransaction(trans);
-            var newState = new AccountState(AccountNumber, CurrentBalance + (-1 * occurred.UacAmountApplied),
-                AccountStatus, Obligations,
-                SimulatedFields,
-                AuditLog.Add(new StateLog("UacAppliedAfterBilling", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
+            var newState = new AccountState(
+                accountNumber: AccountNumber, 
+                currentBalance: CurrentBalance + (-1 * occurred.UacAmountApplied),
+                accountStatus: AccountStatus, 
+                obligations: Obligations,
+                simulation: SimulatedFields,
+                log: AuditLog.Add(new StateLog("UacAppliedAfterBilling", occurred.Message, occurred.UniqueGuid(),
+                    occurred.OccurredOn())),
+                openingBalance: OpeningBalance,
+                inventory: Inventroy,
+                userName: UserName,
+                lastPaymentAmount: LastPaymentAmount,
+                lastPaymentDate: LastPaymentDate
+            );
             //Console.WriteLine($"ObligationAssessedConcept: {occurred}");
             //Console.WriteLine($"New AccountState: {newState}");
 
@@ -172,10 +210,19 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             var trans = new FinancialTransaction(new Tax() {Amount = occurred.TaxAmountApplied},
                 occurred.TaxAmountApplied);
             Obligations[occurred.ObligationNumber]?.PostTransaction(trans);
-            var newState = new AccountState(AccountNumber, CurrentBalance + occurred.TaxAmountApplied,
-                AccountStatus, Obligations,
-                SimulatedFields,
-                AuditLog.Add(new StateLog("TaxAppliedDuringBilling", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
+            var newState = new AccountState(
+                accountNumber: AccountNumber,
+                currentBalance: CurrentBalance + occurred.TaxAmountApplied,
+                accountStatus: AccountStatus,
+                obligations: Obligations,
+                simulation: SimulatedFields,
+                log: AuditLog.Add(new StateLog("TaxAppliedDuringBilling", occurred.Message, occurred.UniqueGuid(),
+                    occurred.OccurredOn())),
+                openingBalance: OpeningBalance,
+                inventory: Inventroy,
+                userName: UserName,
+                lastPaymentAmount: LastPaymentAmount,
+                lastPaymentDate: LastPaymentDate);
             //Console.WriteLine($"ObligationAssessedConcept: {occurred}");
             //Console.WriteLine($"New AccountState: {newState}");
 
@@ -185,95 +232,166 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
         public static AccountState Clone(AccountState state)
         {
             return new AccountState(
-                state.AccountNumber
-                , state.CurrentBalance
-                , state.AccountStatus
-                , state.Obligations
-                , state.SimulatedFields
-                , state.AuditLog);
+                accountNumber: state.AccountNumber
+                , currentBalance: state.CurrentBalance
+                , accountStatus: state.AccountStatus
+                , obligations: state.Obligations
+                , simulation: state.SimulatedFields
+                , log: state.AuditLog
+                , openingBalance: state.OpeningBalance,
+                inventory: state.Inventroy,
+                userName: state.UserName,
+                lastPaymentAmount: state.LastPaymentAmount,
+                lastPaymentDate: state.LastPaymentDate);
+
         }
 
         private AccountState ApplyEvent(SomeOneSaidHiToMe occurred)
         {
-            return new AccountState(AccountNumber, CurrentBalance,
-                AccountStatus, Obligations,
+            return new AccountState(
+                AccountNumber,
+                CurrentBalance,
+                AccountStatus,
+                Obligations,
                 LoadSimulation().ToImmutableDictionary(),
-                AuditLog.Add(new StateLog("SomeOneSaidHiToMe",occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
+                AuditLog.Add(new StateLog("SomeOneSaidHiToMe", occurred.Message, occurred.UniqueGuid(),
+                    occurred.OccurredOn())),
+                openingBalance: OpeningBalance,
+                inventory: Inventroy,
+                userName: UserName,
+                lastPaymentAmount: LastPaymentAmount,
+                lastPaymentDate: LastPaymentDate);
+
         }
 
         private AccountState ApplyEvent(SuperSimpleSuperCoolDomainEventFoundByRules occurred)
         {
-            return new AccountState(AccountNumber, CurrentBalance,
+            return new AccountState(
+                AccountNumber,
+                CurrentBalance,
                 AccountStatus, Obligations,
                 LoadSumulation(SimulatedFields, "1", "My state has been updated, see..."),
-                AuditLog.Add(new StateLog("SuperSimpleSuperCoolEventFoundByRules", occurred.Message, occurred.UniqueGuid(),
-                    occurred.OccurredOn())));
+                AuditLog.Add(new StateLog("SuperSimpleSuperCoolEventFoundByRules", occurred.Message,
+                    occurred.UniqueGuid(),
+                    occurred.OccurredOn())),
+                openingBalance: OpeningBalance,
+                inventory: Inventroy,
+                userName: UserName,
+                lastPaymentAmount: LastPaymentAmount,
+                lastPaymentDate: LastPaymentDate);
         }
 
         private AccountState ApplyEvent(ObligationAssessedConcept occurred)
         {
-            //Console.WriteLine($"{AccountNumber}:{occurred.FinancialBucket};{occurred.FinancialBucket.Amount}");
             var trans = new FinancialTransaction(occurred.FinancialBucket, occurred.FinancialBucket.Amount);
             Obligations[occurred.ObligationNumber]?.PostTransaction(trans);
-            var newState = new AccountState(AccountNumber, CurrentBalance + occurred.FinancialBucket.Amount,
-                AccountStatus, Obligations,
+            var newState = new AccountState(
+                AccountNumber,
+                CurrentBalance + occurred.FinancialBucket.Amount,
+                AccountStatus,
+                Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("ObligationAssessedConcept", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
-            //Console.WriteLine($"ObligationAssessedConcept: {occurred}");
-            //Console.WriteLine($"New AccountState: {newState}");
-
+                AuditLog.Add(new StateLog("ObligationAssessedConcept", occurred.Message, occurred.UniqueGuid(),
+                    occurred.OccurredOn())),
+                openingBalance: OpeningBalance,
+                inventory: Inventroy,
+                userName: UserName,
+                lastPaymentAmount: LastPaymentAmount,
+                lastPaymentDate: LastPaymentDate);
+            
+            
             return newState;
         }
 
         private AccountState ApplyEvent(AccountCurrentBalanceUpdated occurred)
         {
-            return new AccountState(AccountNumber, occurred.CurrentBalance,
-                AccountStatus, Obligations,
+            return new AccountState(
+                AccountNumber,
+                occurred.CurrentBalance,
+                AccountStatus,
+                Obligations,
                 SimulatedFields,
                 AuditLog.Add(new StateLog("AccountCurrentBalanceUpdated", occurred.Message, occurred.UniqueGuid(),
-                    occurred.OccurredOn())));
+                    occurred.OccurredOn())),
+                openingBalance: OpeningBalance,
+                inventory: Inventroy,
+                userName: UserName,
+                lastPaymentAmount: LastPaymentAmount,
+                lastPaymentDate: LastPaymentDate);
         }
 
         private AccountState ApplyEvent(AccountStatusChanged occurred)
         {
-            return new AccountState(AccountNumber, CurrentBalance,
-                occurred.AccountStatus, Obligations,
-                SimulatedFields,
-                AuditLog.Add(new StateLog("AccountStatusChanged", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
+            return new AccountState(
+                accountNumber: AccountNumber,
+                currentBalance: CurrentBalance,
+                accountStatus: occurred.AccountStatus, 
+                obligations: Obligations,
+                simulation: SimulatedFields,
+                log: AuditLog.Add(new StateLog("AccountStatusChanged", occurred.Message, occurred.UniqueGuid(),
+                    occurred.OccurredOn())),
+                openingBalance: OpeningBalance,
+                inventory: Inventroy,
+                userName: UserName,
+                lastPaymentAmount: LastPaymentAmount,
+                lastPaymentDate: LastPaymentDate);
         }
 
         private AccountState ApplyEvent(AccountCancelled occurred)
         {
-            return new AccountState(AccountNumber, CurrentBalance,
+            return new AccountState(AccountNumber, 
+                CurrentBalance,
                 occurred.AccountStatus, Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("AccountCancelled", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
+                AuditLog.Add(new StateLog("AccountCancelled", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn()))
+                ,openingBalance: OpeningBalance,
+                inventory: Inventroy,
+                userName: UserName,
+                lastPaymentAmount: LastPaymentAmount,
+                lastPaymentDate: LastPaymentDate);
         }
 
         private AccountState ApplyEvent(ObligationAddedToAccount occurred)
         {
-            return new AccountState(AccountNumber, CurrentBalance,
+            return new AccountState(
+                AccountNumber, 
+                CurrentBalance,
                 AccountStatus,
                 Obligations.Add(occurred.MaintenanceFee.ObligationNumber, occurred.MaintenanceFee),
                 SimulatedFields,
-                AuditLog.Add(new StateLog("ObligationAddedToAccount", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
+                AuditLog.Add(new StateLog("ObligationAddedToAccount", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn()))
+                ,openingBalance: OpeningBalance,
+                inventory: Inventroy,
+                userName: UserName,
+                lastPaymentAmount: LastPaymentAmount,
+                lastPaymentDate: LastPaymentDate);
         }
 
         private AccountState ApplyEvent(ObligationSettledConcept occurred)
         {
             var trans = new FinancialTransaction(occurred.FinancialBucket, occurred.Amount);
             Obligations[occurred.ObligationNumber].PostTransaction(trans);
-            return new AccountState(AccountNumber, CurrentBalance,
-                AccountStatus, Obligations,
+            return new AccountState(
+                AccountNumber, 
+                CurrentBalance,
+                AccountStatus, 
+                Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("ObligationSettledConcept", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn())));
+                AuditLog.Add(new StateLog("ObligationSettledConcept", occurred.Message, occurred.UniqueGuid(), occurred.OccurredOn()))
+                ,openingBalance: OpeningBalance,
+                inventory: Inventroy,
+                userName: UserName,
+                lastPaymentAmount: LastPaymentAmount,
+                lastPaymentDate: LastPaymentDate);
         }
 
         private AccountState ApplyEvent(AccountCreated occurred)
         {
+
             var newState = new AccountState(
                 accountNumber: occurred.AccountNumber,
-                //accountStatus: AccountStatus.Boarded,
+                accountStatus: AccountStatus.Boarded,
+                obligations: ImmutableDictionary.Create<string, MaintenanceFee>(),
                 simulation: LoadSimulation(),
                 log: AuditLog.Add(
                     new StateLog("AccountCreated",
@@ -283,13 +401,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                     )
                 ),
                 openingBalance: occurred.OpeningBalance,
+                currentBalance: occurred.OpeningBalance,
                 inventory: occurred.Inventory,
                 userName: occurred.UserName, 
                 lastPaymentAmount: occurred.LastPaymentAmount,
                 lastPaymentDate: occurred.LastPaymentDate
             );
            
-                
             return newState;
         }
         
