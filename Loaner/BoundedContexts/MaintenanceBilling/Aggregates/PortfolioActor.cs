@@ -306,7 +306,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         public void ApplySnapShotStrategy()
         {
-            if (LastSequenceNr % LoanerActors.TakePortolioSnapshotAt == 0)
+            if (LastSequenceNr % LoanerActors.TakePortolioSnapshotAt == 0 )
             {
                 var state = new List<string>(); // Just need the name to kick it off?
                 foreach (var record in _accounts.Keys)

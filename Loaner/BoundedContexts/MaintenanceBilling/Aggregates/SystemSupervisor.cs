@@ -87,8 +87,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void GetBillingProgress()
         {
-            Dictionary<string, Dictionary<string, Tuple<double, double>>>
-                result = new Dictionary<string, Dictionary<string, Tuple<double, double>>>();
+            var result = new Dictionary<string, Dictionary<string, Tuple<double, double>>>();
             int accountsCntr = 0;
             foreach (var x in _portfolioBillings)
             {

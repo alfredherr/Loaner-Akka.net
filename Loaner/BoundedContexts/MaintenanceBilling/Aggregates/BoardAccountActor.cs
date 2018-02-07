@@ -213,7 +213,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     {
                         if (row.Length > 11)
                         {
-                            string[] line = row.Split('\t');
+                            string[] line = row.ToUpper().Split('\t');
 
                             if (line.Length < 7)
                                 throw new Exception($"Row: {row} in {clientsFilePath} does not have 7 tab-separated columns. It has {line.Length}.");
