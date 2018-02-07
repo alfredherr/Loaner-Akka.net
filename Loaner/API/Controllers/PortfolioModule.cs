@@ -29,7 +29,7 @@ namespace Loaner.API.Controllers
 
                 var portfolioActor = LoanerActors.DemoActorSystem
                     .ActorSelection($"/user/demoSupervisor/{portfolio}")
-                    .ResolveOne(TimeSpan.FromSeconds(3));
+                    .ResolveOne(TimeSpan.FromSeconds(10));
 
                 if (portfolioActor.Exception != null)
                 {
@@ -40,9 +40,9 @@ namespace Loaner.API.Controllers
                 {
                     answer = portfolioActor.Result
                         .Ask<TellMeYourPortfolioStatus>(new TellMeYourStatus(), TimeSpan.FromSeconds(50)).Result;
-                    return Response.AsJson(new {answer.Message, answer.PortfolioState});
+                    return Response.AsJson(new {answer.Message, PortfolioState = answer.PortfolioStateViewModel});
                 });
-                return Response.AsJson(new {answer.Message, answer.PortfolioState});
+                return Response.AsJson(new {answer.Message, PortfolioState = answer.PortfolioStateViewModel});
             });
 
             Get("/{portfolioName}/run", async args =>
@@ -64,7 +64,7 @@ namespace Loaner.API.Controllers
                 {
                     answer = portfolioActor.Result
                         .Ask<TellMeYourPortfolioStatus>(new StartAccounts(), TimeSpan.FromSeconds(30)).Result;
-                    return Response.AsJson(new {answer.Message, answer.PortfolioState});
+                    return Response.AsJson(new {answer.Message, PortfolioState = answer.PortfolioStateViewModel});
                 });
                 return Response.AsJson(answer);
             });
@@ -142,7 +142,7 @@ namespace Loaner.API.Controllers
                         .Ask<TellMeYourPortfolioStatus>(new AssessWholePortfolio(portfolio, assessment.LineItems),
                             TimeSpan.FromSeconds(50))
                         .Result;
-                    return Response.AsJson(new {answer.Message, answer.PortfolioState});
+                    return Response.AsJson(new {answer.Message, PortfolioState = answer.PortfolioStateViewModel});
                 });
                 return Response.AsJson(answer);
                 

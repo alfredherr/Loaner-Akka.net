@@ -6,9 +6,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
     using DomainModels;
     using System;
 
-    public class AccountStateKafka
+    public class AccountStateViewModel
     {
-        public AccountStateKafka(string accountNumber, string userName, string portfolioName, decimal currentBalance, AccountStatus accountStatus, DateTime asOfDate, DateTime lastPaymentDate, decimal lastPaymentAmount, int daysDelinquent, string accountInventory)
+        public AccountStateViewModel(string accountNumber, string userName, string portfolioName, decimal currentBalance, AccountStatus accountStatus, DateTime asOfDate, DateTime lastPaymentDate, decimal lastPaymentAmount, int daysDelinquent, string accountInventory)
         {
             AccountNumber = accountNumber;
             UserName = userName;

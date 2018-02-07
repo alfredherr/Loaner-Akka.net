@@ -182,7 +182,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             }
             else
             {
-                _log.Info($"You tried to load account {portfolioName} which has already been loaded");
+                _log.Info($"You tried to load portfolio {portfolioName} which has already been loaded");
             }
         }
 

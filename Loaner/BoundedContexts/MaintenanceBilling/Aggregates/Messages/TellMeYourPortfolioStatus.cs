@@ -9,24 +9,24 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages
         {
 
             Message = "";
-            PortfolioState = new PortfolioState();
+            PortfolioStateViewModel = new PortfolioStateViewModel();
 
         }
 
         public TellMeYourPortfolioStatus(string message)
         {
             Message = message;
-            PortfolioState = new PortfolioState();
+            PortfolioStateViewModel = new PortfolioStateViewModel();
         }
 
-        public TellMeYourPortfolioStatus(string message, PortfolioState portfolioState)
+        public TellMeYourPortfolioStatus(string message, PortfolioStateViewModel portfolioStateViewModel)
         {
             Message = message;
-            PortfolioState = portfolioState;
+            PortfolioStateViewModel = portfolioStateViewModel;
 
         }
 
         public string Message { get; }
-        public PortfolioState PortfolioState { get; }
+        public PortfolioStateViewModel PortfolioStateViewModel { get; }
     }
 }

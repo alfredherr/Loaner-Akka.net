@@ -2,7 +2,7 @@
 {
     using System;
 
-    public class PortfolioState
+    public class PortfolioStateViewModel
     {
         
        

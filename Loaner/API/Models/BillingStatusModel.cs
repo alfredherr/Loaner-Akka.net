@@ -27,11 +27,11 @@ namespace Loaner.API.Models
 
         public void Summarize()
         {
-            foreach (var billingStatusBilling in BillingStatus)
+            foreach (KeyValuePair<string, Dictionary<string, Tuple<double, double>>> billingStatusBilling in BillingStatus)
             {
                 SummarizedBillingStatus.AddOrSet(billingStatusBilling.Key, billingStatusBilling.Value.Keys.Count);
 
-                foreach (var account in billingStatusBilling.Value)
+                foreach (KeyValuePair<string, Tuple<double, double>> account in billingStatusBilling.Value)
                 {
                     AccountsBilled++;
                     AmountBilled += account.Value.Item1;

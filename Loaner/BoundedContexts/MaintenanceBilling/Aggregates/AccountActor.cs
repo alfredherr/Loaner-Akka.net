@@ -56,7 +56,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<CancelAccount>(command => ApplyBusinessRules(command));
             Command<AskToBeSupervised>(command => SendParentMyState(command));
             Command<PublishAccountStateToKafka>(msg => PublishToKafka(msg));
-
+            Command<CompleteBoardingProcess>(msg => CompleteBoardingProcess());
+            
             /** Special handlers below; we can decide how to handle snapshot processin outcomes. */
             Command<SaveSnapshotSuccess>(success => PurgeOldSnapShots(success));
             Command<DeleteSnapshotsSuccess>(msg => { });
@@ -77,7 +78,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void PublishToKafka(PublishAccountStateToKafka msg)
         {
             
-            var kafkaAccountModel = new AccountStateKafka
+            var kafkaAccountModel = new AccountStateViewModel
             ( 
              accountNumber: _accountState.AccountNumber,
               userName: _accountState.UserName,
@@ -112,6 +113,19 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         public override string PersistenceId => Self.Path.Name;
 
+        private void ReportMyState( double transAmount, double balanceAfter,IActorRef toWhom = null)
+        {
+            if (toWhom == null)
+                toWhom = Context.Parent; // use the parent if we're not passed one.
+
+            toWhom.Tell(
+                new RegisterMyAccountBalanceChange(
+                    _accountState.AccountNumber,
+                    transAmount,
+                    balanceAfter)
+            );
+
+        }
         private void ProcessBilling(BillingAssessment command)
         {
             //Sender.Tell(new MyAccountStatus($"Your billing request has been submitted.",AccountState.Clone(_accountState)));
@@ -124,13 +138,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             ApplyBusinessRules(command);
             double total = command.LineItems.Aggregate(0.0,(accomulator,next ) => accomulator + next.Item.Amount);
             
-
-            // Let parent portfolio know my current balances
-            Context.Parent.Tell(
-                new RegisterMyAccountBilling(_accountState.AccountNumber,
-                    total,
-                    _accountState.CurrentBalance)
-            );
+            ReportMyState(total, _accountState.CurrentBalance);
+         
 
             //Report current state to Kafka
             Self.Tell(new PublishAccountStateToKafka());
@@ -143,9 +152,18 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
              * send the supervisor to add it to it's list -- then it can terminate. 
              */
             command.MyNewParent.Tell(new SuperviseThisAccount(command.Portfolio, Self.Path.Name));
-            Self.Tell(PoisonPill.Instance);
+            
+            ReportMyState(_accountState.OpeningBalance, _accountState.CurrentBalance, command.MyNewParent);
+         
+            Self.Tell(new CompleteBoardingProcess());
+            
         }
 
+        private void CompleteBoardingProcess()
+        {
+            Self.Tell(PoisonPill.Instance);
+        }
+        
         private void ApplySnapShot(SnapshotOffer offer)
         {
             _accountState = (AccountState) offer.Snapshot;
@@ -202,6 +220,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 Persist(@event, s =>
                 {
                     _accountState = _accountState.ApplyEvent(@event);
+                    
                     _log.Debug($"Created account {command.AccountNumber}");
                 });
             }

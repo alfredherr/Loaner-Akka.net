@@ -1,41 +1,32 @@
-
-
-using System.Reflection;
-using Akka.Dispatch;
-using Loaner.KafkaProducer;
-using Loaner.KafkaProducer.Commands;
-
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Security.Cryptography;
     using Akka.Actor;
     using Akka.Event;
     using Akka.Monitoring;
     using Akka.Persistence;
-    using Akka.Util.Internal;
     using ActorManagement;
     using Messages;
     using Models;
     using DomainCommands;
     using DomainEvents;
     using static ActorManagement.LoanerActors;
+    using System.Collections.Immutable;
+    using System.Reflection;
+    using Akka.Dispatch;
+    using Exceptions;
+    using KafkaProducer.Commands;
 
     public class PortfolioActor : ReceivePersistentActor
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
-        /**
-         * Actor's state = just a list of account under supervision
-         */
-        private Dictionary<string, IActorRef> _accounts = new Dictionary<string, IActorRef>();
-
-        private Dictionary<string, Tuple<double, double>> _billings = new Dictionary<string, Tuple<double, double>>();
-        private int _scheduledCallsToInfo = 0;
-        private DateTime _lastBootedOn;
-
+        
+        private PorfolioState _porfolioState = new PorfolioState();
+       
+        
         public PortfolioActor()
         {
             /*** recovery section **/
@@ -51,10 +42,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<TellMeYourStatus>(asking => GetMyStatus());
             Command<TellMeAboutYou>(me =>
                 Console.WriteLine(
-                    $"About me: I am {Self.Path.Name} Msg: {me.Me} I was last booted up on: {_lastBootedOn}"));
+                    $"About me: I am {Self.Path.Name} Msg: {me.Me} I was last booted up on: {_porfolioState.LastBootedOn}"));
             Command<TellMeYourPortfolioStatus>(msg => _log.Debug(msg.Message));
             Command<string>(noMessage => { });
-            Command<RegisterMyAccountBilling>(cmd => RegisterBillingStatus(cmd));
+            Command<RegisterMyAccountBalanceChange>(cmd => RegisterBalanceChange(cmd));
 
             Command<PublishPortfolioStateToKafka>(cmd => PublishToKafka(cmd));
             Command<ReportDebugInfo>(cmd => ReportDebugInfo(cmd));
@@ -90,24 +81,33 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         }
         private void ReportDebugInfo(ReportDebugInfo msg)
         {
-            var active = _accounts.Aggregate(0, (x, y) => x + ( (y.Value == null || y.Value.Equals(ActorRefs.Nobody)) ? 0 : 1) );
+           
+            int active = _porfolioState.SupervizedAccounts.Aggregate(0,
+                (x, y) => x + ((y.AccountActorRef == null || y.AccountActorRef.Equals(ActorRefs.Nobody)) ? 0 : 1));
+
+            double totalBillings =
+                _porfolioState.SupervizedAccounts.Aggregate(0.0, (x, y) => x + y.BalanceAfterLastTransaction);
+            
             _log.Info(
-                $"DebugInfo: {Self.Path.Name} has {_accounts.Count} accounts under supervision " + 
+                $"DebugInfo: {Self.Path.Name} has {_porfolioState.SupervizedAccounts.Count} " +
+                $"accounts under supervision " + 
                 $"of which, {active} are active " +
-                $"with a total balance of ${_billings.Aggregate(0.0, (x, y) => y.Value.Item2 + x)}" +
-                $" (report#{_scheduledCallsToInfo++})");
+                $"with a total balance of ${totalBillings}" +
+                $" (report#{_porfolioState.ScheduledCallsToInfo++})");
 
         }
         private void PublishToKafka(PublishPortfolioStateToKafka cmd)
         {
-            var portfolioSate = new PortfolioState
+            var portfolioSate = new PortfolioStateViewModel
             {
-                AccountCount = _accounts.Count,
+                AccountCount = _porfolioState.SupervizedAccounts.Count,
                 AsOfDate = DateTime.Now,
                 PortfolioName = Self.Path.Name
             };
-            double total = 0.00;
-            portfolioSate.TotalBalance = (decimal)_billings.Aggregate(total, ( x, y ) =>  y.Value.Item2  + x);
+            var totalBillings =
+                _porfolioState.SupervizedAccounts.Aggregate(0.0, (x, y) => x + y.BalanceAfterLastTransaction);
+
+            portfolioSate.TotalBalance = (decimal) totalBillings; 
           
             var key = portfolioSate.PortfolioName;
             PortfolioStatePublisherActor.Tell(new Publish(key, portfolioSate));
@@ -124,17 +124,25 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
         }
 
-        private void RegisterBillingStatus(RegisterMyAccountBilling cmd)
+        private void RegisterBalanceChange(RegisterMyAccountBalanceChange cmd)
         {
-            _billings.AddOrSet(cmd.AccountNumber, Tuple.Create(cmd.AmountBilled, cmd.AccountBalanceAfterBilling));
+            var account = _porfolioState.SupervizedAccounts.FirstOrDefault(x => x.AccountNumber == cmd.AccountNumber);
+            
+            if (account == null)
+                throw new AccountNotUnderSupervision(cmd.AccountNumber);
+                
+            account.LastTransactionAmount = cmd.AmountTransacted;
+            account.BalanceAfterLastTransaction = cmd.AccountBalanceAfterTransaction;
+            
 
-            //Report to parent (Client/SystemSupervisor) every 10k accounts
-            if (_billings.Count % 10000 == 0)
+            var billed = _porfolioState.SupervizedAccounts.Count(x => x.LastTransactionAmount > 0.0);
+           
+            if ( billed % 10000 == 0)
             {
                 var viewble = new Dictionary<string, Tuple<double, double>>();
-                foreach (var a in _billings)
+                foreach (var a in _porfolioState.SupervizedAccounts)
                 {
-                    viewble.Add(a.Key, a.Value);
+                    viewble.Add(a.AccountNumber, Tuple.Create<double, double>(a.LastTransactionAmount,a.BalanceAfterLastTransaction));
                 }
                 Context.Parent.Tell(new RegisterPortolioBilling(Self.Path.Name, viewble));
                 _log.Debug(
@@ -147,19 +155,19 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void RegisterStartup()
         {
-            _lastBootedOn = DateTime.Now;
+            _porfolioState.LastBootedOn = DateTime.Now;
            
         }
 
         private void AssessAllAccounts(AssessWholePortfolio cmd)
         {
             Monitor();
-            foreach (var account in _accounts)
+            foreach (var account in _porfolioState.SupervizedAccounts)
             {
-                BillingAssessment bill = new BillingAssessment(account.Key, cmd.Items);
-                account.Value.Tell(bill);
+                BillingAssessment bill = new BillingAssessment(account.AccountNumber, cmd.Items);
+                account.AccountActorRef.Tell(bill);
             }
-            Sender.Tell(new TellMeYourPortfolioStatus($"Your request was sent to all {_accounts.Count} accounts",
+            Sender.Tell(new TellMeYourPortfolioStatus($"Your request was sent to all {_porfolioState.SupervizedAccounts.Count} accounts",
                 null));
         }
 
@@ -194,68 +202,73 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private Dictionary<string, string> DictionaryToStringList()
         {
             var viewble = new Dictionary<string, string>();
-            foreach (var a in _accounts)
-                viewble.Add(a.Key, a.Value?.ToString() ?? "Not Instantiated");
+            foreach (var a in _porfolioState.SupervizedAccounts)
+                viewble.Add(a.AccountNumber, a.AccountActorRef?.ToString() ?? "Not Instantiated");
             return viewble;
         }
 
         private void StartAccounts()
         {
             Monitor();
-            var immutAccounts = _accounts.Keys.ToList();
+            var immutAccounts = _porfolioState.SupervizedAccounts.ToImmutableList();
 
-            foreach (var account in immutAccounts)
-                if (account.Length != 0 && _accounts[account] == null)
+            foreach (AccountUnderSupervision account in immutAccounts)
+            {
+                if (account.AccountNumber.Length != 0 && account.AccountActorRef == null)
                 {
-                    InstantiateThisAccount(account);
+                    account.AccountActorRef = InstantiateThisAccount(account);
                 }
                 else
                 {
                     _log.Warning($"skipped account {account}, already instantiated.");
                 }
-            Sender.Tell(
-                new TellMeYourPortfolioStatus($"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",
-                    null));
+                Sender.Tell(
+                    new TellMeYourPortfolioStatus(
+                        $"{_porfolioState.SupervizedAccounts.Count} accounts. I was last booted up on: {_porfolioState.LastBootedOn}",
+                        null));
+            }
         }
 
         private void GetMyStatus()
         {
-            var portfolioSate = new PortfolioState
+            var portfolioSate = new PortfolioStateViewModel
             {
-                AccountCount = _accounts.Count,
+                AccountCount = _porfolioState.SupervizedAccounts.Count,
                 AsOfDate = DateTime.Now,
                 PortfolioName = Self.Path.Name
             };
-            double total = 0.00;
-            portfolioSate.TotalBalance = (decimal)_billings.Aggregate(total, ( x, y ) =>  y.Value.Item1  + x);
+            
+            var totalBillings =
+                _porfolioState.SupervizedAccounts.Aggregate(0.0, (x, y) => x + y.BalanceAfterLastTransaction);
+
+            portfolioSate.TotalBalance = (decimal) totalBillings; 
           
             var key = portfolioSate.PortfolioName;
             
             
             Sender.Tell(new TellMeYourPortfolioStatus(
-                $"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",portfolioSate));
+                $"{_porfolioState.SupervizedAccounts.Count} accounts. I was last booted up on: {_porfolioState.LastBootedOn.ToString("yyyy-MM-dd h:mm tt")}",portfolioSate));
         }
 
         private void ProcessSupervision(SuperviseThisAccount command)
         {
             Monitor();
-            if (!_accounts.ContainsKey(command.AccountNumber))
-            {
-                var @event = new AccountAddedToSupervision(command.AccountNumber);
-                Persist(@event, s =>
-                {
-                    _accounts.Add(command.AccountNumber, null);
-                    InstantiateThisAccount(command.AccountNumber);
-                    ApplySnapShotStrategy();
-                    Self.Tell(new PublishPortfolioStateToKafka());
-                });
-                
-            }
-            else
-            {
-                _log.Info($"You tried to load account {command.AccountNumber} which has already been loaded");
-            }
             
+            if(!AccountExistInState(command.AccountNumber)){
+                _log.Info($"You tried to load account {command.AccountNumber} which has already been loaded");
+                return;
+            }
+
+            var @event = new AccountAddedToSupervision(command.AccountNumber);
+            Persist(@event, s =>
+            {
+                var account = new AccountUnderSupervision(command.AccountNumber);
+                _porfolioState.SupervizedAccounts.Add(account); 
+                InstantiateThisAccount(account);
+                ApplySnapShotStrategy();
+                Self.Tell(new PublishPortfolioStateToKafka());
+            });
+
         }
 
         private void ReplayEvent(string accountNumber)
@@ -266,56 +279,53 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 throw new Exception("Why is this blank?");
             }
 
-            if (_accounts.ContainsKey(accountNumber))
+            if (! AccountExistInState(accountNumber))
             {
                 _log.Debug($"Supervisor already has {accountNumber} in state. No action taken");
+                return;
             }
-            else
-            {
-                _accounts.Add(accountNumber, null);
-                _log.Debug($"Replayed event on {accountNumber}");
-            }
+            
+            var account = new AccountUnderSupervision(accountNumber);
+            _porfolioState.SupervizedAccounts.Add(account); 
+            
+            _log.Debug($"Replayed event on {accountNumber}");
+
         }
 
-        private IActorRef InstantiateThisAccount(string accountNumber)
+        private bool AccountExistInState(string accountNumber)
         {
-            if (_accounts.ContainsKey(accountNumber))
-            {
-                var accountActor = Context.ActorOf(Props.Create<AccountActor>(), accountNumber);
-                _accounts[accountNumber] = accountActor;
-                //accountActor.Tell(new CheckYoSelf()); // to instantiate actor
-                _log.Debug($"Instantiated account {accountActor.Path.Name}");
-                return accountActor;
-            }
-            throw new Exception($"Why are you trying to instantiate an account not yet registered?");
+            return _porfolioState.SupervizedAccounts.Select(x => x.AccountNumber == accountNumber).Any();
+        }
+
+        private IActorRef InstantiateThisAccount(AccountUnderSupervision account)
+        {
+
+            var accountActor = Context.ActorOf(Props.Create<AccountActor>(), account.AccountNumber);
+            
+            account.AccountActorRef = accountActor; // is this neede?
+            
+            _log.Debug($"Instantiated account {accountActor.Path.Name}");
+            
+            return accountActor;
         }
 
         private void ProcessSnapshot(SnapshotOffer offer)
         {
             Monitor();
 
-            //var snap = ((Newtonsoft.Json.Linq.JArray) offer.Snapshot).ToObject<string[]>();
-            var snap = (string[]) offer.Snapshot;
+            _porfolioState = (PorfolioState) offer.Snapshot;
 
-            foreach (var account in snap)
-            {
-                _accounts.Add(account, null);
-            }
-            _log.Info($"{Self.Path.Name} Snapshot recovered. {snap.Length} accounts.");
+            _log.Info($"{Self.Path.Name} Snapshot recovered. {_porfolioState.SupervizedAccounts.Count} accounts.");
         }
 
         public void ApplySnapShotStrategy()
         {
             if (LastSequenceNr % LoanerActors.TakePortolioSnapshotAt == 0 || PersistenceId.ToUpper().Contains("PORTFOLIO") )
             {
-                var state = new List<string>(); // Just need the name to kick it off?
-                foreach (var record in _accounts.Keys)
-                {
-                    state.Add(record);
-                }
-                SaveSnapshot(state.ToArray());
+                SaveSnapshot(_porfolioState);
                 _log.Info($"Portfolio {Self.Path.Name} snapshot taken. Current SequenceNr is {LastSequenceNr}.");
                 Context.IncrementCounter("SnapShotTaken");
+                
             }
         }
     }
