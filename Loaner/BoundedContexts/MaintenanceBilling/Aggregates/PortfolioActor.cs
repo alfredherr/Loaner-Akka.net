@@ -107,7 +107,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 PortfolioName = Self.Path.Name
             };
             double total = 0.00;
-            portfolioSate.TotalBalance = (decimal)_billings.Aggregate(total, ( x, y ) =>  y.Value.Item1  + x);
+            portfolioSate.TotalBalance = (decimal)_billings.Aggregate(total, ( x, y ) =>  y.Value.Item2  + x);
           
             var key = portfolioSate.PortfolioName;
             PortfolioStatePublisherActor.Tell(new Publish(key, portfolioSate));
@@ -306,7 +306,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         public void ApplySnapShotStrategy()
         {
-            if (LastSequenceNr % LoanerActors.TakePortolioSnapshotAt == 0 )
+            if (LastSequenceNr % LoanerActors.TakePortolioSnapshotAt == 0 || PersistenceId.ToUpper().Contains("PORTFOLIO") )
             {
                 var state = new List<string>(); // Just need the name to kick it off?
                 foreach (var record in _accounts.Keys)
