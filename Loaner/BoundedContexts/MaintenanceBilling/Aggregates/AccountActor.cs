@@ -81,7 +81,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             ( 
              accountNumber: _accountState.AccountNumber,
               userName: _accountState.UserName,
-              portfolioNumber: Self.Path.Parent.Name,
+              portfolioName: Self.Path.Parent.Name,
               currentBalance: (decimal) _accountState.CurrentBalance,
               accountStatus: _accountState.AccountStatus,
               asOfDate: DateTime.Now,
