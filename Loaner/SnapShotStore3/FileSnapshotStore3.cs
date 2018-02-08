@@ -84,10 +84,16 @@ namespace Loaner.SnapShotStore3
             {
                 // Get the configuration
                 var config = Context.System.Settings.Config.GetConfig("akka.persistence.snapshot-store.jonfile");
+                
+
                 _maxLoadAttempts = config.GetInt("max-load-attempts");
 
                 _streamDispatcher = Context.System.Dispatchers.Lookup(config.GetString("plugin-dispatcher"));
                 _dir = config.GetString("dir");
+
+                if (!Directory.Exists(_dir))
+                    Directory.CreateDirectory(_dir);
+
                 if (config.GetInt("max-snapshot-size") > 0)
                 {
                     _maxSnapshotSize = config.GetInt("max-snapshot-size");

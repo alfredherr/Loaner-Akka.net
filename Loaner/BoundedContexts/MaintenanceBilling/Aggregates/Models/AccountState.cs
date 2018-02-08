@@ -4,11 +4,48 @@ using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Exceptions;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 {
     public class AccountState
     {
+
+        [JsonProperty(Order = 1)]
+        public string AccountNumber { get; }
+
+        [JsonProperty(Order = 2)]
+        public string UserName { get; }
+
+        [JsonProperty(Order = 3)]
+        public double LastPaymentAmount { get; }
+
+        [JsonProperty(Order = 4)]
+        public DateTime LastPaymentDate { get; }
+
+        [JsonProperty(Order = 5)]
+        public string Inventroy { get; }
+
+        [JsonProperty(Order = 6)]
+        public double OpeningBalance { get; }
+
+        [JsonProperty(Order = 7)]
+        public double CurrentBalance { get; }
+
+        [JsonProperty(Order = 8)]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public AccountStatus AccountStatus { get; private set; }
+
+        [JsonProperty(Order = 9)]
+        public ImmutableDictionary<string, MaintenanceFee> Obligations { get; }
+
+        [JsonProperty(Order = 10)]
+        public ImmutableList<StateLog> AuditLog { get; }
+
+        [JsonProperty(Order = 11)]
+        public ImmutableDictionary<string, string> SimulatedFields { get; }
+
 
         /**
          * Only two ways to initiate an Account State
@@ -52,24 +89,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             OpeningBalance = openingBalance;
         }
 
-
-        public string UserName { get;   }
-
-        public string Inventroy { get;  }
-
-        public double OpeningBalance { get; }
-
-        public string AccountNumber { get; }
-
-        public double CurrentBalance { get; }
-
-        public AccountStatus AccountStatus { get; private set; }
-
-        public ImmutableList<StateLog> AuditLog { get; }
-
-        public ImmutableDictionary<string, string> SimulatedFields { get; }
-
-        public ImmutableDictionary<string, MaintenanceFee> Obligations { get; }
+       
 
         /**
          * The ApplyEvent() handler is responsible for always returning a new state
@@ -355,9 +375,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
            
             return newState;
         }
-        
-        public double LastPaymentAmount { get; }
-        public DateTime LastPaymentDate { get; }
+
 
         /* Helpers */
         private static ImmutableDictionary<string, string> LoadSimulation()

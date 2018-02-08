@@ -1,5 +1,6 @@
 ﻿using System;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
+using Newtonsoft.Json;
 
 namespace Loaner.API.Models
 {
@@ -20,9 +21,12 @@ namespace Loaner.API.Models
             this.AccountState = accountState;
             Message = $"State as of: {DateTime.Now}";
         }
+        
 
-        public AccountState AccountState { get; set; }
-
+        [JsonProperty(Order = 1)]
         public string Message { get; set; }
+
+        [JsonProperty(Order = 2)]
+        public AccountState AccountState { get; set; }
     }
 }

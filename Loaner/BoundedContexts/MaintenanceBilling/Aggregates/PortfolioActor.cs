@@ -81,9 +81,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         }
         private void ReportDebugInfo(ReportDebugInfo msg)
         {
-           
-            int active = _porfolioState.SupervizedAccounts.Aggregate(0,
-                (x, y) => x + ((y.AccountActorRef == null || y.AccountActorRef.Equals(ActorRefs.Nobody)) ? 0 : 1));
+
+            int active = _porfolioState.SupervizedAccounts.Count(x => x.AccountActorRef != null);
 
             double totalBillings =
                 _porfolioState.SupervizedAccounts.Aggregate(0.0, (x, y) => x + y.BalanceAfterLastTransaction);
@@ -129,7 +128,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             var account = _porfolioState.SupervizedAccounts.FirstOrDefault(x => x.AccountNumber == cmd.AccountNumber);
             
             if (account == null)
-                throw new AccountNotUnderSupervision(cmd.AccountNumber);
+                account = new AccountUnderSupervision(cmd.AccountNumber);
                 
             account.LastTransactionAmount = cmd.AmountTransacted;
             account.BalanceAfterLastTransaction = cmd.AccountBalanceAfterTransaction;
@@ -210,11 +209,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void StartAccounts()
         {
             Monitor();
+
             var immutAccounts = _porfolioState.SupervizedAccounts.ToImmutableList();
 
             foreach (AccountUnderSupervision account in immutAccounts)
             {
-                if (account.AccountNumber.Length != 0 && account.AccountActorRef == null)
+                if (account.AccountActorRef == null)
                 {
                     account.AccountActorRef = InstantiateThisAccount(account);
                 }
@@ -222,11 +222,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 {
                     _log.Warning($"skipped account {account}, already instantiated.");
                 }
-                Sender.Tell(
+            }
+            Sender.Tell(
                     new TellMeYourPortfolioStatus(
                         $"{_porfolioState.SupervizedAccounts.Count} accounts. I was last booted up on: {_porfolioState.LastBootedOn}",
                         null));
-            }
+            
         }
 
         private void GetMyStatus()
@@ -253,18 +254,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void ProcessSupervision(SuperviseThisAccount command)
         {
             Monitor();
-            
-            if(!AccountExistInState(command.AccountNumber)){
-                _log.Info($"You tried to load account {command.AccountNumber} which has already been loaded");
-                return;
-            }
 
+            var account = new AccountUnderSupervision(command.AccountNumber);
             var @event = new AccountAddedToSupervision(command.AccountNumber);
             Persist(@event, s =>
             {
-                var account = new AccountUnderSupervision(command.AccountNumber);
-                _porfolioState.SupervizedAccounts.Add(account); 
-                InstantiateThisAccount(account);
+                account.AccountActorRef = InstantiateThisAccount(account);
+                _porfolioState.SupervizedAccounts.Add(account);
                 ApplySnapShotStrategy();
                 Self.Tell(new PublishPortfolioStateToKafka());
             });
@@ -279,15 +275,18 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 throw new Exception("Why is this blank?");
             }
 
-            if (! AccountExistInState(accountNumber))
+            if (AccountExistInState(accountNumber))
             {
                 _log.Debug($"Supervisor already has {accountNumber} in state. No action taken");
                 return;
             }
             
             var account = new AccountUnderSupervision(accountNumber);
+            account.AccountActorRef = InstantiateThisAccount(account);
             _porfolioState.SupervizedAccounts.Add(account); 
-            
+
+            // TODO probably will have to ask the account for some more data, like curr bal, etc.
+
             _log.Debug($"Replayed event on {accountNumber}");
 
         }
@@ -314,6 +313,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Monitor();
 
             _porfolioState = (PorfolioState) offer.Snapshot;
+
+            //Clear out the old address reference
+            _porfolioState.SupervizedAccounts.ForEach(x => x.AccountActorRef = null);
 
             _log.Info($"{Self.Path.Name} Snapshot recovered. {_porfolioState.SupervizedAccounts.Count} accounts.");
         }

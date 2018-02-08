@@ -73,7 +73,7 @@ namespace Loaner.KafkaProducer
             Context.IncrementCounter("ResendMsg");
         }
 
-
+        public static int keyCounter;
         public void Send(string msgKey, string json)
         {
             try
@@ -84,12 +84,11 @@ namespace Loaner.KafkaProducer
                     if (task.IsCompletedSuccessfully)
                     {
                         //Context.IncrementCounter("send-SUCCESS");
-                        var key = BigInteger.Parse(task.Result.Key);
-                        if (key % 1000 == 0)
+                        if (keyCounter % 1000 == 0)
                         {
                             Console.WriteLine($"Sent key: {task.Result.Key} to kafka @ {DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss")}");
                         }
-                        
+                        keyCounter++;
                     }
                 });
             }

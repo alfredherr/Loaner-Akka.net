@@ -4,9 +4,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Exceptions
 {
     public class AccountNotUnderSupervision : Exception
     {
-        public AccountNotUnderSupervision(string cmdAccountNumber)
+        public AccountNotUnderSupervision(string cmdAccountNumber) : base(cmdAccountNumber)
         {
-            throw new NotImplementedException();
+            
         }
     }
 }

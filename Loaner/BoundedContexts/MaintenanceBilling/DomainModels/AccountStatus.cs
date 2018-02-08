@@ -1,5 +1,9 @@
-﻿namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
 {
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum AccountStatus
     {
         Active=0,
