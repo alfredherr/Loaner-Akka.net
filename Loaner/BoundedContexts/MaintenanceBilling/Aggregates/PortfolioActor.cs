@@ -51,7 +51,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<TellMeYourStatus>(asking => GetMyStatus());
             Command<TellMeAboutYou>(me =>
                 Console.WriteLine(
-                    $"About me: I am {Self.Path.Name} Msg: {me.Me} I was last booted up on: {_lastBootedOn}"));
+                    $"About me: I am {Self.Path.Name} Msg: {me.Me} I was last booted up on: {_lastBootedOn.ToString("yyyy-MM-dd hh:mm:ss")}"));
             Command<TellMeYourPortfolioStatus>(msg => _log.Debug(msg.Message));
             Command<string>(noMessage => { });
             Command<RegisterMyAccountBilling>(cmd => RegisterBillingStatus(cmd));
@@ -214,7 +214,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     _log.Warning($"skipped account {account}, already instantiated.");
                 }
             Sender.Tell(
-                new TellMeYourPortfolioStatus($"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",
+                new TellMeYourPortfolioStatus($"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn.ToString("yyyy-MM-dd hh:mm:ss")}",
                     null));
         }
 
@@ -233,7 +233,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             
             
             Sender.Tell(new TellMeYourPortfolioStatus(
-                $"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn}",portfolioSate));
+                $"{_accounts.Count} accounts. I was last booted up on: {_lastBootedOn.ToString("yyyy-MM-dd hh:mm:ss")}",portfolioSate));
         }
 
         private void ProcessSupervision(SuperviseThisAccount command)

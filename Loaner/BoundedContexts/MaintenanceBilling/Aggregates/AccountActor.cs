@@ -66,7 +66,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             //Command<RecoverySuccess>(msg => this.WakeUp());
             Command<TellMeYourStatus>(asking =>
                 Sender.Tell(
-                    new MyAccountStatus($"{Self.Path.Name} I am alive! I was last booted up on {_lastBootedOn}")));
+                    new MyAccountStatus($"{Self.Path.Name} I am alive! I was last booted up on {_lastBootedOn.ToString("yyyy-MM-dd hh:mm:ss")}")));
             Command<TellMeYourInfo>(asking => Sender.Tell(new MyAccountStatus("", AccountState.Clone(_accountState))));
             
             Command<DeleteMessagesSuccess>(

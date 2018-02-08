@@ -17,7 +17,7 @@
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseKestrel()
                 .UseStartup<Startup>()
-                .UseUrls("http://*:8181")
+//                .UseUrls("http://localhost:8181")
                 .Build();
             host.Run();
 
