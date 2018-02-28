@@ -1,5 +1,5 @@
 curl -X POST \
-  http://localhost/api/portfolio/PortfolioABC/assessment \
+  http://localhost/api/portfolio/villadelmar/assessment \
   -H 'Cache-Control: no-cache' \
   -H 'Content-Type: application/json' \
   -H 'Postman-Token: 8ba3833b-19c1-e6cd-71e6-e2962e183bad' \
