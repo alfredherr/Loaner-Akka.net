@@ -5,8 +5,6 @@ curl -X POST \
   -H 'Postman-Token: a4c68858-4995-f72e-6e7e-e726aecb42f2' \
   -d '{
 	"ClientName": "Raintree",
-	"ClientAccountsFilePath": "/demo/SampleData/Raintree.txt",
-	"ObligationsFilePath":"/demo/SampleData/Obligations/Raintree.txt"
+	"ClientAccountsFilePath": "/demo/Raintree.txt",
+	"ObligationsFilePath":"/demo/Obligations/Raintree.txt"
 }'
-
-
