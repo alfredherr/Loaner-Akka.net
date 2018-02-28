@@ -4,9 +4,9 @@
     {
         public RestoreSnapshot(string id)
         {
-            this.ID = id;
+            ID = id;
         }
 
-        public string ID { get; private set; }
+        public string ID { get; }
     }
 }

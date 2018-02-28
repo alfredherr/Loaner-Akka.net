@@ -16,8 +16,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 
         public override bool Equals(object obj)
         {
-            Balance test = obj as Balance;
-            return test.Instance == this.Instance;
+            var test = obj as Balance;
+            return test.Instance == Instance;
         }
     }
 }

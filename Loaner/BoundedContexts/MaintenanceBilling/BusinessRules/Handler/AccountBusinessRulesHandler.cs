@@ -1,36 +1,35 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Akka.Event;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using Akka.Event;
-    using Aggregates.Models;
-    using Models;
-    using DomainCommands;
-
     // ReSharper disable once ClassNeverInstantiated.Global
     public class AccountBusinessRulesHandler
     {
-         private AccountBusinessRulesMapper _poorMansDb;// = new AccountBusinessRulesMapper();
+        private AccountBusinessRulesMapper _poorMansDb; // = new AccountBusinessRulesMapper();
 
         public BusinessRuleApplicationResultModel ApplyBusinessRules(ILoggingAdapter logger, string client,
             string portfolioName,
             AccountState accountState, IDomainCommand comnd)
         {
-            ILoggingAdapter log = logger;
+            var log = logger;
 
-            List<IAccountBusinessRule> rules =
+            var rules =
                 GetBusinessRulesToApply(client, portfolioName, accountState, comnd) ??
                 throw new ArgumentNullException($"GetBusinessRulesToApply(accountState, comnd)");
 
             log.Debug($"Found {rules.Count} account business rules for account {accountState.AccountNumber}");
 
-            BusinessRuleApplicationResultModel resultModel = new BusinessRuleApplicationResultModel();
+            var resultModel = new BusinessRuleApplicationResultModel();
 
-            AccountState pipedState = AccountState.Clone(accountState);
+            var pipedState = AccountState.Clone(accountState);
 
-            foreach (IAccountBusinessRule reglaDeNegocio in rules)
+            foreach (var reglaDeNegocio in rules)
             {
                 log.Debug($"Found {reglaDeNegocio.GetType().Name} rule for account {accountState.AccountNumber}");
 
@@ -46,11 +45,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 
                     //Save all the events resulting from runnin this rule.
                     var events = reglaDeNegocio.GetGeneratedEvents().ToList();
-                    foreach (var @event in events)
-                    {
-                        resultModel.GeneratedEvents.Add(@event);
-                    }
-                    
+                    foreach (var @event in events) resultModel.GeneratedEvents.Add(@event);
+
 
                     // Rule output -> next rule input (Pipes & Filters approach)
                     // Replace pipedState wth the state resulting from running the rule.
@@ -75,6 +71,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                     return resultModel; //we stop processing any further rules.
                 }
             }
+
             //for each rule in rules
             // pass the info to the rule and call rule
             // create event of result of calling rule & apply event to state
@@ -86,10 +83,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             AccountState accountState,
             IDomainCommand command)
         {
-
             _poorMansDb = new AccountBusinessRulesMapper();
-           
-	        //When ApplyEvent is a SettleFinancialConcept?orWhatever command
+
+            //When ApplyEvent is a SettleFinancialConcept?orWhatever command
             // get the rules to apply to this account for this particular command
             // and the order in which they need to be applied
             // In future We would also want to pass in the command so we filter the search to just the rules 

@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Loaner.ActorManagement;
 using Loaner.API.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
-using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
 using Nancy;
 using Nancy.ModelBinding;
@@ -23,10 +22,7 @@ namespace Loaner.API.Controllers
                     var system = LoanerActors.DemoActorSystem
                         .ActorSelection($"/user/demoSupervisor/*/{args.actorName}")
                         .ResolveOne(TimeSpan.FromSeconds(3));
-                    if (system.Exception != null)
-                    {
-                        throw system.Exception;
-                    }
+                    if (system.Exception != null) throw system.Exception;
                     var response = await Task.Run(
                         () => system.Result.Ask<MyAccountStatus>(new TellMeYourStatus(), TimeSpan.FromSeconds(1))
                     );
@@ -47,16 +43,13 @@ namespace Loaner.API.Controllers
                 try
                 {
                     string account = args.actorName;
-                    string path = $@"/user/demoSupervisor/*/{account}";
+                    var path = $@"/user/demoSupervisor/*/{account}";
                     var system = LoanerActors.DemoActorSystem
                         .ActorSelection(path)
                         .ResolveOne(TimeSpan.FromSeconds(3)).Result;
 
 
-                    if (system.IsNobody())
-                    {
-                        throw new ActorNotFoundException();
-                    }
+                    if (system.IsNobody()) throw new ActorNotFoundException();
                     var response = await Task.Run(
                         () => system.Ask<MyAccountStatus>(new TellMeYourInfo(), TimeSpan.FromSeconds(3))
                     );
@@ -74,7 +67,7 @@ namespace Loaner.API.Controllers
             });
             Get("/{actorName}/assessment", args =>
             {
-                InvoiceLineItem[] lineItems = new InvoiceLineItem[]
+                InvoiceLineItem[] lineItems =
                 {
                     new InvoiceLineItem(new Tax(0)),
                     new InvoiceLineItem(new Dues(0)),
@@ -88,7 +81,7 @@ namespace Loaner.API.Controllers
             Post("/{actorName}/assessment", async args =>
             {
                 string account = args.actorName;
-                SimulateAssessmentModel assessment = this.Bind<SimulateAssessmentModel>();
+                var assessment = this.Bind<SimulateAssessmentModel>();
 
                 try
                 {
@@ -96,10 +89,7 @@ namespace Loaner.API.Controllers
                     var system = LoanerActors.DemoActorSystem
                         .ActorSelection($"/user/demoSupervisor/*/{account}")
                         .ResolveOne(TimeSpan.FromSeconds(3));
-                    if (system.Exception != null)
-                    {
-                        throw system.Exception;
-                    }
+                    if (system.Exception != null) throw system.Exception;
                     var response = await Task.Run(
                         () => system.Result.Ask<MyAccountStatus>(domanCommand, TimeSpan.FromSeconds(30))
                     );

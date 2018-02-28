@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Numerics;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Monitoring;
@@ -17,15 +16,16 @@ namespace Loaner.KafkaProducer
 
     #endregion
 
-    class KafkaPublisherActor : ReceiveActor
+    internal class KafkaPublisherActor : ReceiveActor
     {
-        Producer<string, string> producer;
-        private readonly string _topicName;
-        ActorSelection thisActor = null;
+        public static int keyCounter;
         private readonly ILoggingAdapter _log = Context.GetLogger();
+        private readonly string _topicName;
+        private readonly Producer<string, string> producer;
         private DateTime _lastBootedOn;
-        private int _messagesSent = 0;
-        private int _messagesReSent = 0;
+        private int _messagesReSent;
+        private int _messagesSent;
+        private ActorSelection thisActor;
 
         public KafkaPublisherActor(string topicName, Producer<string, string> producer, string actorName)
         {
@@ -33,7 +33,7 @@ namespace Loaner.KafkaProducer
             _topicName = topicName;
 
             // Save a reference to this actor for later use in producer callback
-            this.thisActor = Context.ActorSelection("/user/" + actorName);
+            thisActor = Context.ActorSelection("/user/" + actorName);
 
             // Commands
             Receive<Publish>(cmd => PublishMsg(cmd));
@@ -49,7 +49,7 @@ namespace Loaner.KafkaProducer
         private void PublishMsg(Publish cmd)
         {
             // Convert the msg to JSON before sending
-            string json = JsonConvert.SerializeObject(cmd.Msg);
+            var json = JsonConvert.SerializeObject(cmd.Msg);
             Send(cmd.Key, json);
 
             _messagesSent++;
@@ -73,7 +73,6 @@ namespace Loaner.KafkaProducer
             Context.IncrementCounter("ResendMsg");
         }
 
-        public static int keyCounter;
         public void Send(string msgKey, string json)
         {
             try
@@ -85,9 +84,8 @@ namespace Loaner.KafkaProducer
                     {
                         //Context.IncrementCounter("send-SUCCESS");
                         if (keyCounter % 1000 == 0)
-                        {
-                            Console.WriteLine($"Sent key: {task.Result.Key} to kafka @ {DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss")}");
-                        }
+                            Console.WriteLine(
+                                $"Sent key: {task.Result.Key} to kafka @ {DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss")}");
                         keyCounter++;
                     }
                 });

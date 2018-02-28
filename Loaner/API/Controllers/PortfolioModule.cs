@@ -1,22 +1,16 @@
-﻿using System.Dynamic;
-using System.Linq;
-using Hyperion.Extensions;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Akka.Actor;
+using Loaner.ActorManagement;
+using Loaner.API.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
+using Nancy;
 
 namespace Loaner.API.Controllers
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using Akka.Actor;
-    using ActorManagement;
-    using Models;
-    using BoundedContexts.MaintenanceBilling.Aggregates.Messages;
-    using BoundedContexts.MaintenanceBilling.DomainCommands;
-    using BoundedContexts.MaintenanceBilling.DomainModels;
-    using Nancy;
-    using Nancy.ModelBinding;
-
-
     public class PortfolioModule : NancyModule
     {
         public PortfolioModule() : base("/api/portfolio")
@@ -25,16 +19,13 @@ namespace Loaner.API.Controllers
             {
                 var answer = new TellMeYourPortfolioStatus("This didn't work");
 
-                string portfolio = ((string) args.portfolioName).ToUpper();
+                var portfolio = ((string) args.portfolioName).ToUpper();
 
                 var portfolioActor = LoanerActors.DemoActorSystem
                     .ActorSelection($"/user/demoSupervisor/{portfolio}")
                     .ResolveOne(TimeSpan.FromSeconds(10));
 
-                if (portfolioActor.Exception != null)
-                {
-                    throw portfolioActor.Exception;
-                }
+                if (portfolioActor.Exception != null) throw portfolioActor.Exception;
 
                 await Task.Run(() =>
                 {
@@ -49,16 +40,13 @@ namespace Loaner.API.Controllers
             {
                 var answer = new TellMeYourPortfolioStatus("This didn't work");
 
-                string portfolio = ((string) args.portfolioName).ToUpper();
+                var portfolio = ((string) args.portfolioName).ToUpper();
 
                 var portfolioActor = LoanerActors.DemoActorSystem
                     .ActorSelection($"/user/demoSupervisor/{portfolio}")
                     .ResolveOne(TimeSpan.FromSeconds(3));
 
-                if (portfolioActor.Exception != null)
-                {
-                    throw portfolioActor.Exception;
-                }
+                if (portfolioActor.Exception != null) throw portfolioActor.Exception;
 
                 await Task.Run(() =>
                 {
@@ -81,59 +69,52 @@ namespace Loaner.API.Controllers
                 return Response.AsJson(model);
             });
 
-        
+
             Post("/{portfolioName}/assessment", async args =>
             {
-                string portfolio = ((string) args.portfolioName).ToUpper();
-                
+                var portfolio = ((string) args.portfolioName).ToUpper();
+
                 var answer = new TellMeYourPortfolioStatus("This didn't work");
 
-                dynamic product = Context.ToDynamic();
+                var product = Context.ToDynamic();
 
-                string message = string.Empty;
+                var message = string.Empty;
 
-                SimulateAssessmentModel assessment = new SimulateAssessmentModel();
+                var assessment = new SimulateAssessmentModel();
                 assessment.LineItems = new List<InvoiceLineItem>();
-                
+
                 foreach (var p in product)
                 {
-                    string name = (string)(p.item.name ?? string.Empty);
-                    double bucketAmount = (double)(p.item.amount ?? -1.0);
+                    var name = (string) (p.item.name ?? string.Empty);
+                    var bucketAmount = (double) (p.item.amount ?? -1.0);
                     if (bucketAmount >= 0)
-                    {
                         switch (name)
                         {
                             case "Dues":
-                                assessment.LineItems.Add(new InvoiceLineItem(new Dues(amount: bucketAmount)));
+                                assessment.LineItems.Add(new InvoiceLineItem(new Dues(bucketAmount)));
                                 break;
                             case "Tax":
-                                assessment.LineItems.Add(new InvoiceLineItem(new Tax(amount: bucketAmount)));
+                                assessment.LineItems.Add(new InvoiceLineItem(new Tax(bucketAmount)));
                                 break;
                             case "Reserve":
-                                assessment.LineItems.Add(new InvoiceLineItem(new Reserve(amount: bucketAmount)));
+                                assessment.LineItems.Add(new InvoiceLineItem(new Reserve(bucketAmount)));
                                 break;
                             case "Interest":
-                                assessment.LineItems.Add(new InvoiceLineItem(new Interest(amount: bucketAmount)));
+                                assessment.LineItems.Add(new InvoiceLineItem(new Interest(bucketAmount)));
                                 break;
                         }
-                    }
                     else
-                    {
                         return Response.AsJson(new
                         {
                             Error = "You must provide a valid bucket type (i.e. Dues, Tax, etc.) and amount"
                         });
-                    }
                 }
 
                 var portfolioActor = LoanerActors.DemoActorSystem
                     .ActorSelection($"/user/demoSupervisor/{portfolio}")
                     .ResolveOne(TimeSpan.FromSeconds(10));
 
-                if (portfolioActor.Exception != null)
-                {
-                    throw portfolioActor.Exception;
-                }
+                if (portfolioActor.Exception != null) throw portfolioActor.Exception;
 
                 await Task.Run(() =>
                 {
@@ -145,10 +126,7 @@ namespace Loaner.API.Controllers
                     return Response.AsJson(new {answer.Message, PortfolioState = answer.PortfolioStateViewModel});
                 });
                 return Response.AsJson(answer);
-                
             });
         }
-       
     }
-
 }

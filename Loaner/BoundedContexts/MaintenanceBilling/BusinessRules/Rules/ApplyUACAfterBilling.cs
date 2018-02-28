@@ -11,10 +11,28 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 {
     public class ApplyUacAfterBilling : IAccountBusinessRule
     {
+        private string _detailsGenerated;
+        private List<IDomainEvent> _eventsGenerated;
+
+        public ApplyUacAfterBilling((string Command, Dictionary<string, object> Parameters) commandState)
+        {
+            CommandState = commandState;
+        }
+
+        public ApplyUacAfterBilling(AccountState accountState)
+        {
+            AccountState = accountState;
+        }
+
+        private AccountState AccountState { get; set; }
+        private (string Command, Dictionary<string, object> Parameters) CommandState { get; set; }
+
+        public bool Success { get; private set; }
+
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
         {
-            double uac = AccountState.CurrentBalance < 0 ? AccountState.CurrentBalance : 0.0;
+            var uac = AccountState.CurrentBalance < 0 ? AccountState.CurrentBalance : 0.0;
             if (uac != 0.0)
             {
                 _eventsGenerated = new List<IDomainEvent>
@@ -43,21 +61,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
             Success = true;
         }
 
-        private AccountState AccountState { get; set; }
-        private string _detailsGenerated;
-        private List<IDomainEvent> _eventsGenerated;
-        private (string Command, Dictionary<string, object> Parameters) CommandState { get; set; }
-
-        public ApplyUacAfterBilling((string Command, Dictionary<string, object> Parameters) commandState)
-        {
-            CommandState = commandState;
-        }
-
-        public ApplyUacAfterBilling(AccountState accountState)
-        {
-            AccountState = accountState;
-        }
-
         public void SetAccountState(AccountState state)
         {
             AccountState = state;
@@ -67,8 +70,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             CommandState = commandState;
         }
-
-        public bool Success { get; private set; }
 
         public string GetResultDetails()
         {

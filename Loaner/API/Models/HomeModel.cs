@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
+using Nancy.Routing;
 
 namespace Loaner.API.Models
 {
     public class HomeModel
     {
-        public IEnumerable<Nancy.Routing.RouteDescription> Routes { get; set; }
+        public IEnumerable<RouteDescription> Routes { get; set; }
     }
 }

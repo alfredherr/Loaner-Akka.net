@@ -1,20 +1,16 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Monitoring;
 using Akka.Persistence;
-using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
-using static Loaner.ActorManagement.LoanerActors;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
-using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
-using Loaner.KafkaProducer;
 using Loaner.KafkaProducer.Commands;
+using static Loaner.ActorManagement.LoanerActors;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {
@@ -22,10 +18,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
+        private readonly AccountBusinessRulesHandler _rulesRunner = new AccountBusinessRulesHandler();
+
         /* This Actor's State */
         private AccountState _accountState = new AccountState();
-
-        private readonly AccountBusinessRulesHandler _rulesRunner = new AccountBusinessRulesHandler();
 
 
         private DateTime _lastBootedOn;
@@ -57,7 +53,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<AskToBeSupervised>(command => SendParentMyState(command));
             Command<PublishAccountStateToKafka>(msg => PublishToKafka(msg));
             Command<CompleteBoardingProcess>(msg => CompleteBoardingProcess());
-            
+
             /** Special handlers below; we can decide how to handle snapshot processin outcomes. */
             Command<SaveSnapshotSuccess>(success => PurgeOldSnapShots(success));
             Command<DeleteSnapshotsSuccess>(msg => { });
@@ -67,32 +63,35 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             //Command<RecoverySuccess>(msg => this.WakeUp());
             Command<TellMeYourStatus>(asking =>
                 Sender.Tell(
-                    new MyAccountStatus($"{Self.Path.Name} I am alive! I was last booted up on {_lastBootedOn.ToString("yyyy-MM-dd hh:mm:ss")}")));
+                    new MyAccountStatus(
+                        $"{Self.Path.Name} I am alive! I was last booted up on {_lastBootedOn.ToString("yyyy-MM-dd hh:mm:ss")}")));
             Command<TellMeYourInfo>(asking => Sender.Tell(new MyAccountStatus("", AccountState.Clone(_accountState))));
-            
+
             Command<DeleteMessagesSuccess>(
                 msg => _log.Debug($"Successfully cleared log after snapshot ({msg.ToString()})"));
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
 
+
+        public override string PersistenceId => Self.Path.Name;
+
         private void PublishToKafka(PublishAccountStateToKafka msg)
         {
-            
             var kafkaAccountModel = new AccountStateViewModel
-            ( 
-             accountNumber: _accountState.AccountNumber,
-              userName: _accountState.UserName,
-              portfolioName: Self.Path.Parent.Name,
-              currentBalance: (decimal) _accountState.CurrentBalance,
-              accountStatus: _accountState.AccountStatus,
-              asOfDate: DateTime.Now,
-              lastPaymentDate: _accountState.LastPaymentDate,
-              lastPaymentAmount: (decimal) _accountState.LastPaymentAmount,
-              daysDelinquent: (int) DateTime.Now.Subtract(_accountState.LastPaymentDate).Days,
-              accountInventory: _accountState.Inventroy
+            (
+                _accountState.AccountNumber,
+                _accountState.UserName,
+                Self.Path.Parent.Name,
+                (decimal) _accountState.CurrentBalance,
+                _accountState.AccountStatus,
+                DateTime.Now,
+                _accountState.LastPaymentDate,
+                (decimal) _accountState.LastPaymentAmount,
+                DateTime.Now.Subtract(_accountState.LastPaymentDate).Days,
+                _accountState.Inventroy
             );
-               
-             AccountStatePublisherActor.Tell(new Publish(kafkaAccountModel.AccountNumber, kafkaAccountModel));
+
+            AccountStatePublisherActor.Tell(new Publish(kafkaAccountModel.AccountNumber, kafkaAccountModel));
             _log.Debug($"Sending kafka message for account {kafkaAccountModel}");
         }
 
@@ -110,10 +109,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             _lastBootedOn = DateTime.Now;
         }
 
-
-        public override string PersistenceId => Self.Path.Name;
-
-        private void ReportMyState( double transAmount, double balanceAfter,IActorRef toWhom = null)
+        private void ReportMyState(double transAmount, double balanceAfter, IActorRef toWhom = null)
         {
             if (toWhom == null)
                 toWhom = Context.Parent; // use the parent if we're not passed one.
@@ -124,22 +120,20 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     transAmount,
                     balanceAfter)
             );
-
         }
+
         private void ProcessBilling(BillingAssessment command)
         {
             //Sender.Tell(new MyAccountStatus($"Your billing request has been submitted.",AccountState.Clone(_accountState)));
             if (_accountState.AccountNumber == null)
-            {
                 throw new Exception($"Actor {Self.Path.Name} is passing an empty account number.");
-            }
 
             // Process all business rules
             ApplyBusinessRules(command);
-            double total = command.LineItems.Aggregate(0.0,(accomulator,next ) => accomulator + next.Item.Amount);
-            
+            var total = command.LineItems.Aggregate(0.0, (accomulator, next) => accomulator + next.Item.Amount);
+
             ReportMyState(total, _accountState.CurrentBalance);
-         
+
 
             //Report current state to Kafka
             Self.Tell(new PublishAccountStateToKafka());
@@ -152,18 +146,17 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
              * send the supervisor to add it to it's list -- then it can terminate. 
              */
             command.MyNewParent.Tell(new SuperviseThisAccount(command.Portfolio, Self.Path.Name));
-            
+
             ReportMyState(_accountState.OpeningBalance, _accountState.CurrentBalance, command.MyNewParent);
-         
+
             Self.Tell(new CompleteBoardingProcess());
-            
         }
 
         private void CompleteBoardingProcess()
         {
             Self.Tell(PoisonPill.Instance);
         }
-        
+
         private void ApplySnapShot(SnapshotOffer offer)
         {
             _accountState = (AccountState) offer.Snapshot;
@@ -220,7 +213,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 Persist(@event, s =>
                 {
                     _accountState = _accountState.ApplyEvent(@event);
-                    
+
                     _log.Debug($"Created account {command.AccountNumber}");
                 });
             }
@@ -242,14 +235,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             if (command is BillingAssessment)
             {
                 var c = (BillingAssessment) command;
-                string parameters = c.LineItems.Aggregate("",
+                var parameters = c.LineItems.Aggregate("",
                     (working, next) => working + ";" + next.Item.Name + "=" + next.Item.Amount);
                 _log.Debug($"{_accountState.AccountNumber}: " +
                            $"Command {c.GetType().Name} with {c.LineItems.Count} line items: " +
                            $"{parameters}");
             }
 
-            BusinessRuleApplicationResultModel resultModel =
+            var resultModel =
                 _rulesRunner.ApplyBusinessRules(_log, Self.Path.Parent.Parent.Name,
                     Self.Path.Parent.Name, _accountState, command);
             _log.Debug(
@@ -258,9 +251,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             {
                 /* I may want to do old vs new state comparisons for other reasons
 				 *  but ultimately we just update the state.. */
-                List<IDomainEvent> events = resultModel.GeneratedEvents;
+                var events = resultModel.GeneratedEvents;
                 foreach (var @event in events)
-                {
                     Persist(@event, s =>
                     {
                         _log.Debug(
@@ -268,14 +260,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                         _accountState = _accountState.ApplyEvent(@event);
                         ApplySnapShotStrategy();
                     });
-                }
             }
         }
 
         /*Example of how snapshotting can be custom to the actor, in this case per 'Account' events*/
         public void ApplySnapShotStrategy()
         {
-            if (LastSequenceNr  % LoanerActors.TakeAccountSnapshotAt == 0)
+            if (LastSequenceNr % TakeAccountSnapshotAt == 0)
             {
                 SaveSnapshot(_accountState);
                 _log.Debug($"{_accountState.AccountNumber} Snapshot taken. LastSequenceNr is {LastSequenceNr}.");

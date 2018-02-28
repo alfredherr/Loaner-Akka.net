@@ -4,7 +4,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
 {
     public class AccountCreated : IDomainEvent
     {
-        public AccountCreated(DateTime lastPaymentDate, double lastPaymentAmount, string accountNumber, double openingBalance, string inventory, string userName, string message = "")
+        public AccountCreated(DateTime lastPaymentDate, double lastPaymentAmount, string accountNumber,
+            double openingBalance, string inventory, string userName, string message = "")
         {
             AccountNumber = accountNumber;
             OpeningBalance = openingBalance;
@@ -16,14 +17,15 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
             _OccurredOn = DateTime.Now;
             Message = message;
         }
+
         public double LastPaymentAmount { get; }
         public DateTime LastPaymentDate { get; }
 
         public double OpeningBalance { get; }
         public string Inventory { get; }
         public string UserName { get; }
-        
-        public string Message { get;  }
+
+        public string Message { get; }
         private DateTime _OccurredOn { get; }
         public string AccountNumber { get; }
         private Guid _UniqueGuid { get; }
@@ -40,7 +42,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
 
         public override string ToString()
         {
-            return $"{nameof(LastPaymentAmount)}: {LastPaymentAmount}, {nameof(LastPaymentDate)}: {LastPaymentDate}, {nameof(OpeningBalance)}: {OpeningBalance}, {nameof(Inventory)}: {Inventory}, {nameof(UserName)}: {UserName}, {nameof(Message)}: {Message}, {nameof(_OccurredOn)}: {_OccurredOn}, {nameof(AccountNumber)}: {AccountNumber}, {nameof(_UniqueGuid)}: {_UniqueGuid}";
+            return
+                $"{nameof(LastPaymentAmount)}: {LastPaymentAmount}, {nameof(LastPaymentDate)}: {LastPaymentDate}, {nameof(OpeningBalance)}: {OpeningBalance}, {nameof(Inventory)}: {Inventory}, {nameof(UserName)}: {UserName}, {nameof(Message)}: {Message}, {nameof(_OccurredOn)}: {_OccurredOn}, {nameof(AccountNumber)}: {AccountNumber}, {nameof(_UniqueGuid)}: {_UniqueGuid}";
         }
     }
 }

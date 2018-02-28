@@ -16,8 +16,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 
         public override bool Equals(object obj)
         {
-            AccountNumber test = obj as AccountNumber;
-            return test.Instance == this.Instance;
+            var test = obj as AccountNumber;
+            return test.Instance == Instance;
         }
     }
 }

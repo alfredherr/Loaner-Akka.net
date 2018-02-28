@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Akka.Actor;
-using Confluent.Kafka.Serialization;
 using Confluent.Kafka;
 using Newtonsoft.Json;
 using StatsdClient;
@@ -10,17 +7,18 @@ using StatsdClient;
 namespace kafka_actors
 {
     #region Command classes
+
     // The message to be published
     public class Publish
     {
         public Publish(string key, object msg)
         {
-            this.Key = key;
-            this.Msg = msg;
+            Key = key;
+            Msg = msg;
         }
 
-        public string Key { get; private set; }
-        public object Msg { get; private set; }
+        public string Key { get; }
+        public object Msg { get; }
     }
 
     // If a message fails then it is contained in the Resend cmd below
@@ -28,20 +26,21 @@ namespace kafka_actors
     {
         public Resend(string key, string msg)
         {
-            this.Key = key;
-            this.Msg = msg;
+            Key = key;
+            Msg = msg;
         }
 
-        public string Key { get; private set; }
-        public string Msg { get; private set; }
+        public string Key { get; }
+        public string Msg { get; }
     }
+
     #endregion
 
-    class KafkaPublisherActor : ReceiveActor
+    internal class KafkaPublisherActor : ReceiveActor
     {
-        Producer<string, string> producer;
         private readonly string _topicName;
-        ActorSelection thisActor = null;
+        private readonly Producer<string, string> producer;
+        private ActorSelection thisActor;
 
 
         public KafkaPublisherActor(string topicName, Producer<string, string> producer, string actorName)
@@ -50,7 +49,7 @@ namespace kafka_actors
             _topicName = topicName;
 
             // Save a reference to this actor for later use in producer callback
-            this.thisActor = Context.ActorSelection("/user/" + actorName);
+            thisActor = Context.ActorSelection("/user/" + actorName);
 
             // Commands
             Receive<Publish>(cmd => PublishMsg(cmd));
@@ -62,7 +61,7 @@ namespace kafka_actors
         private void PublishMsg(Publish cmd)
         {
             // Convert the msg to JSON before sending
-            string json = JsonConvert.SerializeObject(cmd.Msg);
+            var json = JsonConvert.SerializeObject(cmd.Msg);
             Send(cmd.Key, json);
 
             // Increment a counter by 1
@@ -99,35 +98,24 @@ namespace kafka_actors
 
                     }
 */
-                    
+
                     if (task.IsCompletedSuccessfully)
                     {
                         DogStatsd.Increment("send-SUCCESS");
                         var key = task.Result.Key;
                         if (key.EndsWith("999999"))
-                        {
                             Console.WriteLine($"Complete key: {task.Result.Key}");
-                        }
                         else if (key.EndsWith("0000"))
-                        {
                             Console.WriteLine($"Sent key: {task.Result.Key}");
-                        }
                     }
+
                     //                Console.WriteLine($"Partition: {task.Result.Partition}, Offset: {task.Result.Offset}");
                 });
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 Console.WriteLine($"Exception in Send: {e.StackTrace}");
             }
         }
     }
 }
-
-
-
-
-
-
-
-
-

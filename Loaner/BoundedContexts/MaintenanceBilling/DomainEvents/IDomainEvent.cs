@@ -6,6 +6,5 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
     {
         DateTime OccurredOn();
         Guid UniqueGuid();
-        
     }
 }

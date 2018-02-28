@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using Akka;
-using Akka.Actor;
 using Akka.Event;
 using Akka.Persistence;
-
 
 namespace SnapShotStore
 {
@@ -14,27 +8,20 @@ namespace SnapShotStore
 
     #endregion
 
-    class TestActor : ReceivePersistentActor
+    internal class TestActor : ReceivePersistentActor
     {
-        private readonly ILoggingAdapter _log = Logging.GetLogger(Context);
+        private readonly ILoggingAdapter _log = Context.GetLogger();
 
         // The actor state to be persisted
         private Account Acc;
         private string AccountId;
-        public override string PersistenceId
-        {
-            get
-            {
-                return (string)AccountId;
-            }
-        }
 
         public TestActor(Account acc)
         {
             // Store the actor state 
             Acc = acc;
             AccountId = acc.AccountID;
-            
+
             Setup();
         }
 
@@ -43,6 +30,8 @@ namespace SnapShotStore
             AccountId = accountId;
             Setup();
         }
+
+        public override string PersistenceId => AccountId;
 
         private void Setup()
         {
@@ -68,7 +57,6 @@ namespace SnapShotStore
         }
 
 
-
         private void SnapshotSuccess(SaveSnapshotSuccess cmd)
         {
             _log.Debug("Processing SnapShotSuccess command, ID={0}", Acc.AccountID);
@@ -76,7 +64,8 @@ namespace SnapShotStore
 
         private void SnapshotFailure(SaveSnapshotFailure cmd)
         {
-            _log.Error("Processing SnapShotFailure command, ID={0}, cause={1} \nStacktrace={2}", Acc.AccountID, cmd.Cause.Message, cmd.Cause.StackTrace);
+            _log.Error("Processing SnapShotFailure command, ID={0}, cause={1} \nStacktrace={2}", Acc.AccountID,
+                cmd.Cause.Message, cmd.Cause.StackTrace);
         }
 
         private void Process(SomeMessage msg)
@@ -95,7 +84,7 @@ namespace SnapShotStore
 
         private void RecoverSnapshot(SnapshotOffer offer)
         {
-            Acc = (Account)offer.Snapshot;
+            Acc = (Account) offer.Snapshot;
             if (Acc == null)
             {
                 _log.Error("ERROR in RecoverSnapshot. PersistenceId = {0}", AccountId);
@@ -106,9 +95,5 @@ namespace SnapShotStore
                 _log.Debug("Finished Processing RecoverSnapshot, ID={0}", Acc.AccountID);
             }
         }
-
-
-
-
     }
 }

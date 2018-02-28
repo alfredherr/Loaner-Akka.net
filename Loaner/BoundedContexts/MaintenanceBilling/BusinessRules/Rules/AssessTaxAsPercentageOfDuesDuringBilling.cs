@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Akka;
-using Akka.Persistence;
-using Akka.Util.Internal;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Exceptions;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
@@ -15,19 +11,37 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 {
     public class AssessTaxAsPercentageOfDuesDuringBilling : IAccountBusinessRule
     {
+        private string _detailsGenerated;
+        private List<IDomainEvent> _eventsGenerated;
+
+        public AssessTaxAsPercentageOfDuesDuringBilling(
+            (string Command, Dictionary<string, object> Parameters) commandState)
+        {
+            CommandState = commandState;
+        }
+
+        public AssessTaxAsPercentageOfDuesDuringBilling(AccountState accountState)
+        {
+            AccountState = accountState;
+        }
+
+        private AccountState AccountState { get; set; }
+        private (string Command, Dictionary<string, object> Parameters) CommandState { get; set; }
+
+        private bool Success { get; set; }
+
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
         {
             //Extract parameter TaxPercentageRate
-            double taxRate = ExtractParameter("TaxPercentageRate");
+            var taxRate = ExtractParameter("TaxPercentageRate");
 
             //Extract parameter Dues from Command
-            double duesAmount = 0.00;
-            bool foundAtLeastOne = false;
+            var duesAmount = 0.00;
+            var foundAtLeastOne = false;
 
             var com = (BillingAssessment) command;
             foreach (var c in com.LineItems)
-            {
                 //Console.WriteLine(
                 //    $"In {this.GetType().Name} and this is the FinancialConcept name: {c.Item.Name} and amount: {c.Item.Amount}");
                 if (c.Item.Name.Equals("Dues"))
@@ -36,7 +50,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                     duesAmount = c.Item.Amount;
                     break;
                 }
-            }
 
             if (!foundAtLeastOne)
             {
@@ -54,8 +67,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
             }
 
 
-            double calculatedTaxAmount = (taxRate / 100) * duesAmount;
-            string obligationUsed = AccountState.Obligations
+            var calculatedTaxAmount = taxRate / 100 * duesAmount;
+            var obligationUsed = AccountState.Obligations
                 .FirstOrDefault(x => x.Value.Status == ObligationStatus.Active).Key;
             _eventsGenerated = new List<IDomainEvent>
             {
@@ -69,31 +82,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
             Success = true;
         }
 
-        private double ExtractParameter(string parameterName)
-        {
-            if (!CommandState.Parameters.ContainsKey(parameterName))
-                throw new CommandStateOptionMissingException(
-                    $"Rule AssessTaxAsPercentageOfDuesDuringBilling requires parameter '{parameterName}'.");
-            Double.TryParse((string) CommandState.Parameters[parameterName], out double value);
-            return value;
-        }
-
-        private AccountState AccountState { get; set; }
-        private string _detailsGenerated;
-        private List<IDomainEvent> _eventsGenerated;
-        private (string Command, Dictionary<string, object> Parameters) CommandState { get; set; }
-
-        public AssessTaxAsPercentageOfDuesDuringBilling(
-            (string Command, Dictionary<string, object> Parameters) commandState)
-        {
-            CommandState = commandState;
-        }
-
-        public AssessTaxAsPercentageOfDuesDuringBilling(AccountState accountState)
-        {
-            AccountState = accountState;
-        }
-
         public void SetAccountState(AccountState state)
         {
             AccountState = state;
@@ -103,8 +91,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             CommandState = commandState;
         }
-
-        private bool Success { get; set; }
 
         public string GetResultDetails()
         {
@@ -124,6 +110,15 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         public bool RuleAppliedSuccessfuly()
         {
             return Success;
+        }
+
+        private double ExtractParameter(string parameterName)
+        {
+            if (!CommandState.Parameters.ContainsKey(parameterName))
+                throw new CommandStateOptionMissingException(
+                    $"Rule AssessTaxAsPercentageOfDuesDuringBilling requires parameter '{parameterName}'.");
+            double.TryParse((string) CommandState.Parameters[parameterName], out var value);
+            return value;
         }
     }
 }

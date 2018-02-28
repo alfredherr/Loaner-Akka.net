@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using Akka.Actor;
 using System.IO;
-using System.Threading;
 using System.Runtime.Serialization;
+using System.Threading;
+using Akka.Actor;
 
 namespace SnapShotStore
 {
@@ -13,24 +12,25 @@ namespace SnapShotStore
     #endregion
 
 
-    class SnapshotActor : ReceiveActor
+    internal class SnapshotActor : ReceiveActor
     {
-        private FileStream stream = null;
-//        private BinaryFormatter formatter = new BinaryFormatter();
-        int counter = 0;
-
         // Create the map to the items held in the snapshot store
-        const int INITIAL_SIZE = 10000;
-        Dictionary<string, long> objectLocation = new Dictionary<string, long>(INITIAL_SIZE);
+        private const int INITIAL_SIZE = 10000;
+        private readonly Dictionary<string, long> objectLocation = new Dictionary<string, long>(INITIAL_SIZE);
+        private readonly FileStream stream;
+
+//        private BinaryFormatter formatter = new BinaryFormatter();
+        private int counter;
 
         public SnapshotActor(long actorID, string dir, ActorSystem system)
         {
             // Open the file that is the snapshot store
-            string filename = Path.Combine(dir, "snapshot-store" + actorID + ".bin");
+            var filename = Path.Combine(dir, "snapshot-store" + actorID + ".bin");
             try
             {
                 stream = File.Open(filename, FileMode.Append);
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 Console.WriteLine($"Error opening the snapshot store file, error: {e.StackTrace}");
             }
@@ -63,29 +63,24 @@ namespace SnapShotStore
             var sender = Sender;
 
             // Dispatch the write to the file and send a msg to the actor when it is complete
-            Thread reader = new Thread(() =>
+            var reader = new Thread(() =>
             {
-                object obj = Read(pos);
+                var obj = Read(pos);
                 sender.Tell(new RestoreComplete(obj));
             });
             reader.Start();
-
         }
-
-
-
-
-
 
 
         public void Write(string id, object obj)
         {
-            try {
+            try
+            {
                 // Write the ID of the object to store first so on Initialize() the objects can all be identified correctly
 //                formatter.Serialize(stream, id);
 
                 // Get the current location of the file stream so we know where the object is stored on the disk
-                long pos = stream.Position;
+                var pos = stream.Position;
 
                 // Writre the object to the store
 //                formatter.Serialize(stream, obj);
@@ -94,10 +89,7 @@ namespace SnapShotStore
                 // Save the information about where the object is located in the file
                 objectLocation.Add(id, pos);
 
-                if (counter % 100 == 0)
-                {
-                    stream.Flush(true);
-                }
+                if (counter % 100 == 0) stream.Flush(true);
             }
             catch (SerializationException e)
             {
@@ -133,7 +125,6 @@ namespace SnapShotStore
             // Loop through the snapshot store file and find all the previous objects written
             // add any objects found to the map
             while (stream.Position < stream.Length)
-            {
                 try
                 {
                     /*
@@ -155,9 +146,6 @@ namespace SnapShotStore
                     Console.WriteLine("Failed to deserialize. Reason: " + e.Message);
                     throw;
                 }
-            }
         }
-
     }
 }
-

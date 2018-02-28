@@ -1,30 +1,31 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using Akka.Actor;
+using Akka.Configuration;
+using Akka.Monitoring;
+using Akka.Monitoring.StatsD;
+using Akka.Routing;
+using Confluent.Kafka;
+using Confluent.Kafka.Serialization;
+using Loaner.ActorManagement;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
+using Loaner.Configuration;
+using Loaner.KafkaProducer;
 using Loaner.KafkaProducer.Commands;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Nancy.Owin;
+using NLog.Extensions.Logging;
+using NLog.Web;
 
 namespace Loaner
 {
-    using BoundedContexts.MaintenanceBilling.Aggregates.Messages;
-    using System;
-    using static ActorManagement.LoanerActors;
-    using Akka.Actor;
-    using Akka.Configuration;
-    using Akka.Monitoring;
-    using Akka.Monitoring.StatsD;
-    using BoundedContexts.MaintenanceBilling.Aggregates;
-    using Microsoft.AspNetCore.Builder;
-    using Microsoft.AspNetCore.Hosting;
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.Logging;
-    using Nancy.Owin;
-    using NLog.Extensions.Logging;
-    using NLog.Web;
-    using System.Collections.Generic;
-    using System.Text;
-    using Akka.Routing;
-    using Confluent.Kafka;
-    using Confluent.Kafka.Serialization;
-    using Configuration;
-    using KafkaProducer;
+    using static LoanerActors;
 
     public class Startup
     {
@@ -54,7 +55,7 @@ namespace Loaner
             DemoSystemSupervisor = DemoActorSystem.ActorOf(Props.Create<SystemSupervisor>(), "demoSupervisor");
 
             var statsDServer = config.GetString("Akka.StatsDServer");
-            int statsDPort = Convert.ToInt32(config.GetString("Akka.StatsDPort"));
+            var statsDPort = Convert.ToInt32(config.GetString("Akka.StatsDPort"));
             var statsDPrefix = config.GetString("Akka.StatsDPrefix");
             BusinessRulesFilename = config.GetString("Akka.BusinessRulesFilename");
             CommandsToRulesFilename = config.GetString("Akka.CommandsToRulesFilename");
@@ -67,14 +68,13 @@ namespace Loaner
             Console.WriteLine($"(Business Rules) CommandsToRulesFilename: {CommandsToRulesFilename}");
 
             ActorMonitoringExtension.RegisterMonitor(DemoActorSystem,
-                new ActorStatsDMonitor(host: statsDServer
-                    , port: statsDPort
-                    , prefix: statsDPrefix
+                new ActorStatsDMonitor(statsDServer
+                    , statsDPort
+                    , statsDPrefix
                 ));
 
             DemoSystemSupervisor.Tell(new TellMeAboutYou("Starting Up"));
             DemoSystemSupervisor.Tell(new StartPortfolios());
-
         }
 
         private void ConfigureKafkaProducerActors(Config config)
@@ -92,17 +92,17 @@ namespace Loaner
             Console.WriteLine($"(kafka) List of brokers: {brokerList}");
 
             // Create the Kafka Producer object for use by the actual actors
-            var kafkaConfig = new Dictionary<string, object>()
+            var kafkaConfig = new Dictionary<string, object>
             {
                 ["bootstrap.servers"] = brokerList,
                 //["retries"] = 20,
                 //["retry.backoff.ms"] = 1000,
                 ["client.id"] = "akks-arch-demo",
                 //["socket.nagle.disable"] = true,
-                ["default.topic.config"] = new Dictionary<string, object>()
+                ["default.topic.config"] = new Dictionary<string, object>
                 {
                     ["acks"] = -1,
-                    ["message.timeout.ms"] = 60_000,
+                    ["message.timeout.ms"] = 60_000
                 }
             };
 
@@ -119,7 +119,7 @@ namespace Loaner
                 if (obj.GetType() == MyKafkaProducer.GetType())
                 {
                     Console.WriteLine(DateTime.Now.ToString("h:mm:ss tt") + $"- Type matches produucer");
-                    Producer<string, string> temp = (Producer<string, string>) obj;
+                    var temp = (Producer<string, string>) obj;
                 }
             };
 
@@ -134,7 +134,7 @@ namespace Loaner
             };
 
             // Schedule the flush actor so we flush the producer on a regular basis
-            Props publisherFlushProps = Props.Create(() => new KafkaPublisherFlushActor(MyKafkaProducer));
+            var publisherFlushProps = Props.Create(() => new KafkaPublisherFlushActor(MyKafkaProducer));
 
             FlushActor = DemoActorSystem.ActorOf(publisherFlushProps, "publisherFlushActor");
 
@@ -142,24 +142,27 @@ namespace Loaner
                 TimeSpan.FromSeconds(5), FlushActor, new Flush(), ActorRefs.NoSender);
 
             //Create AccountState publisher
-            Props accountStatePublisherProps = Props.Create(() =>
+            var accountStatePublisherProps = Props.Create(() =>
                     new KafkaPublisherActor(AccountStateKafkaTopicName, MyKafkaProducer, "AccountStatePublisherActor"))
                 .WithRouter(new RoundRobinPool(numAccountPublishers));
 
-            AccountStatePublisherActor = DemoActorSystem.ActorOf(accountStatePublisherProps, "AccountStatePublisherActor");
+            AccountStatePublisherActor =
+                DemoActorSystem.ActorOf(accountStatePublisherProps, "AccountStatePublisherActor");
 
             //Create Porfolio Publisher
-            Props portfolioStatePublisherProps = Props.Create(() =>
-                    new KafkaPublisherActor(PortfolioStateKafkaTopicName, MyKafkaProducer, "PortfolioStatePublisherActor"))
+            var portfolioStatePublisherProps = Props.Create(() =>
+                    new KafkaPublisherActor(PortfolioStateKafkaTopicName, MyKafkaProducer,
+                        "PortfolioStatePublisherActor"))
                 .WithRouter(new RoundRobinPool(numPortfolioPublishers));
 
-            PortfolioStatePublisherActor = DemoActorSystem.ActorOf(portfolioStatePublisherProps, "PortfolioStatePublisherActor");
+            PortfolioStatePublisherActor =
+                DemoActorSystem.ActorOf(portfolioStatePublisherProps, "PortfolioStatePublisherActor");
         }
 
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
             var appConfig = new AppConfiguration();
-            ConfigurationBinder.Bind(_config, appConfig);
+            _config.Bind(appConfig);
 
             app.UseOwin(x => x.UseNancy(opt => opt.Bootstrapper = new DemoBootstrapper(appConfig)));
 

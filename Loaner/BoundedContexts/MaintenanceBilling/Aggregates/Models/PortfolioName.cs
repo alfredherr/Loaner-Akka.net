@@ -16,8 +16,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 
         public override bool Equals(object obj)
         {
-            PortfolioName test = obj as PortfolioName;
-            return test.Instance == this.Instance;
+            var test = obj as PortfolioName;
+            return test.Instance == Instance;
         }
     }
 }

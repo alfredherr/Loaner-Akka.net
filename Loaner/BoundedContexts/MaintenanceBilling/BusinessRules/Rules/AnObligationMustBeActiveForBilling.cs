@@ -10,46 +10,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 {
     public class AnObligationMustBeActiveForBilling : IAccountBusinessRule
     {
-        /* Rule logic goes here. */
-        public void RunRule(IDomainCommand command)
-        {
-            Success = false;
-            _eventsGenerated = new List<IDomainEvent>();
-            MaintenanceFee maintenanceFeeToUse = null;
-            maintenanceFeeToUse =
-                AccountState
-                    .Obligations
-                    .Where(x => x.Value.Status == ObligationStatus.Active)
-                    .Select(y => y.Value).First();
-            if (command is BillingAssessment b)
-            {
-                LineItems = b.LineItems ?? new List<InvoiceLineItem>();
-            }
-
-            if (maintenanceFeeToUse != null)
-            {
-                foreach (var item in LineItems)
-                {
-                    var @event =
-                        new AccountBusinessRuleValidationSuccess(maintenanceFeeToUse.ObligationNumber, "AccountBusinessRuleValidationSuccess on AnObligationMustBeActiveForBilling");
-                    _eventsGenerated.Add(@event);
-                }
-
-                _detailsGenerated = "THIS WORKED";
-                Success = true;
-            }
-            else
-            {
-                _detailsGenerated = "No Active obligations on this account.";
-            }
-        }
-
-        private AccountState AccountState { set; get; }
         private string _detailsGenerated;
         private List<IDomainEvent> _eventsGenerated;
-        private List<InvoiceLineItem> LineItems { get; set; }
-
-        private (string Command, Dictionary<string, object> Parameters) CommandState { get; set; }
 
         public AnObligationMustBeActiveForBilling((string Command, Dictionary<string, object> Parameters) commandState)
         {
@@ -63,6 +25,45 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
             LineItems = lineItems;
         }
 
+        private AccountState AccountState { set; get; }
+        private List<InvoiceLineItem> LineItems { get; set; }
+
+        private (string Command, Dictionary<string, object> Parameters) CommandState { get; set; }
+
+        private bool Success { get; set; }
+
+        /* Rule logic goes here. */
+        public void RunRule(IDomainCommand command)
+        {
+            Success = false;
+            _eventsGenerated = new List<IDomainEvent>();
+            MaintenanceFee maintenanceFeeToUse = null;
+            maintenanceFeeToUse =
+                AccountState
+                    .Obligations
+                    .Where(x => x.Value.Status == ObligationStatus.Active)
+                    .Select(y => y.Value).First();
+            if (command is BillingAssessment b) LineItems = b.LineItems ?? new List<InvoiceLineItem>();
+
+            if (maintenanceFeeToUse != null)
+            {
+                foreach (var item in LineItems)
+                {
+                    var @event =
+                        new AccountBusinessRuleValidationSuccess(maintenanceFeeToUse.ObligationNumber,
+                            "AccountBusinessRuleValidationSuccess on AnObligationMustBeActiveForBilling");
+                    _eventsGenerated.Add(@event);
+                }
+
+                _detailsGenerated = "THIS WORKED";
+                Success = true;
+            }
+            else
+            {
+                _detailsGenerated = "No Active obligations on this account.";
+            }
+        }
+
         public void SetAccountState(AccountState state)
         {
             AccountState = state;
@@ -72,13 +73,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             CommandState = commandState;
         }
-
-        public void SetLineItems(List<InvoiceLineItem> lineItems)
-        {
-            LineItems = lineItems;
-        }
-
-        private bool Success { get; set; }
 
         public string GetResultDetails()
         {
@@ -98,6 +92,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         public bool RuleAppliedSuccessfuly()
         {
             return Success;
+        }
+
+        public void SetLineItems(List<InvoiceLineItem> lineItems)
+        {
+            LineItems = lineItems;
         }
     }
 }

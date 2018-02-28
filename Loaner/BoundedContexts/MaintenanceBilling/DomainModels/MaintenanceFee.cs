@@ -6,6 +6,18 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
 {
     public class MaintenanceFee : IObligation
     {
+        public MaintenanceFee()
+        {
+        }
+
+        [JsonConstructor]
+        public MaintenanceFee(string obligationNumber, double openingBalance)
+        {
+            ObligationNumber = obligationNumber;
+            CurrentBalance = openingBalance;
+            Status = ObligationStatus.Active;
+            Transactions = new List<FinancialTransaction>();
+        }
 
         [JsonProperty(Order = 1)]
         public string ObligationNumber { get; }
@@ -20,21 +32,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
 
         [JsonProperty(Order = 4)]
         public List<FinancialTransaction> Transactions { get; private set; }
-
-
-
-        public MaintenanceFee()
-        {
-        }
-
-        [JsonConstructor]
-        public MaintenanceFee(string obligationNumber, double openingBalance)
-        {
-            ObligationNumber = obligationNumber;
-            CurrentBalance = openingBalance;
-            Status = ObligationStatus.Active;
-            Transactions = new List<FinancialTransaction>();
-        }
 
         public double PostTransaction(FinancialTransaction occurred)
         {

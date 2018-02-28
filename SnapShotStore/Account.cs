@@ -1,6 +1,4 @@
-﻿using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.Serialization;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace SnapShotStore
 {
@@ -11,7 +9,7 @@ namespace SnapShotStore
             AccountID = accountID;
         }
 
-        public string AccountID { get; private set; }
+        public string AccountID { get; }
         public string CompanyIDCustomerID { get; set; }
         public string AccountTypeID { get; set; }
         public string PrimaryAccountCodeID { get; set; }
@@ -41,6 +39,7 @@ namespace SnapShotStore
         public string RandomText9 { get; set; }
         public Dictionary<string, string> LargeAccount1 { get; set; }
         public List<float> LargeAccount2 { get; set; }
+
         public long[] LongValues { get; set; }
         /*
                 protected Account(SerializationInfo info, StreamingContext context)

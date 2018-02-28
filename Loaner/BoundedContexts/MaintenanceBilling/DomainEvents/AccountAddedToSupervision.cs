@@ -10,7 +10,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
             _OccurredOn = DateTime.Now;
         }
 
-        public AccountAddedToSupervision(string accountNumber, string message ="") : this()
+        public AccountAddedToSupervision(string accountNumber, string message = "") : this()
         {
             Message = message;
             AccountNumber = accountNumber;

@@ -1,18 +1,15 @@
-﻿
+﻿using System;
+using System.IO;
+using System.Net;
+using Microsoft.AspNetCore.Hosting;
+
 namespace Loaner
 {
-    using System;
-    using Microsoft.AspNetCore.Hosting;
-    using System.IO;
-    using System.Net;
-    using Microsoft.AspNetCore.Server.Kestrel.Core;
-    
-
     public class Program
     {
-        static void Main()
+        private static void Main()
         {
-            var ip = IPAddress.Loopback;
+            IPAddress ip = IPAddress.Any;
 
             Console.WriteLine($"*****************************");
             Console.WriteLine($"**** Akka & DotNet Core  ****");
@@ -30,11 +27,7 @@ namespace Loaner
                     //options.Limits.MinResponseDataRate =
                     //    new MinDataRate(bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
                     options.Listen(ip, 8080);
-                    options.Listen(ip, 8443, listenOptions =>
-                    {
-                        listenOptions.UseHttps("localhost.pfx", "Testing");
-                    });
-
+                    options.Listen(ip, 8443, listenOptions => { listenOptions.UseHttps("mycert.pfx", "Testing"); });
                 })
                 .UseStartup<Startup>()
                 .Build();

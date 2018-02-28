@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Akka.Actor;
-using Confluent.Kafka.Serialization;
+﻿using Akka.Actor;
 using Confluent.Kafka;
-using Newtonsoft.Json;
 using StatsdClient;
 
 namespace kafka_actors
 {
     #region Command classes
+
     // Command to flush the producer
     public class Flush
     {
@@ -17,9 +13,9 @@ namespace kafka_actors
 
     #endregion
 
-    class KafkaPublisherFlushActor : ReceiveActor
+    internal class KafkaPublisherFlushActor : ReceiveActor
     {
-        Producer<string, string> producer;
+        private readonly Producer<string, string> producer;
 
 
         public KafkaPublisherFlushActor(Producer<string, string> producer)
@@ -39,12 +35,3 @@ namespace kafka_actors
         }
     }
 }
-
-
-
-
-
-
-
-
-

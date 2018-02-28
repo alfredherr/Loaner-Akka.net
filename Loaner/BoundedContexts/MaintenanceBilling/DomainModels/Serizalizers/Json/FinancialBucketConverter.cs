@@ -1,9 +1,9 @@
+using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels.Serizalizers.Json
 {
-    using System;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
-
     public class FinancialBucketConverter : JsonConverter
     {
         public override bool CanWrite => false;
@@ -43,6 +43,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels.Serizalizers.Js
                     funancialBucket = new Interest(bucketAmount);
                     break;
             }
+
             serializer.Populate(jsonObject.CreateReader(), funancialBucket);
             return funancialBucket;
         }

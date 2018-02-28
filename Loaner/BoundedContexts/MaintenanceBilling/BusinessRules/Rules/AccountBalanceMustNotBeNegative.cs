@@ -8,10 +8,23 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 {
     public class AccountBalanceMustNotBeNegative : IAccountBusinessRule
     {
-        private AccountState AccountState { get; set; }
         private string _detailsGenerated;
         private List<IDomainEvent> _eventsGenerated;
+
+        public AccountBalanceMustNotBeNegative((string Command, Dictionary<string, object> Parameters) commandState)
+        {
+            CommandState = commandState;
+        }
+
+        public AccountBalanceMustNotBeNegative(AccountState accountState)
+        {
+            AccountState = accountState;
+        }
+
+        private AccountState AccountState { get; set; }
         private (string Command, Dictionary<string, object> Parameters) CommandState { get; set; }
+
+        public bool Success { get; private set; }
 
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
@@ -30,16 +43,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
             Success = true;
         }
 
-        public AccountBalanceMustNotBeNegative((string Command, Dictionary<string, object> Parameters) commandState)
-        {
-            CommandState = commandState;
-        }
-
-        public AccountBalanceMustNotBeNegative(AccountState accountState)
-        {
-            AccountState = accountState;
-        }
-
         public void SetAccountState(AccountState state)
         {
             AccountState = state;
@@ -49,8 +52,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             CommandState = commandState;
         }
-
-        public bool Success { get; private set; }
 
         public string GetResultDetails()
         {

@@ -18,10 +18,10 @@ namespace Loaner.API.Models
 
         public AccountStateViewModel(AccountState accountState)
         {
-            this.AccountState = accountState;
+            AccountState = accountState;
             Message = $"State as of: {DateTime.Now}";
         }
-        
+
 
         [JsonProperty(Order = 1)]
         public string Message { get; set; }

@@ -5,10 +5,10 @@
         public GenerateAccounts(string filename, int numAccountsToGenerate)
         {
             Filename = filename;
-            NumAccountsToGenerate = numAccountsToGenerate;        }
+            NumAccountsToGenerate = numAccountsToGenerate;
+        }
 
-        public string Filename { get; private set; }
-        public int NumAccountsToGenerate { get; private set; }
-
+        public string Filename { get; }
+        public int NumAccountsToGenerate { get; }
     }
 }

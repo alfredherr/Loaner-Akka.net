@@ -1,6 +1,6 @@
 ﻿using Akka.Actor;
-using Confluent.Kafka;
 using Akka.Monitoring;
+using Confluent.Kafka;
 using Loaner.KafkaProducer.Commands;
 
 namespace Loaner.KafkaProducer
@@ -11,9 +11,9 @@ namespace Loaner.KafkaProducer
 
     #endregion
 
-    class KafkaPublisherFlushActor : ReceiveActor
+    internal class KafkaPublisherFlushActor : ReceiveActor
     {
-        Producer<string, string> producer;
+        private readonly Producer<string, string> producer;
 
 
         public KafkaPublisherFlushActor(Producer<string, string> producer)

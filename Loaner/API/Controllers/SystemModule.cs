@@ -10,7 +10,6 @@ using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
-using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
 using Nancy;
 using Nancy.ModelBinding;
@@ -47,25 +46,23 @@ namespace Loaner.API.Controllers
                 });
                 return Response.AsJson(answer);
             });
-            Get("/businessrules", args =>
-            {
-                return Response.AsJson(new AccountBusinessRulesMapper().GetCommandsToBusinesRules());
-            });
+            Get("/businessrules",
+                args => { return Response.AsJson(new AccountBusinessRulesMapper().GetCommandsToBusinesRules()); });
 
-            Post("/businessrules",  args =>
+            Post("/businessrules", args =>
             {
-                var reader = new StreamReader(this.Request.Body);
-                string text = reader.ReadToEnd();
+                var reader = new StreamReader(Request.Body);
+                var text = reader.ReadToEnd();
                 var newRules = JsonConvert.DeserializeObject<AccountBusinessRuleMapModel[]>(text);
 
-                var proof = new AccountBusinessRulesMapper().UpdateAccountBusinessRules(updatedRules: newRules.ToList());
+                var proof = new AccountBusinessRulesMapper().UpdateAccountBusinessRules(newRules.ToList());
 
-                return new BusinessRulesMapModel() {Message = $"Info as of: {DateTime.Now}", RulesMap = proof};
+                return new BusinessRulesMapModel {Message = $"Info as of: {DateTime.Now}", RulesMap = proof};
             });
 
             Post("/billall", args =>
             {
-                InvoiceLineItem[] assessment = this.Bind<InvoiceLineItem[]>();
+                var assessment = this.Bind<InvoiceLineItem[]>();
 
                 Console.WriteLine($"Assessment is {assessment}");
 
@@ -94,15 +91,17 @@ namespace Loaner.API.Controllers
                     billingSummary = new BillingStatusModel(answer);
                     billingSummary.Summarize();
                     Console.WriteLine($"Responded to API with {billingSummary.AccountsBilled} accounts billed");
-                    Console.WriteLine($"Responded to API with ${string.Format("{0:C}",billingSummary.AmountBilled)} billed");
-                    Console.WriteLine($"Responded to API with ${string.Format("{0:C}",billingSummary.BalanceAfterBilling)} ending balance");
+                    Console.WriteLine(
+                        $"Responded to API with ${string.Format("{0:C}", billingSummary.AmountBilled)} billed");
+                    Console.WriteLine(
+                        $"Responded to API with ${string.Format("{0:C}", billingSummary.BalanceAfterBilling)} ending balance");
                 });
                 return Response.AsJson(billingSummary ?? new BillingStatusModel());
             });
 
             Post("/simulation", args =>
             {
-                SimulateBoardingOfAccountModel client = this.Bind<SimulateBoardingOfAccountModel>();
+                var client = this.Bind<SimulateBoardingOfAccountModel>();
 
                 Console.WriteLine($"Supervisor's name is: {LoanerActors.DemoSystemSupervisor.Path.Name}");
 

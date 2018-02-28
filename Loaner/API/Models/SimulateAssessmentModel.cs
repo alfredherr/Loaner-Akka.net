@@ -1,11 +1,8 @@
-﻿namespace Loaner.API.Models
+﻿using System.Collections.Generic;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
+
+namespace Loaner.API.Models
 {
-    using System.Collections.Generic;
-    using BoundedContexts.MaintenanceBilling.DomainModels;
-    using Newtonsoft.Json;
-    using BoundedContexts.MaintenanceBilling.DomainModels.Serizalizers.Json;
-
-
     public class SimulateAssessmentModel
     {
         //[JsonConverter(typeof(FinancialBucketConverter))]

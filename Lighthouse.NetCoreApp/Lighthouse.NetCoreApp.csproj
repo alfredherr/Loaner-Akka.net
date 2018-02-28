@@ -8,10 +8,10 @@
     <RuntimeIdentifiers>win-x86;win-x64;linux-x64;ubuntu-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Akka" Version="1.3.4" />
-    <PackageReference Include="Akka.Cluster" Version="1.3.4" />
+    <PackageReference Include="Akka" Version="1.3.5" />
+    <PackageReference Include="Akka.Cluster" Version="1.3.5" />
     <PackageReference Include="Akka.Logger.NLog" Version="1.3.0-beta" />
-    <PackageReference Include="Akka.Remote" Version="1.3.4" />
+    <PackageReference Include="Akka.Remote" Version="1.3.5" />
     <PackageReference Include="Akka.Serialization.Hyperion" Version="1.3.4-beta58" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Https" Version="2.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />

@@ -17,7 +17,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
             AccountStatus = status;
             AccountNumber = accountNumber;
         }
-        public string Message { get;  }
+
+        public string Message { get; }
         public AccountStatus AccountStatus { get; }
         public string AccountNumber { get; }
         private DateTime _OccurredOn { get; }

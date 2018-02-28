@@ -7,6 +7,6 @@
             Acc = acc;
         }
 
-        public Account Acc { get; private set; }
+        public Account Acc { get; }
     }
 }

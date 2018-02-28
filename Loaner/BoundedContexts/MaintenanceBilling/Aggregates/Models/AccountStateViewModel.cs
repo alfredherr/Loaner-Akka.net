@@ -1,14 +1,14 @@
-﻿using System.Transactions;
+﻿using System;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 
 {
-    using DomainModels;
-    using System;
-
     public class AccountStateViewModel
     {
-        public AccountStateViewModel(string accountNumber, string userName, string portfolioName, decimal currentBalance, AccountStatus accountStatus, DateTime asOfDate, DateTime lastPaymentDate, decimal lastPaymentAmount, int daysDelinquent, string accountInventory)
+        public AccountStateViewModel(string accountNumber, string userName, string portfolioName,
+            decimal currentBalance, AccountStatus accountStatus, DateTime asOfDate, DateTime lastPaymentDate,
+            decimal lastPaymentAmount, int daysDelinquent, string accountInventory)
         {
             AccountNumber = accountNumber;
             UserName = userName;
@@ -21,6 +21,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             DaysDelinquent = daysDelinquent;
             AccountInventory = accountInventory;
         }
+
         public string AccountNumber { get; set; }
         public string UserName { get; set; }
         public string PortfolioName { get; set; }
@@ -31,7 +32,5 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
         public decimal LastPaymentAmount { get; set; }
         public int DaysDelinquent { get; set; }
         public string AccountInventory { get; set; }
-
     }
-
 }

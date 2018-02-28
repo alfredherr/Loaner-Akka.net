@@ -1,3 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Akka.Actor;
+using Akka.Event;
+using Akka.Monitoring;
+using Akka.Persistence;
 using Akka.Util.Internal;
 using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
@@ -6,25 +13,17 @@ using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {
-    using Akka.Actor;
-    using Akka.Event;
-    using Akka.Monitoring;
-    using Akka.Persistence;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-
     public class SystemSupervisor : ReceivePersistentActor
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
+        private readonly Dictionary<string, Dictionary<string, Tuple<double, double>>> _portfolioBillings =
+            new Dictionary<string, Dictionary<string, Tuple<double, double>>>();
+
         /**
          * Actor's state = just a list of account under supervision
          */
-        private Dictionary<string, IActorRef> _portfolios = new Dictionary<string, IActorRef>();
-
-        private Dictionary<string, Dictionary<string, Tuple<double, double>>> _portfolioBillings =
-            new Dictionary<string, Dictionary<string, Tuple<double, double>>>();
+        private readonly Dictionary<string, IActorRef> _portfolios = new Dictionary<string, IActorRef>();
 
         private DateTime _lastBootedOn;
 
@@ -39,7 +38,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<SuperviseThisPortfolio>(command => ProcessSupervision(command));
             Command<StartPortfolios>(command => StartPortfolios());
             Command<MySystemStatus>(cmd => Console.WriteLine(cmd.Message));
-            
+
             /* Commonly used commands */
             Command<TellMeYourStatus>(asking => GetMyStatus());
             Command<TellMeAboutYou>(me =>
@@ -54,7 +53,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             /** Special handlers below; we can decide how to handle snapshot processin outcomes. */
             Command<SaveSnapshotSuccess>(success => PurgeOldSnapShots(success));
-            
+
             Command<DeleteSnapshotsSuccess>(msg => { });
             Command<SaveSnapshotFailure>(
                 failure => _log.Error(
@@ -63,6 +62,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 msg => _log.Info($"Successfully cleared log after snapshot ({msg.ToString()})"));
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
+
+
+        public override string PersistenceId => Self.Path.Name;
 
         private void RegisterStartup()
         {
@@ -88,19 +90,17 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void GetBillingProgress()
         {
             var result = new Dictionary<string, Dictionary<string, Tuple<double, double>>>();
-            int accountsCntr = 0;
+            var accountsCntr = 0;
             foreach (var x in _portfolioBillings)
             {
                 result.Add(x.Key, x.Value);
                 x.Value.ForEach(_ => accountsCntr++);
             }
+
             Sender.Tell(new PortfolioBillingStatus(result));
             _log.Info(
-                $"ReplyWithBillingProgress to {Sender.Path.Name} with {result.Count} portfolios with a total of {accountsCntr.ToString()} billed accounts.");
+                $"ReplyWithBillingProgress to {Sender.Path.Name} with {result.Count} portfolios with a total of {accountsCntr} billed accounts.");
         }
-
-
-        public override string PersistenceId => Self.Path.Name;
 
         protected override void PostStop()
         {
@@ -154,6 +154,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 {
                     _portfolios[portfolio].Tell(new StartAccounts());
                 }
+
             GetMyStatus();
         }
 
@@ -162,7 +163,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             var tooMany = new Dictionary<string, string>();
             tooMany.Add("sorry", "Too many portfolios to list here");
             Sender.Tell(new MySystemStatus($"{_portfolios.Count} portfolio(s) started.",
-                (_portfolios.Count > 999) ? tooMany : DictionaryToStringList()));
+                _portfolios.Count > 999 ? tooMany : DictionaryToStringList()));
         }
 
         private void ProcessSupervision(SuperviseThisPortfolio command)
@@ -178,7 +179,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     Sender.Tell(InstantiateThisPortfolio(portfolioName));
                     ApplySnapShotStrategy();
                 });
-                
             }
             else
             {
@@ -189,10 +189,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void ReplayEvent(string portfolioNumber)
         {
             RecoveryCounter();
-            if (string.IsNullOrEmpty(portfolioNumber))
-            {
-                throw new Exception("Why is this blank?");
-            }
+            if (string.IsNullOrEmpty(portfolioNumber)) throw new Exception("Why is this blank?");
 
             if (_portfolios.ContainsKey(portfolioNumber))
             {
@@ -215,6 +212,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 _log.Debug($"Instantiated portfolio {portfolioActor.Path.Name}");
                 return portfolioActor;
             }
+
             throw new Exception($"Why are you trying to instantiate a portfolio not yet registered?");
         }
 
@@ -234,20 +232,18 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         public void ApplySnapShotStrategy()
         {
-            if (LastSequenceNr  % LoanerActors.TakeSystemSupervisorSnapshotAt == 0)
+            if (LastSequenceNr % LoanerActors.TakeSystemSupervisorSnapshotAt == 0)
             {
-            var state = new List<string>(); // Just need the name to kick it off?
+                var state = new List<string>(); // Just need the name to kick it off?
 
-            foreach (var record in _portfolios.Keys)
-            {
-                state.Add(record);
-            }
+                foreach (var record in _portfolios.Keys) state.Add(record);
 
-            SaveSnapshot(state.ToArray());
+                SaveSnapshot(state.ToArray());
 
-            _log.Info($"SystemSupervisor Snapshot taken of {state.Count} portfolios. LastSequenceNr is {LastSequenceNr}.");
+                _log.Info(
+                    $"SystemSupervisor Snapshot taken of {state.Count} portfolios. LastSequenceNr is {LastSequenceNr}.");
 
-            Context.IncrementCounter("SnapShotTaken");
+                Context.IncrementCounter("SnapShotTaken");
             }
         }
     }

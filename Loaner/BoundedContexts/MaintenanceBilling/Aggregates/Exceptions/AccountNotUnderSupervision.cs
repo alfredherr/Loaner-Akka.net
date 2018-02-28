@@ -6,7 +6,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Exceptions
     {
         public AccountNotUnderSupervision(string cmdAccountNumber) : base(cmdAccountNumber)
         {
-            
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using Loaner.BoundedContexts.MaintenanceBilling.Aggregates;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.DomainCommands
@@ -13,6 +12,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainCommands
             AccountNumber = accountNumber;
             BoardingModel = boardingModel;
         }
+
         public AccountBoardingModel BoardingModel { get; }
         public string AccountNumber { get; }
         private Guid _UniqueGuid { get; }

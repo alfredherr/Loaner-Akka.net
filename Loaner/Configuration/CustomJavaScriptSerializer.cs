@@ -6,7 +6,7 @@ namespace Loaner.Configuration
     {
         public CustomJavaScriptSerializer()
         {
-            this.RegisterConverters(new[]{new CustomFinancialBucketConverter()});
+            RegisterConverters(new[] {new CustomFinancialBucketConverter()});
         }
     }
 }

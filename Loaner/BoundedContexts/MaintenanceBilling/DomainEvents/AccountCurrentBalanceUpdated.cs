@@ -4,19 +4,21 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
 {
     public class AccountCurrentBalanceUpdated : IDomainEvent
     {
-        public AccountCurrentBalanceUpdated(string accountNumber, double newCurrentBalance, string message ="") : this()
+        public AccountCurrentBalanceUpdated(string accountNumber, double newCurrentBalance, string message = "") :
+            this()
         {
             Message = message;
             AccountNumber = accountNumber;
             CurrentBalance = newCurrentBalance;
         }
-        public string Message { get; set; }
 
         public AccountCurrentBalanceUpdated()
         {
             _UniqueGuid = Guid.NewGuid();
             _OccurredOn = DateTime.Now;
         }
+
+        public string Message { get; set; }
 
         public string AccountNumber { get; }
 

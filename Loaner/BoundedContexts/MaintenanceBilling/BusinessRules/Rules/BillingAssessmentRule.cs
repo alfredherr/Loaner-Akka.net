@@ -11,10 +11,27 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 {
     public class BillingAssessmentRule : IAccountBusinessRule
     {
-        private AccountState AccountState { get; set; }
+        private readonly List<IDomainEvent> _eventsGenerated = new List<IDomainEvent>();
         private string _detailsGenerated;
-        private List<IDomainEvent> _eventsGenerated = new List<IDomainEvent>();
+
+        public BillingAssessmentRule()
+        {
+        }
+
+        public BillingAssessmentRule((string Command, Dictionary<string, object> Parameters) commandState)
+        {
+            CommandState = commandState;
+        }
+
+        public BillingAssessmentRule(AccountState accountState)
+        {
+            AccountState = accountState;
+        }
+
+        private AccountState AccountState { get; set; }
         private (string Command, Dictionary<string, object> Parameters) CommandState { get; set; }
+
+        public bool Success { get; private set; }
 
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
@@ -33,24 +50,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                     Success = true;
                 }
             else
-            {
                 throw new Exception($"I don't know how to handle commands of type {command.GetType().Name}");
-            }
-            
-        }
-
-        public BillingAssessmentRule()
-        {
-            
-        }
-        public BillingAssessmentRule((string Command, Dictionary<string, object> Parameters) commandState)
-        {
-            CommandState = commandState;
-        }
-
-        public BillingAssessmentRule(AccountState accountState)
-        {
-            AccountState = accountState;
         }
 
         public void SetAccountState(AccountState state)
@@ -62,8 +62,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             CommandState = commandState;
         }
-
-        public bool Success { get; private set; }
 
         public string GetResultDetails()
         {

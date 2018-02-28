@@ -4,9 +4,9 @@
     {
         public RestoreComplete(object obj)
         {
-            this.Obj = obj;
+            Obj = obj;
         }
 
-        public object Obj { get; private set; }
+        public object Obj { get; }
     }
 }

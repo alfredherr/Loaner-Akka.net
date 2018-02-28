@@ -20,6 +20,6 @@ RUN dpkg-reconfigure -f noninteractive tzdata
 COPY --from=build-env /app/out ./
 COPY --from=build-env /app/ ./
 
-EXPOSE 8080 7777
+EXPOSE 8080 7777 8443
 
 ENTRYPOINT ["dotnet", "Loaner.dll"]

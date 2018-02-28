@@ -36,19 +36,28 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models
             BusinessRule = validateBusinessRuleExists(rule, BusinessRuleParameters);
         }
 
+        public string Client { get; }
+        public string Portfolio { get; }
+        public string AccountNumber { get; }
+        public bool ForAllAccounts { get; }
+        public IDomainCommand Command { get; }
+        public IAccountBusinessRule BusinessRule { get; }
+        public (string Command, Dictionary<string, object> Parameters) BusinessRuleParameters { get; }
+
         private (string Command, Dictionary<string, object> Parameters) SplitParameters(string commandName,
             string parameters)
         {
-            Dictionary<string, object> parametros = new Dictionary<string, object>();
+            var parametros = new Dictionary<string, object>();
             if (parameters.Contains(",") || parameters.Contains("="))
             {
                 var ruleparams = parameters.Split(',');
                 foreach (var parameter in ruleparams)
                 {
-                    string[] keyVal = parameter.Split("=");
+                    var keyVal = parameter.Split("=");
                     parametros.Add(keyVal[0], keyVal[1]);
                 }
             }
+
             return ( commandName, parametros);
         }
 
@@ -86,13 +95,5 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models
                     throw new InvalidIAccountBusinessRuleException(rule);
             }
         }
-
-        public string Client { get; private set; }
-        public string Portfolio { get; private set; }
-        public string AccountNumber { get; private set; }
-        public bool ForAllAccounts { get; private set; }
-        public IDomainCommand Command { get; private set; }
-        public IAccountBusinessRule BusinessRule { get; private set; }
-        public (string Command, Dictionary<string, object> Parameters) BusinessRuleParameters { get; private set; }
     }
 }

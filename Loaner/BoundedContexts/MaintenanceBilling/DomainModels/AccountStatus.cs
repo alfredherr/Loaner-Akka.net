@@ -6,7 +6,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
     [JsonConverter(typeof(StringEnumConverter))]
     public enum AccountStatus
     {
-        Active=0,
+        Active = 0,
         Inactive,
         Cancelled,
         Created,

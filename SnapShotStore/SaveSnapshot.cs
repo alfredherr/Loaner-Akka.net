@@ -6,12 +6,12 @@ namespace SnapShotStore
     {
         public SaveSnapshot(string id, object state)
         {
-            this.ID = id;
-            this.State = state;
+            ID = id;
+            State = state;
         }
 
-        public object State { get; private set; }
-        public string ID { get; private set; }
-        public object ConsistentHashKey { get { return ID; } }
+        public object State { get; }
+        public string ID { get; }
+        public object ConsistentHashKey => ID;
     }
 }

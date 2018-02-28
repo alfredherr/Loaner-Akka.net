@@ -1,13 +1,12 @@
-﻿namespace Lighthouse.NetCoreApp
+﻿using System;
+using System.IO;
+using Microsoft.AspNetCore.Hosting;
+
+namespace Lighthouse.NetCoreApp
 {
-    using System;
-    using Microsoft.AspNetCore.Hosting;
-    using System.Threading.Tasks;
-    using System.IO;
-    using static ActorManagement.Management;
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             Console.WriteLine($"*****************************");
             Console.WriteLine($"****      Lighthouse     ****");
@@ -17,10 +16,9 @@
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseKestrel()
                 .UseStartup<Startup>()
-//                .UseUrls("http://localhost:8181")
+                .UseUrls("http://*:8181")
                 .Build();
             host.Run();
-
         }
     }
 }

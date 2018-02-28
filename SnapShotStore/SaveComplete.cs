@@ -1,4 +1,6 @@
 ﻿namespace SnapShotStore
 {
-    public class SaveComplete { };
+    public class SaveComplete
+    {
+    }
 }
