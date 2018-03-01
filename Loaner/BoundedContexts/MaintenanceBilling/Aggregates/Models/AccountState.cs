@@ -8,7 +8,7 @@ using Newtonsoft.Json.Converters;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 {
-    public class AccountState
+    public class AccountState : ICloneable
     {
         /**
          * Only two ways to initiate an Account State
@@ -397,6 +397,22 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
         {
             return
                 $"{nameof(UserName)}: {UserName}, {nameof(Inventroy)}: {Inventroy}, {nameof(OpeningBalance)}: {OpeningBalance}, {nameof(AccountNumber)}: {AccountNumber}, {nameof(CurrentBalance)}: {CurrentBalance}, {nameof(AccountStatus)}: {AccountStatus}, {nameof(AuditLog)}: {AuditLog}, {nameof(SimulatedFields)}: {SimulatedFields}, {nameof(Obligations)}: {Obligations}, {nameof(LastPaymentAmount)}: {LastPaymentAmount}, {nameof(LastPaymentDate)}: {LastPaymentDate}";
+        }
+
+        public object Clone()
+        {
+             return new AccountState(
+                  this.AccountNumber
+                , this.CurrentBalance
+                , this.AccountStatus
+                , this.Obligations.ToImmutableDictionary()
+                , this.SimulatedFields.ToImmutableDictionary()
+                , this.AuditLog.ToImmutableList()
+                , this.OpeningBalance
+                , this.Inventroy
+                , this.UserName
+                , this.LastPaymentAmount
+                , this.LastPaymentDate);
         }
     }
 }
