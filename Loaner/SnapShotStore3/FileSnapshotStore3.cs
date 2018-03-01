@@ -243,8 +243,8 @@ namespace Loaner.SnapShotStore3
         //        [MethodImpl(MethodImplOptions.Synchronized)]
         protected virtual void Save(SnapshotMetadata metadata, object snapshot)
         {
-            _save++;
-            if (_save % 10000 == 0) _log.Info("Save() - count of calls={0}", _saveasync);
+            //_save++;
+            //if (_save % 10000 == 0) _log.Info("Save() - count of calls={0}", _saveasync);
 
             lock (_smeLock)
             {
