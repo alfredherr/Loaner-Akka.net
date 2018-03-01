@@ -1,7 +1,7 @@
 version: "2"
 services:
   loaner:
-    image: alfredherr/loaner:1.13
+    image: alfredherr/loaner:1.15
     hostname: loaner
     container_name: loaner
     depends_on:
