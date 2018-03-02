@@ -44,7 +44,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<TellMeAboutYou>(me =>
                 Console.WriteLine(
                     $"About me: I am {Self.Path.Name} Msg: {me.Me} I was last booted up on: {_lastBootedOn}"));
-            Command<TellMeYourPortfolioStatus>(msg => _log.Debug(msg.Message));
+            Command<TellMeYourPortfolioStatus>(msg => _log.Debug("[TellMeYourPortfolioStatus]: " + msg.Message));
             Command<string>(noMessage => { });
 
 
@@ -57,10 +57,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<DeleteSnapshotsSuccess>(msg => { });
             Command<SaveSnapshotFailure>(
                 failure => _log.Error(
-                    $"Actor {Self.Path.Name} was unable to save a snapshot. {failure.Cause.Message}"));
+                    $"[SaveSnapshotFailure]: Actor {Self.Path.Name} was unable to save a snapshot. {failure.Cause.Message}"));
             Command<DeleteMessagesSuccess>(
-                msg => _log.Info($"Successfully cleared log after snapshot ({msg.ToString()})"));
-            CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
+                msg => _log.Info($"[DeleteMessagesSuccess]: Successfully cleared log after snapshot ({msg.ToString()})"));
+            CommandAny(msg => _log.Error($"[CommandAny]: Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
 
 
@@ -83,7 +83,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void RegisterPortfolioBilling(RegisterPortolioBilling cmd)
         {
             _portfolioBillings.AddOrSet(cmd.PortfolioName, cmd.AccountsBilled);
-            _log.Debug($"Portfolio {cmd.PortfolioName} reporting {cmd.AccountsBilled.Count} billed accounts");
+            _log.Debug($"[RegisterPortfolioBilling]: Portfolio {cmd.PortfolioName} reporting {cmd.AccountsBilled.Count} billed accounts");
         }
 
 
@@ -99,7 +99,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             Sender.Tell(new PortfolioBillingStatus(result));
             _log.Info(
-                $"ReplyWithBillingProgress to {Sender.Path.Name} with {result.Count} portfolios with a total of {accountsCntr} billed accounts.");
+                $"[GetBillingProgress]: ReplyWithBillingProgress to {Sender.Path.Name} with {result.Count} portfolios with a total of {accountsCntr} billed accounts.");
         }
 
         protected override void PostStop()
@@ -129,7 +129,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             var clientName = client.ClientName.ToUpper();
             var boardingActor = Context.ActorOf<BoardAccountActor>($"Client{clientName}");
             boardingActor.Tell(client);
-            _log.Info($"Started the boarding of accounts for Client{clientName} {DateTime.Now} ");
+            _log.Info($"[RunSimulator]: Started the boarding of accounts for Client{clientName} {DateTime.Now} ");
         }
 
         private Dictionary<string, string> DictionaryToStringList()
@@ -182,7 +182,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             }
             else
             {
-                _log.Info($"You tried to load portfolio {portfolioName} which has already been loaded");
+                _log.Info($"[ProcessSupervision]: You tried to load portfolio {portfolioName} which has already been loaded");
             }
         }
 
@@ -193,12 +193,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             if (_portfolios.ContainsKey(portfolioNumber))
             {
-                _log.Debug($"Supervisor already has {portfolioNumber} in state. No action taken");
+                _log.Debug($"[ReplayEvent]: Supervisor already has {portfolioNumber} in state. No action taken");
             }
             else
             {
                 _portfolios.Add(portfolioNumber, null);
-                _log.Debug($"Replayed event on {portfolioNumber}");
+                _log.Debug($"[ReplayEvent]: Replayed event on {portfolioNumber}");
             }
         }
 
@@ -209,11 +209,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 var portfolioActor = Context.ActorOf(Props.Create<PortfolioActor>(), portfolioName);
                 _portfolios[portfolioName] = portfolioActor;
                 portfolioActor.Tell(new CheckYoSelf()); // to instantiate actor
-                _log.Debug($"Instantiated portfolio {portfolioActor.Path.Name}");
+                _log.Debug($"[InstantiateThisPortfolio]: Instantiated portfolio {portfolioActor.Path.Name}");
                 return portfolioActor;
             }
 
-            throw new Exception($"Why are you trying to instantiate a portfolio not yet registered?");
+            throw new Exception($"[InstantiateThisPortfolio]: Why are you trying to instantiate a portfolio not yet registered?");
         }
 
         private void ProcessSnapshot(SnapshotOffer offer)
@@ -226,7 +226,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             foreach (var portfolio in snap)
             {
                 _portfolios.Add(portfolio, null);
-                _log.Info($"{Self.Path.Name} Snapshot recovered portfolio: {portfolio}.");
+                _log.Info($"[ProcessSnapshot]: {Self.Path.Name} Snapshot recovered portfolio: {portfolio}.");
             }
         }
 
@@ -241,7 +241,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 SaveSnapshot(state.ToArray());
 
                 _log.Info(
-                    $"SystemSupervisor Snapshot taken of {state.Count} portfolios. LastSequenceNr is {LastSequenceNr}.");
+                    $"[ApplySnapShotStrategy]: SystemSupervisor Snapshot taken of {state.Count} portfolios. LastSequenceNr is {LastSequenceNr}.");
 
                 Context.IncrementCounter("SnapShotTaken");
             }

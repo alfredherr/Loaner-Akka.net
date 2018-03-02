@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Exceptions;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
@@ -27,7 +29,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
         }
 
 
-        private AccountState(string accountNumber,
+        private AccountState(
+            string accountNumber,
             double currentBalance,
             AccountStatus accountStatus,
             ImmutableDictionary<string, MaintenanceFee> obligations,
@@ -131,8 +134,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                 AccountStatus,
                 Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("AccountBusinessRuleValidationSuccess",
-                        $"AccountBusinessRuleValidationSuccess on {occurred.Message}",
+                AuditLog.Add(
+                    new StateLog(
+                        "AccountBusinessRuleValidationSuccess",
+                        $"{occurred.Message}",
                         occurred.UniqueGuid(),
                         occurred.OccurredOn()
                     )
@@ -156,7 +161,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                 AccountStatus,
                 Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("UacAppliedAfterBilling", occurred.Message, occurred.UniqueGuid(),
+                AuditLog.Add(new StateLog(
+                    "UacAppliedAfterBilling", 
+                    occurred.Message + " Balance After: " + (CurrentBalance + -1 * occurred.UacAmountApplied).ToString("C"), 
+                    occurred.UniqueGuid(),
                     occurred.OccurredOn())),
                 OpeningBalance,
                 Inventroy,
@@ -180,7 +188,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                 AccountStatus,
                 Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("TaxAppliedDuringBilling", occurred.Message, occurred.UniqueGuid(),
+                AuditLog.Add(new StateLog(
+                    "TaxAppliedDuringBilling", 
+                    occurred.Message  + " Balance After: " + (CurrentBalance + occurred.TaxAmountApplied).ToString("C"), 
+                    occurred.UniqueGuid(),
                     occurred.OccurredOn())),
                 OpeningBalance,
                 Inventroy,
@@ -245,14 +256,20 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
         {
             var trans = new FinancialTransaction(occurred.FinancialBucket, occurred.FinancialBucket.Amount);
             Obligations[occurred.ObligationNumber]?.PostTransaction(trans);
+            var newBalance = CurrentBalance + occurred.FinancialBucket.Amount;
             var newState = new AccountState(
                 AccountNumber,
-                CurrentBalance + occurred.FinancialBucket.Amount,
+                newBalance,
                 AccountStatus,
                 Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("ObligationAssessedConcept", occurred.Message, occurred.UniqueGuid(),
-                    occurred.OccurredOn())),
+                AuditLog.Add(
+                    new StateLog(
+                        "ObligationAssessedConcept",         
+                        occurred.Message + " Balance After: " + ((decimal)newBalance).ToString("C"), 
+                        occurred.UniqueGuid(),
+                        occurred.OccurredOn())
+                    ),
                 OpeningBalance,
                 Inventroy,
                 UserName,
@@ -335,11 +352,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             Obligations[occurred.ObligationNumber].PostTransaction(trans);
             return new AccountState(
                 AccountNumber,
-                CurrentBalance,
+                CurrentBalance - occurred.Amount, //CurrentBalance,
                 AccountStatus,
                 Obligations,
                 SimulatedFields,
-                AuditLog.Add(new StateLog("ObligationSettledConcept", occurred.Message, occurred.UniqueGuid(),
+                AuditLog.Add(new StateLog(
+                    "ObligationSettledConcept", 
+                    occurred.Message + " Balance After: " + (CurrentBalance - occurred.Amount).ToString("C"), 
+                    occurred.UniqueGuid(),
                     occurred.OccurredOn()))
                 , OpeningBalance,
                 Inventroy,
@@ -357,7 +377,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                 simulation: LoadSimulation(),
                 log: AuditLog.Add(
                     new StateLog("AccountCreated",
-                        occurred.Message,
+                        occurred.Message + " Balance After: " + ((decimal)occurred.OpeningBalance).ToString("C"),
                         occurred.UniqueGuid(),
                         occurred.OccurredOn()
                     )
@@ -378,7 +398,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
         private static ImmutableDictionary<string, string> LoadSimulation()
         {
             var range = ImmutableDictionary.Create<string, string>();
-            for (var i = 1; i <= 100; i++)
+            for (var i = 1; i <= 10; i++)
                 range = range.Add(i.ToString(), $"This simulates field {i}");
 
             return range;
@@ -401,18 +421,19 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 
         public object Clone()
         {
+            var newDict = this.Obligations.ToDictionary(x => x.Key, y => (MaintenanceFee) y.Value.Clone());
              return new AccountState(
                   this.AccountNumber
                 , this.CurrentBalance
                 , this.AccountStatus
-                , this.Obligations.ToImmutableDictionary()
+                , newDict.ToImmutableDictionary()
                 , this.SimulatedFields.ToImmutableDictionary()
-                , this.AuditLog.ToImmutableList()
+                , this.AuditLog.Select(x => x.Clone()).Cast<StateLog>().ToImmutableList()
                 , this.OpeningBalance
                 , this.Inventroy
                 , this.UserName
                 , this.LastPaymentAmount
-                , this.LastPaymentDate);
+                , this.LastPaymentDate );
         }
     }
 }

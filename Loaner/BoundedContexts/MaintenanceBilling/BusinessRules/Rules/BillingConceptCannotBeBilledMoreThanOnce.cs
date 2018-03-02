@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
@@ -32,6 +33,25 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
         {
+            var conceptName = (command as BillingAssessment).LineItems.Select(x => x.Item.Name).ToDictionary(x => x, x=> x);
+
+            var matches = 
+                AccountState.Obligations
+                .SelectMany(x => x.Value.Transactions.Select(y => conceptName.ContainsKey(y.FinancialBucket.Name)))
+                .All(x => x);
+            if (matches)
+            {
+                _eventsGenerated = new List<IDomainEvent>
+                {
+                    new AccountBusinessRuleValidationFailure(
+                        AccountState.AccountNumber,
+                        "AccountBusinessRuleValidationFailure on BillingConceptCannotBeBilledMoreThanOnce"
+                    )
+                };
+                _detailsGenerated = "THIS FAILED";
+                Success = false;
+                return;
+            }
             _eventsGenerated = new List<IDomainEvent>
             {
                 new AccountBusinessRuleValidationSuccess(

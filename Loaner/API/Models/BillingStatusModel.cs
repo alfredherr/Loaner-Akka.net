@@ -19,9 +19,26 @@ namespace Loaner.API.Models
 
         private Dictionary<string, Dictionary<string, Tuple<double, double>>> BillingStatus { get; }
 
-        public int AccountsBilled { get; set; }
-        public double AmountBilled { get; set; }
-        public double BalanceAfterBilling { get; set; }
+        public string AccountsBilled {
+            get => _AccountsBilled.ToString("##,#");
+            set => AccountsBilled = value;
+        }
+        
+        public string  AmountBilled {
+            get => _AmountBilled.ToString("C");
+            set => AmountBilled = value;
+        }
+        
+        public string BalanceAfterBilling  {
+            get => _BalanceAfterBilling.ToString("C");
+            set => BalanceAfterBilling = value;
+        }
+
+        private int _AccountsBilled { get; set; }
+ 
+        private double _AmountBilled { get; set; }
+ 
+        private double _BalanceAfterBilling { get; set; }
 
         public Dictionary<string, int> SummarizedBillingStatus { get; set; }
 
@@ -33,9 +50,9 @@ namespace Loaner.API.Models
 
                 foreach (var account in billingStatusBilling.Value)
                 {
-                    AccountsBilled++;
-                    AmountBilled += account.Value.Item1;
-                    BalanceAfterBilling += account.Value.Item2;
+                    _AccountsBilled++;
+                    _AmountBilled += account.Value.Item1;
+                    _BalanceAfterBilling += account.Value.Item2;
                 }
             }
         }

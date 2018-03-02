@@ -23,14 +23,14 @@ namespace Loaner.API.Controllers
 
                 var portfolioActor = LoanerActors.DemoActorSystem
                     .ActorSelection($"/user/demoSupervisor/{portfolio}")
-                    .ResolveOne(TimeSpan.FromSeconds(10));
+                    .ResolveOne(TimeSpan.FromSeconds(30));
 
                 if (portfolioActor.Exception != null) throw portfolioActor.Exception;
 
                 await Task.Run(() =>
                 {
                     answer = portfolioActor.Result
-                        .Ask<TellMeYourPortfolioStatus>(new TellMeYourStatus(), TimeSpan.FromSeconds(50)).Result;
+                        .Ask<TellMeYourPortfolioStatus>(new TellMeYourStatus(), TimeSpan.FromSeconds(150)).Result;
                     return Response.AsJson(new {answer.Message, PortfolioState = answer.PortfolioStateViewModel});
                 });
                 return Response.AsJson(new {answer.Message, PortfolioState = answer.PortfolioStateViewModel});

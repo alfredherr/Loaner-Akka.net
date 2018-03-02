@@ -59,7 +59,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<DeleteSnapshotsSuccess>(msg => { });
             Command<SaveSnapshotFailure>(
                 failure => _log.Error(
-                    $"Actor {Self.Path.Name} was unable to save a snapshot. {failure.Cause.Message}"));
+                    $"[SaveSnapshotFailure]: Actor {Self.Path.Name} was unable to save a snapshot. {failure.Cause.Message}"));
             //Command<RecoverySuccess>(msg => this.WakeUp());
             Command<TellMeYourStatus>(asking =>
                 Sender.Tell(
@@ -68,8 +68,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<TellMeYourInfo>(asking => Sender.Tell(new MyAccountStatus("", AccountState.Clone(_accountState))));
 
             Command<DeleteMessagesSuccess>(
-                msg => _log.Debug($"Successfully cleared log after snapshot ({msg.ToString()})"));
-            CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
+                msg => _log.Debug($"[DeleteMessagesSuccess]: Successfully cleared log after snapshot ({msg.ToString()})"));
+            CommandAny(msg => _log.Error($"[CommandAny]: Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
 
 
@@ -92,7 +92,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             );
 
             AccountStatePublisherActor.Tell(new Publish(kafkaAccountModel.AccountNumber, kafkaAccountModel));
-            _log.Debug($"Sending kafka message for account {kafkaAccountModel}");
+            _log.Debug($"[PublishToKafka]: Sending kafka message for account {kafkaAccountModel}");
         }
 
         private void PurgeOldSnapShots(SaveSnapshotSuccess success)
@@ -128,15 +128,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             if (_accountState.AccountNumber == null)
                 throw new Exception($"Actor {Self.Path.Name} is passing an empty account number.");
 
-            // Process all business rules
+             // Process all business rules
             ApplyBusinessRules(command);
-            var total = command.LineItems.Aggregate(0.0, (accomulator, next) => accomulator + next.Item.Amount);
-
-            ReportMyState(total, _accountState.CurrentBalance);
-
-
-            //Report current state to Kafka
-            Self.Tell(new PublishAccountStateToKafka());
+       
         }
 
         private void SendParentMyState(AskToBeSupervised command)
@@ -147,7 +141,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
              */
             command.MyNewParent.Tell(new SuperviseThisAccount(command.Portfolio, Self.Path.Name));
 
-            ReportMyState(_accountState.OpeningBalance, _accountState.CurrentBalance, command.MyNewParent);
+            ReportMyState(0, _accountState.CurrentBalance, command.MyNewParent);
 
             Self.Tell(new CompleteBoardingProcess());
         }
@@ -167,7 +161,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             RecoveryCounter();
             _accountState = _accountState.ApplyEvent(domainEvent);
-            _log.Debug($"Recovery event: {eventname}");
+            _log.Debug($"[ApplyPastEvent]: Recovery event: {eventname}");
         }
 
         private void AddObligation(AddObligationToAccount command)
@@ -181,14 +175,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     _accountState = _accountState.ApplyEvent(@event);
                     ApplySnapShotStrategy();
                     _log.Debug(
-                        $"Added maintenanceFee {command.MaintenanceFee.ObligationNumber} to account {command.AccountNumber}");
+                        $"[AddObligation]: Added maintenanceFee {command.MaintenanceFee.ObligationNumber} to account {command.AccountNumber}");
                     /* Optionally, put this command on the external notificaiton system (i.e. Kafka) */
                 });
             }
             else
             {
                 _log.Debug(
-                    $"You are trying to add maintenanceFee {command.MaintenanceFee.ObligationNumber} an account which has exists on account {command.AccountNumber}. No action taken.");
+                    $"[AddObligation]: You are trying to add maintenanceFee {command.MaintenanceFee.ObligationNumber} an account which has exists on account {command.AccountNumber}. No action taken.");
             }
         }
 
@@ -214,13 +208,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 {
                     _accountState = _accountState.ApplyEvent(@event);
 
-                    _log.Debug($"Created account {command.AccountNumber}");
+                    _log.Debug($"[InitiateAccount]: Created account {command.AccountNumber}");
                 });
             }
             else
             {
                 _log.Warning(
-                    $"You are trying to create {command.AccountNumber}, but has already been created. No action taken.");
+                    $"[InitiateAccount]: You are trying to create {command.AccountNumber}, but has already been created. No action taken.");
             }
         }
 
@@ -232,13 +226,17 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 			 * Then, based on the outcome generated events.
 			 * In this example, we are simply going to accept it and updated our state.
 			 */
+            var billedAmount = 0.0;
             if (command is BillingAssessment)
             {
+
                 var c = (BillingAssessment) command;
+                billedAmount = c.LineItems.Aggregate(0.0, (accumulator, next) => accumulator + next.Item.Amount);
+                
                 var parameters = c.LineItems.Aggregate("",
                     (working, next) => working + ";" + next.Item.Name + "=" + next.Item.Amount);
-                _log.Debug($"{_accountState.AccountNumber}: " +
-                           $"Command {c.GetType().Name} with {c.LineItems.Count} line items: " +
+                _log.Debug($"[ApplyBusinessRules]: {_accountState.AccountNumber}: " +
+                           $"Command {c.GetType().Name} with {c.LineItems.Count} total billed = {billedAmount} & line items: " +
                            $"{parameters}");
             }
 
@@ -246,18 +244,27 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 _rulesRunner.ApplyBusinessRules(_log, Self.Path.Parent.Parent.Name,
                     Self.Path.Parent.Name, _accountState, command);
             _log.Debug(
-                $"There were {resultModel.GeneratedEvents.Count} events for {command} command. And it was {resultModel.Success}");
+                $"[ApplyBusinessRules]: There were {resultModel.GeneratedEvents.Count} events for {command} command. And success={resultModel.Success}");
+            
             if (resultModel.Success)
             {
                 /* I may want to do old vs new state comparisons for other reasons
 				 *  but ultimately we just update the state.. */
                 var events = resultModel.GeneratedEvents;
+
                 foreach (var @event in events)
                     Persist(@event, s =>
                     {
-                        _log.Debug(
-                            $"Processing event {@event.GetType().Name} on account {_accountState.AccountNumber} ");
                         _accountState = _accountState.ApplyEvent(@event);
+                        
+                        _log.Debug(
+                            $"[ApplyBusinessRules]: Persisted event {@event.GetType().Name} on account {_accountState.AccountNumber}" +
+                            $" account balance after is {_accountState.CurrentBalance :C} ");
+                        
+                        ReportMyState(billedAmount, _accountState.CurrentBalance);
+
+                        //Report current state to Kafka
+                        Self.Tell(new PublishAccountStateToKafka());
                         ApplySnapShotStrategy();
                     });
             }
@@ -269,7 +276,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             if (LastSequenceNr % TakeAccountSnapshotAt == 0)
             {
                 SaveSnapshot(_accountState);
-                _log.Debug($"{_accountState.AccountNumber} Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
+                _log.Debug($"[ApplySnapShotStrategy]: {_accountState.AccountNumber} Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
                 Context.IncrementCounter("SnapShotTaken");
             }
         }

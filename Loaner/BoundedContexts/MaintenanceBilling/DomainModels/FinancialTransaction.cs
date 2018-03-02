@@ -2,7 +2,7 @@
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
 {
-    public class FinancialTransaction : ITransaction
+    public class FinancialTransaction : ITransaction, ICloneable
     {
         public FinancialTransaction()
         {
@@ -14,6 +14,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
         {
             FinancialBucket = bucket;
             TransactionAmount = amount;
+        }
+        private FinancialTransaction(IFinancialBucket bucket, double amount, DateTime _occurredOn, Guid _uniqueGuid) 
+        {
+            FinancialBucket = bucket;
+            TransactionAmount = amount;
+            _OccurredOn = _occurredOn;
+            _UniqueGuid = _uniqueGuid;
         }
 
         public double TransactionAmount { get; }
@@ -29,6 +36,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
         public Guid UniqueGuid()
         {
             return _UniqueGuid;
+        }
+
+        public object Clone()
+        {
+            return new FinancialTransaction(FinancialBucket, TransactionAmount, _OccurredOn, _UniqueGuid);
         }
     }
 }

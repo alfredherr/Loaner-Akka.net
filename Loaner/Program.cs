@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using Microsoft.AspNetCore.Hosting;
@@ -10,7 +11,8 @@ namespace Loaner
         private static void Main()
         {
             IPAddress ip = IPAddress.Any;
-
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+            
             Console.WriteLine($"*****************************");
             Console.WriteLine($"**** Akka & DotNet Core  ****");
             Console.WriteLine($"********{ip}************");

@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
 {
-    public class MaintenanceFee : IObligation
+    public class MaintenanceFee : IObligation , ICloneable
     {
         public MaintenanceFee()
         {
@@ -19,6 +20,18 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
             Transactions = new List<FinancialTransaction>();
         }
 
+        private MaintenanceFee(string obligationNumber,ObligationStatus status, double currentBalance, List<FinancialTransaction> transactions)
+        {
+            ObligationNumber = obligationNumber;
+            Status = status;
+            CurrentBalance = currentBalance;
+            Transactions = transactions.Select( x=> x.Clone() ).Cast<FinancialTransaction>().ToList();
+        }
+        public object Clone()
+        {
+            return new MaintenanceFee(ObligationNumber,Status,CurrentBalance,GetTransactions());
+        }
+        
         [JsonProperty(Order = 1)]
         public string ObligationNumber { get; }
 
@@ -47,7 +60,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
 
         public List<FinancialTransaction> GetTransactions()
         {
-            return Transactions;
+            return Transactions.Select(x => x.Clone()).Cast<FinancialTransaction>().ToList();
         }
 
         public MaintenanceFee SetStatus(ObligationStatus status)
@@ -55,5 +68,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
             Status = status;
             return this;
         }
+
     }
 }
