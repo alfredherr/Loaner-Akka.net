@@ -27,6 +27,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 
         public object Clone()
         {
+            
          var dict = this.SupervizedAccounts.ToDictionary(
                 x => x.Key,
                 x => (AccountUnderSupervision) x.Value.Clone() );

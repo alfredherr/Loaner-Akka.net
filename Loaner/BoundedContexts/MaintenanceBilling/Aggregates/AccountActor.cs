@@ -275,7 +275,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             if (LastSequenceNr % TakeAccountSnapshotAt == 0)
             {
-                SaveSnapshot(_accountState);
+                var clonedState = _accountState.Clone();
+                SaveSnapshot(clonedState);
                 _log.Debug($"[ApplySnapShotStrategy]: {_accountState.AccountNumber} Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
                 Context.IncrementCounter("SnapShotTaken");
             }

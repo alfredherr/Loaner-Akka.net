@@ -9,10 +9,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             AccountNumber = accountNumber;
         }
 
-        private AccountUnderSupervision (string accountNumber, double lastBilledAmount, double balanceAfterLastTransaction) {
+        private AccountUnderSupervision (string accountNumber, double lastBilledAmount, double balanceAfterLastTransaction, IActorRef accountActorRef) {
             AccountNumber = accountNumber;
             LastBilledAmount = lastBilledAmount;
             BalanceAfterLastTransaction = balanceAfterLastTransaction;
+            AccountActorRef = accountActorRef;
         }
         public string AccountNumber { get; }
 
@@ -24,7 +25,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
         
         public object Clone()
         {
-           return new AccountUnderSupervision(this.AccountNumber,this.LastBilledAmount,this.BalanceAfterLastTransaction);
+           return new AccountUnderSupervision(this.AccountNumber,this.LastBilledAmount,this.BalanceAfterLastTransaction,AccountActorRef);
         }
     }
 }

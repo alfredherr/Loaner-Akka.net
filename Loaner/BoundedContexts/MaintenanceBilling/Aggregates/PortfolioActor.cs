@@ -335,7 +335,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             if (LastSequenceNr % TakePortolioSnapshotAt == 0 || PersistenceId.ToUpper().Contains("PORTFOLIO"))
             {
-                SaveSnapshot(_porfolioState);
+                var clonedState = _porfolioState.Clone();
+                SaveSnapshot(clonedState);
                 _log.Info($"[ApplySnapShotStrategy]: Portfolio {Self.Path.Name} snapshot taken. Current SequenceNr is {LastSequenceNr}.");
                 Context.IncrementCounter("SnapShotTaken");
             }

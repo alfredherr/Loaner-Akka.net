@@ -222,7 +222,7 @@ namespace Loaner.SnapShotStore3 {
             lock (_smeLock) {
                 try {
                     // Serialize the object that describes the snapshot
-                    object snapshot = (original_snapshot as ICloneable).Clone();
+                    object snapshot = original_snapshot; //relegated fix to snapshot called
                     var serializer = _serialization.FindSerializerFor (snapshot, _defaultSerializer);
                     byte[] bytes = null;
                     try {
