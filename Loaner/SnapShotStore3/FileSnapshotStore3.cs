@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Akka.Actor;
 using Akka.Dispatch;
 using Akka.Event;
 using Akka.Persistence;
 using Akka.Persistence.Snapshot;
 using Akka.Serialization;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 
 namespace Loaner.SnapShotStore3 {
     /* STUFF TO DO
@@ -21,8 +24,8 @@ namespace Loaner.SnapShotStore3 {
      * 
      * 
      */
-
-    public class FileSnapshotStore3 : SnapshotStore {
+    public class FileSnapshotStore3 : SnapshotStore 
+    {
         // Constants for the offsets when reading and writing SFE's
         private const int SIZE_OF_PERSISTENCE_ID_LENGTH = 4;
         private const int SIZE_OF_SEQ_NUM = 8;
@@ -68,13 +71,13 @@ namespace Loaner.SnapShotStore3 {
         // Counters for debug
         private long _loadasync;
         private int _readSME;
-        private long _save;
+     
         private long _saveasync;
-        private int _smeMaxLength = 0;
+        
         private bool FlushingFiles;
 
         private Timer FlushTimer;
-
+        
         public FileSnapshotStore3 () {
             try {
                 // Get the configuration
@@ -117,12 +120,19 @@ namespace Loaner.SnapShotStore3 {
                 _writeSMEStream.Seek (_writeSMEStream.Length, SeekOrigin.Begin);
 
                 _readSMEStream = File.Open (filenameSME, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                
+                    
+                
+
             } catch (Exception e) {
                 _log.Error ("Error opening the snapshot store file, error: {0}", e.StackTrace);
                 throw e;
             }
+              
+            
         }
-
+    
+        
         protected override Task DeleteAsync (SnapshotMetadata metadata) {
             _log.Debug ("DeleteAsync() - metadata: {0}, metadata.Timestamp {1:yyyy-MMM-dd-HH-mm-ss ffff}", metadata,
                 metadata.Timestamp);
@@ -319,7 +329,7 @@ namespace Loaner.SnapShotStore3 {
 
             return promise.Task;
         }
-
+        
         private void FlushFiles (object info) {
             lock (_smeLock) {
                 //            _log.Debug("FlushFiles() - flushing the files");
@@ -342,6 +352,7 @@ namespace Loaner.SnapShotStore3 {
         }
 
         protected override void PreStart () {
+        
             try {
                 _log.Debug ("PreStart()");
 
@@ -350,6 +361,7 @@ namespace Loaner.SnapShotStore3 {
 
                 // Start the timer for flushing the files
                 FlushTimer = new Timer (FlushFiles, null, 0, 5000);
+            
             } catch (Exception e) {
                 _log.Error ("Serious error in PreStart(). Message={0}\n StackTrace={1}", e.Message, e.StackTrace);
                 throw e;
@@ -412,7 +424,7 @@ namespace Loaner.SnapShotStore3 {
 
                     // Stop the scheduled flush process
                     FlushTimer.Dispose ();
-
+                     
                     // Close the file and ensure that everything is flushed correctly
                     _writeStream.Flush (true);
                     _writeSMEStream.Flush (true);

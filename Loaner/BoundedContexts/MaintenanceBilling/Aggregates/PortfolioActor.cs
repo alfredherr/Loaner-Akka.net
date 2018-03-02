@@ -76,7 +76,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
       
             //Context.Gauge("PortfolioMailbox", numberOfMessages);
-            _log.Info($"[ReportMailboxSize]: Portfolio Mailbox Size: {GetMailboxSize() :##,#}");
+            _log.Info($"[ReportMailboxSize]: {PersistenceId} Mailbox Size: {GetMailboxSize() :##,#}");
  
         }
 

@@ -46,7 +46,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Https" Version="2.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
-    <PackageReference Include="Microsoft.NETCore.App" Version="2.0.5" />
+    <!--<PackageReference Include="Microsoft.NETCore.App" Version="2.0.5" />-->
     <PackageReference Include="Nancy" Version="2.0.0-clinteastwood" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="4.4.1" />
   </ItemGroup>
