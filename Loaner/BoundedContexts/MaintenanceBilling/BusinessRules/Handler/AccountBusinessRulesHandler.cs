@@ -10,51 +10,46 @@ using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
     // ReSharper disable once ClassNeverInstantiated.Global
-    public class AccountBusinessRulesHandler: ReceiveActor
+    public class AccountBusinessRulesHandler : ReceiveActor
     {
         private readonly ILoggingAdapter _logger = Context.GetLogger();
 
-        private readonly AccountBusinessRulesMapper _poorMansDb = new AccountBusinessRulesMapper();
+        private AccountBusinessRulesMapper _poorMansDb;
 
         public AccountBusinessRulesHandler()
         {
             Receive<ApplyBusinessRules>(command => ApplyBusinessRules(command));
-
         }
 
         private void ApplyBusinessRules(ApplyBusinessRules cmd)
         {
             var resultModel = new BusinessRuleApplicationResultModel();
             resultModel.TotalBilledAmount = cmd.TotalBilledAmount; //TODO what a hack! Ha!
+
             try
             {
-              
                 var rules =
                     GetBusinessRulesToApply(cmd.Client, cmd.PortfolioName, cmd.AccountState, cmd.Command) ??
                     throw new ArgumentNullException($"GetBusinessRulesToApply(accountState, cmd)");
 
-                _logger.Debug($"Found {rules.Count} account business rules for account {cmd.AccountState.AccountNumber}");
+                _logger.Debug(
+                    $"Found {rules.Count} account business rules for account {cmd.AccountState.AccountNumber}");
 
-              
                 var pipedState = cmd.AccountState;
-                
-//                rules.ForEach(x =>
-//                {
-//                    var isnull = x == null ? "null" : "not null";
-//
-//                    Console.WriteLine($"[GetBusinessRulesToApply]: " +
-//                                      $"{pipedState.AccountNumber} matched rule " +
-//                                      $"'{x.GetType().Name}' associated to command {x.GetType().Name}" +
-//                                      $" and isnull={isnull}");
-//                });
+
                 foreach (var reglaDeNegocio in rules)
                 {
+                    if (reglaDeNegocio == null)
+                    {
+                        throw new Exception("Why is this business rule null?");
+                    }
 
                     reglaDeNegocio.SetAccountState(pipedState);
                     reglaDeNegocio.RunRule(cmd.Command);
 
-                    _logger.Info($"Found {reglaDeNegocio.GetType().Name} rule for account {cmd.AccountState.AccountNumber}" +
-                                 $" and its Success={reglaDeNegocio.RuleAppliedSuccessfuly()}");
+                    _logger.Debug(
+                        $"Found {reglaDeNegocio.GetType().Name} rule for account {cmd.AccountState.AccountNumber}" +
+                        $" and its Success={reglaDeNegocio.RuleAppliedSuccessfuly()}");
 
                     if (reglaDeNegocio.RuleAppliedSuccessfuly())
                     {
@@ -85,13 +80,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                             $"Business Rule Failed Application. {reglaDeNegocio.GetResultDetails()}");
 
                         _logger.Debug($"Business Rule {reglaDeNegocio.GetType().Name} " +
-                                  $"application failed on account {cmd.AccountState.AccountNumber} " +
-                                  $"due to {reglaDeNegocio.GetResultDetails()}");
+                                      $"application failed on account {cmd.AccountState.AccountNumber} " +
+                                      $"due to {reglaDeNegocio.GetResultDetails()}");
 
-                        Sender.Tell(resultModel);//we stop processing any further rules.
+                        Sender.Tell(resultModel); //we stop processing any further rules.
                     }
                 }
-               
             }
             catch (Exception e)
             {
@@ -99,6 +93,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                 _logger.Error($"{e.Message} \n {e.StackTrace}");
                 throw;
             }
+
             //for each rule in rules
             // pass the info to the rule and call rule
             // create event of result of calling rule & apply event to state
@@ -115,6 +110,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             // and the order in which they need to be applied
             // In future We would also want to pass in the command so we filter the search to just the rules 
             // associated to the command
+            _poorMansDb = new AccountBusinessRulesMapper();
             List<IAccountBusinessRule> rulesFound =
                 _poorMansDb.GetAccountBusinessRulesForCommand(client, portfolioName,
                     accountState.AccountNumber,
@@ -128,8 +124,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
     {
         public ApplyBusinessRules()
         {
-            
         }
+
         public double TotalBilledAmount { get; set; } //TODO tis has to be moved somewhere else
         public string Client { get; set; }
         public string PortfolioName { get; set; }

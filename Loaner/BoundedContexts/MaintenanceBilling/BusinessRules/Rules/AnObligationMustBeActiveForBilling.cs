@@ -26,6 +26,15 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
             LineItems = lineItems;
         }
 
+        public AnObligationMustBeActiveForBilling()
+        {
+        }
+
+        public AnObligationMustBeActiveForBilling(AccountState accountState)
+        {
+            AccountState = accountState;
+        }
+
         private AccountState AccountState { set; get; }
         private List<InvoiceLineItem> LineItems { get; set; }
 
@@ -48,41 +57,46 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 
         private void RunRule(BillingAssessment command)
         {
-            Success = false;
-            _eventsGenerated = new List<IDomainEvent>();
-            var maintenanceFeeToUse =
-                AccountState
-                    .Obligations
-                    .Where(x => x.Value.Status == ObligationStatus.Active)
-                    .Select(y => y.Value.ObligationNumber).FirstOrDefault();
-
-            Console.WriteLine(
-                $"{AccountState.AccountNumber} has {AccountState.Obligations.Count} obligations and #'{maintenanceFeeToUse}' will be used");
-
-
-            if (!String.IsNullOrEmpty(maintenanceFeeToUse))
+            LineItems = command.LineItems;
+            try
             {
-                foreach (var item in LineItems)
+                Success = false;
+                _eventsGenerated = new List<IDomainEvent>();
+                var maintenanceFeeToUse =
+                    AccountState
+                        .Obligations
+                        .Where(x => x.Value.Status == ObligationStatus.Active)
+                        .Select(y => y.Value.ObligationNumber).FirstOrDefault();
+
+                if (!string.IsNullOrEmpty(maintenanceFeeToUse))
                 {
-                    var @event =
-                        new AccountBusinessRuleValidationSuccess(maintenanceFeeToUse,
-                            "AccountBusinessRuleValidationSuccess on AnObligationMustBeActiveForBilling");
-                    _eventsGenerated.Add(@event);
-                }
+                    foreach (var item in LineItems)
+                    {
+                        var @event =
+                            new AccountBusinessRuleValidationSuccess(maintenanceFeeToUse,
+                                "AccountBusinessRuleValidationSuccess on AnObligationMustBeActiveForBilling");
+                        _eventsGenerated.Add(@event);
+                    }
 
-                _detailsGenerated = "THIS WORKED";
-                Success = true;
+                    _detailsGenerated = "THIS WORKED";
+                    Success = true;
+                }
+                else
+                {
+                    _detailsGenerated = "No Active obligations on this account.";
+                }
             }
-            else
+            catch (Exception e)
             {
-                _detailsGenerated = "No Active obligations on this account.";
+                Console.WriteLine($"AnObligationMustBeActiveForBilling exception {e}");
+                throw;
             }
         }
 
 
         public void SetAccountState(AccountState state)
         {
-            AccountState = state;
+            AccountState = state ?? throw new ArgumentNullException("Why are you trying to set a null AccountState?");
         }
 
         public void SetCallingCommandState((string Command, Dictionary<string, object> Parameters) commandState)

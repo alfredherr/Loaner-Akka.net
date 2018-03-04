@@ -43,16 +43,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
             }
            
         }
+
         public void RunRule(BillingAssessment command)
         {
- 
-            var conceptName = command.LineItems.Select(x => x.Item.Name).ToDictionary(x => x, x=> x);
+            var conceptName = command.LineItems.Select(x => x.Item.Name).ToDictionary(x => x, x => x);
 
-            var matches = 
+            var matches =
                 AccountState.Obligations
-                .SelectMany(x => x.Value.Transactions.Select(y => conceptName.ContainsKey(y.FinancialBucket.Name)))
-                .All(x => x);
-            if (matches)
+                    .SelectMany(x => x.Value.Transactions.Select(y => conceptName.ContainsKey(y.FinancialBucket.Name)))
+                    .All(x => x);
+            if (!matches)
             {
                 _eventsGenerated = new List<IDomainEvent>
                 {
@@ -65,6 +65,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                 Success = false;
                 return;
             }
+
             _eventsGenerated = new List<IDomainEvent>
             {
                 new AccountBusinessRuleValidationSuccess(

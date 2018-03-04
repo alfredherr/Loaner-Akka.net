@@ -114,7 +114,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             _log.Info(
                 $"[ReportDebugInfo]: {Self.Path.Name} has {_porfolioState.SupervizedAccounts.Count :##,#} " +
-                $"accounts under supervision " +
+                $"accounts under supervision, " +
                 $"of which, {active :##,#} are active " +
                 $"with a total balance of {totalBillings :C}" +
                 $" (report#{_porfolioState.ScheduledCallsToInfo++})");
