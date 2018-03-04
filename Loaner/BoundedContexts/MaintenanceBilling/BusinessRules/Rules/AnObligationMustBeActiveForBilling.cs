@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
@@ -35,22 +36,36 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
         {
+            switch (command)
+            {
+                case BillingAssessment billing:
+                    RunRule(billing);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        private void RunRule(BillingAssessment command)
+        {
             Success = false;
             _eventsGenerated = new List<IDomainEvent>();
-            MaintenanceFee maintenanceFeeToUse = null;
-            maintenanceFeeToUse =
+            var maintenanceFeeToUse =
                 AccountState
                     .Obligations
                     .Where(x => x.Value.Status == ObligationStatus.Active)
-                    .Select(y => y.Value).First();
-            if (command is BillingAssessment b) LineItems = b.LineItems ?? new List<InvoiceLineItem>();
+                    .Select(y => y.Value.ObligationNumber).FirstOrDefault();
 
-            if (maintenanceFeeToUse != null)
+            Console.WriteLine(
+                $"{AccountState.AccountNumber} has {AccountState.Obligations.Count} obligations and #'{maintenanceFeeToUse}' will be used");
+
+
+            if (!String.IsNullOrEmpty(maintenanceFeeToUse))
             {
                 foreach (var item in LineItems)
                 {
                     var @event =
-                        new AccountBusinessRuleValidationSuccess(maintenanceFeeToUse.ObligationNumber,
+                        new AccountBusinessRuleValidationSuccess(maintenanceFeeToUse,
                             "AccountBusinessRuleValidationSuccess on AnObligationMustBeActiveForBilling");
                     _eventsGenerated.Add(@event);
                 }
@@ -63,6 +78,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                 _detailsGenerated = "No Active obligations on this account.";
             }
         }
+
 
         public void SetAccountState(AccountState state)
         {

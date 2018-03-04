@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Akka.Actor;
 using Akka.Event;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
@@ -9,95 +10,130 @@ using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
     // ReSharper disable once ClassNeverInstantiated.Global
-    public class AccountBusinessRulesHandler
+    public class AccountBusinessRulesHandler: ReceiveActor
     {
-        private AccountBusinessRulesMapper _poorMansDb; // = new AccountBusinessRulesMapper();
+        private readonly ILoggingAdapter _logger = Context.GetLogger();
 
-        public BusinessRuleApplicationResultModel ApplyBusinessRules(ILoggingAdapter logger, string client,
-            string portfolioName,
-            AccountState accountState, IDomainCommand comnd)
+        private readonly AccountBusinessRulesMapper _poorMansDb = new AccountBusinessRulesMapper();
+
+        public AccountBusinessRulesHandler()
         {
-            var log = logger;
+            Receive<ApplyBusinessRules>(command => ApplyBusinessRules(command));
 
-            var rules =
-                GetBusinessRulesToApply(client, portfolioName, accountState, comnd) ??
-                throw new ArgumentNullException($"GetBusinessRulesToApply(accountState, comnd)");
+        }
 
-            log.Debug($"Found {rules.Count} account business rules for account {accountState.AccountNumber}");
-
+        private void ApplyBusinessRules(ApplyBusinessRules cmd)
+        {
             var resultModel = new BusinessRuleApplicationResultModel();
-
-            var pipedState = AccountState.Clone(accountState);
-
-            foreach (var reglaDeNegocio in rules)
+            resultModel.TotalBilledAmount = cmd.TotalBilledAmount; //TODO what a hack! Ha!
+            try
             {
-                log.Debug($"Found {reglaDeNegocio.GetType().Name} rule for account {accountState.AccountNumber}");
+              
+                var rules =
+                    GetBusinessRulesToApply(cmd.Client, cmd.PortfolioName, cmd.AccountState, cmd.Command) ??
+                    throw new ArgumentNullException($"GetBusinessRulesToApply(accountState, cmd)");
 
-                reglaDeNegocio.SetAccountState(pipedState);
+                _logger.Debug($"Found {rules.Count} account business rules for account {cmd.AccountState.AccountNumber}");
 
-                reglaDeNegocio.RunRule(comnd);
-
-                if (reglaDeNegocio.RuleAppliedSuccessfuly())
+              
+                var pipedState = cmd.AccountState;
+                
+//                rules.ForEach(x =>
+//                {
+//                    var isnull = x == null ? "null" : "not null";
+//
+//                    Console.WriteLine($"[GetBusinessRulesToApply]: " +
+//                                      $"{pipedState.AccountNumber} matched rule " +
+//                                      $"'{x.GetType().Name}' associated to command {x.GetType().Name}" +
+//                                      $" and isnull={isnull}");
+//                });
+                foreach (var reglaDeNegocio in rules)
                 {
-                    //Save the rule and results into the return model 'resultModel'.
-                    resultModel.RuleProcessedResults.Add(reglaDeNegocio,
-                        $"Business Rule {reglaDeNegocio.GetType().Name} applied successfully to account {accountState.AccountNumber}. Details: {reglaDeNegocio.GetResultDetails()}");
 
-                    //Save all the events resulting from runnin this rule.
-                    var events = reglaDeNegocio.GetGeneratedEvents().ToList();
-                    foreach (var @event in events) resultModel.GeneratedEvents.Add(@event);
+                    reglaDeNegocio.SetAccountState(pipedState);
+                    reglaDeNegocio.RunRule(cmd.Command);
+
+                    _logger.Info($"Found {reglaDeNegocio.GetType().Name} rule for account {cmd.AccountState.AccountNumber}" +
+                                 $" and its Success={reglaDeNegocio.RuleAppliedSuccessfuly()}");
+
+                    if (reglaDeNegocio.RuleAppliedSuccessfuly())
+                    {
+                        //Save the rule and results into the return model 'resultModel'.
+                        resultModel.RuleProcessedResults.Add(reglaDeNegocio,
+                            $"Business Rule {reglaDeNegocio.GetType().Name} applied successfully to account " +
+                            $"{cmd.AccountState.AccountNumber}. Details: {reglaDeNegocio.GetResultDetails()}");
+
+                        //Save all the events resulting from runnin this rule.
+                        var events = reglaDeNegocio.GetGeneratedEvents().ToList();
+                        foreach (var @event in events) resultModel.GeneratedEvents.Add(@event);
 
 
-                    // Rule output -> next rule input (Pipes & Filters approach)
-                    // Replace pipedState wth the state resulting from running the rule.
-                    pipedState = AccountState.Clone(reglaDeNegocio.GetGeneratedState());
+                        // Rule output -> next rule input (Pipes & Filters approach)
+                        // Replace pipedState wth the state resulting from running the rule.
+                        pipedState = (AccountState) (reglaDeNegocio.GetGeneratedState()).Clone();
 
-                    resultModel.Success = true;
+                        resultModel.Success = true;
 
-                    log.Debug(
-                        $"Business Rule {reglaDeNegocio.GetType().Name} applied successfully to account {accountState.AccountNumber}");
+                        _logger.Debug(
+                            $"Business Rule {reglaDeNegocio.GetType().Name} applied successfully to account {cmd.AccountState.AccountNumber}");
+                    }
+                    else
+                    {
+                        resultModel.Success = false;
+
+                        resultModel.RuleProcessedResults.Add(reglaDeNegocio,
+                            $"Business Rule Failed Application. {reglaDeNegocio.GetResultDetails()}");
+
+                        _logger.Debug($"Business Rule {reglaDeNegocio.GetType().Name} " +
+                                  $"application failed on account {cmd.AccountState.AccountNumber} " +
+                                  $"due to {reglaDeNegocio.GetResultDetails()}");
+
+                        Sender.Tell(resultModel);//we stop processing any further rules.
+                    }
                 }
-                else
-                {
-                    resultModel.Success = false;
-
-                    resultModel.RuleProcessedResults.Add(reglaDeNegocio,
-                        $"Business Rule Failed Application. {reglaDeNegocio.GetResultDetails()}");
-
-                    log.Debug($"Business Rule {reglaDeNegocio.GetType().Name} " +
-                              $"application failed on account {accountState.AccountNumber} " +
-                              $"due to {reglaDeNegocio.GetResultDetails()}");
-
-                    return resultModel; //we stop processing any further rules.
-                }
+               
             }
-
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                _logger.Error($"{e.Message} \n {e.StackTrace}");
+                throw;
+            }
             //for each rule in rules
             // pass the info to the rule and call rule
             // create event of result of calling rule & apply event to state
             // return new state
-            return resultModel;
+            Sender.Tell(resultModel);
         }
 
         private List<IAccountBusinessRule> GetBusinessRulesToApply(string client, string portfolioName,
             AccountState accountState,
             IDomainCommand command)
         {
-            _poorMansDb = new AccountBusinessRulesMapper();
-
             //When ApplyEvent is a SettleFinancialConcept?orWhatever command
             // get the rules to apply to this account for this particular command
             // and the order in which they need to be applied
             // In future We would also want to pass in the command so we filter the search to just the rules 
             // associated to the command
-            var rulesFound =
+            List<IAccountBusinessRule> rulesFound =
                 _poorMansDb.GetAccountBusinessRulesForCommand(client, portfolioName,
                     accountState.AccountNumber,
                     command);
-            //rulesFound.ForEach(x =>
-            //    Console.WriteLine(
-            //        $"{accountState.AccountNumber} matched rule '{x.GetType().Name}' associated to command {command.GetType().Name}"));
+
             return rulesFound;
         }
+    }
+
+    public class ApplyBusinessRules
+    {
+        public ApplyBusinessRules()
+        {
+            
+        }
+        public double TotalBilledAmount { get; set; } //TODO tis has to be moved somewhere else
+        public string Client { get; set; }
+        public string PortfolioName { get; set; }
+        public AccountState AccountState { get; set; }
+        public BillingAssessment Command { get; set; }
     }
 }

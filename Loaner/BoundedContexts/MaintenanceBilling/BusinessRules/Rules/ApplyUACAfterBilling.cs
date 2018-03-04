@@ -31,7 +31,19 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
+        {    switch (command)
+            {
+                case BillingAssessment billing:
+                    RunRule(billing);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+           
+        }
+        public void RunRule(BillingAssessment command)
         {
+
             var uac = AccountState.CurrentBalance < 0 ? AccountState.CurrentBalance : 0.0;
             if (uac != 0.0)
             {

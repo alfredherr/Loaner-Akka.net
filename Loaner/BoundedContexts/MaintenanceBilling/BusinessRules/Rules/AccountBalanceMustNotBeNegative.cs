@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
@@ -28,7 +29,19 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
+        {    switch (command)
+            {
+                case BillingAssessment billing:
+                    RunRule(billing);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+           
+        }
+        public void RunRule(BillingAssessment command)
         {
+
             //User CommandState to get list of passed in options. 
             // and COMMAND to merge the specifics of the command
 

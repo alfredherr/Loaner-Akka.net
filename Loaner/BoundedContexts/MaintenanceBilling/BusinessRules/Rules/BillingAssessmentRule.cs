@@ -13,9 +13,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
     {
         private readonly List<IDomainEvent> _eventsGenerated = new List<IDomainEvent>();
         private string _detailsGenerated;
+        private IAccountBusinessRule _accountBusinessRuleImplementation;
 
         public BillingAssessmentRule()
         {
+            
         }
 
         public BillingAssessmentRule((string Command, Dictionary<string, object> Parameters) commandState)
@@ -35,22 +37,32 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
+        {    switch (command)
+            {
+                case BillingAssessment billing:
+                    RunRule(billing);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+           
+        }
+        public void RunRule(BillingAssessment command)
         {
             //User CommandState to get list of passed in options. 
             // and COMMAND to merge the specifics of the command
-            if (command is BillingAssessment billing)
-                foreach (var billLine in billing.LineItems)
-                {
-                    _eventsGenerated.Add(new ObligationAssessedConcept(
-                            AccountState.Obligations.FirstOrDefault(x => x.Value.Status == ObligationStatus.Active).Key,
-                            billLine.Item
-                        )
-                    );
-                    _detailsGenerated = "THIS WORKED";
-                    Success = true;
-                }
-            else
-                throw new Exception($"I don't know how to handle commands of type {command.GetType().Name}");
+
+            foreach (var billLine in command.LineItems)
+            {
+                _eventsGenerated.Add(new ObligationAssessedConcept(
+                        AccountState.Obligations.FirstOrDefault(x => x.Value.Status == ObligationStatus.Active)
+                            .Key,
+                        billLine.Item
+                    )
+                );
+                _detailsGenerated = "THIS WORKED";
+                Success = true;
+            }
         }
 
         public void SetAccountState(AccountState state)
@@ -62,6 +74,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             CommandState = commandState;
         }
+
+       
 
         public string GetResultDetails()
         {

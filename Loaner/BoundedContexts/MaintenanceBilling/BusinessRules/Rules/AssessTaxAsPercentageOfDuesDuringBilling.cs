@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Exceptions;
@@ -32,15 +33,26 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
+        {    switch (command)
+            {
+                case BillingAssessment billing:
+                    RunRule(billing);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+           
+        }
+        public void RunRule(BillingAssessment com)
         {
+
             //Extract parameter TaxPercentageRate
             var taxRate = ExtractParameter("TaxPercentageRate");
 
             //Extract parameter Dues from Command
             var duesAmount = 0.00;
             var foundAtLeastOne = false;
-
-            var com = (BillingAssessment) command;
+ 
             foreach (var c in com.LineItems)
                 //Console.WriteLine(
                 //    $"In {this.GetType().Name} and this is the FinancialConcept name: {c.Item.Name} and amount: {c.Item.Amount}");

@@ -141,8 +141,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                             double openningBalance;
                             double.TryParse(line[3], out openningBalance);
 
-                            var o = new MaintenanceFee(obligationNumber, openningBalance);
-
+                            var o = new MaintenanceFee(obligationNumber, openningBalance, ObligationStatus.Active);
+                            
                             if (_obligationsInFile.ContainsKey(accountNumber))
                             {
                                 var obligations = _obligationsInFile[accountNumber];

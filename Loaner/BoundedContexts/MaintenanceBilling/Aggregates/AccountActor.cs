@@ -7,6 +7,7 @@ using Akka.Persistence;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 using Loaner.KafkaProducer.Commands;
@@ -17,8 +18,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
     public class AccountActor : ReceivePersistentActor
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
-
-        private readonly AccountBusinessRulesHandler _rulesRunner = new AccountBusinessRulesHandler();
 
         /* This Actor's State */
         private AccountState _accountState = new AccountState();
@@ -46,10 +45,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<CheckYoSelf>(command => RegisterStartup() /*effectively a noop */);
 
             /* Example of running comannds through business rules */
-            Command<SettleFinancialConcept>(command => ApplyBusinessRules(command));
-            Command<AssessFinancialConcept>(command => ApplyBusinessRules(command));
+//            Command<SettleFinancialConcept>(command => ApplyBusinessRules(command));
+//            Command<AssessFinancialConcept>(command => ApplyBusinessRules(command));
             Command<BillingAssessment>(command => ProcessBilling(command));
-            Command<CancelAccount>(command => ApplyBusinessRules(command));
+            Command<BusinessRuleApplicationResultModel>(model => ApplyBusinessRules(model) );
+//            Command<CancelAccount>(command => ApplyBusinessRules(command));
             Command<AskToBeSupervised>(command => SendParentMyState(command));
             Command<PublishAccountStateToKafka>(msg => PublishToKafka(msg));
             Command<CompleteBoardingProcess>(msg => CompleteBoardingProcess());
@@ -65,7 +65,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 Sender.Tell(
                     new MyAccountStatus(
                         $"{Self.Path.Name} I am alive! I was last booted up on {_lastBootedOn.ToString("yyyy-MM-dd hh:mm:ss")}")));
-            Command<TellMeYourInfo>(asking => Sender.Tell(new MyAccountStatus("", AccountState.Clone(_accountState))));
+            Command<TellMeYourInfo>(asking => Sender.Tell(new MyAccountStatus("", (AccountState) _accountState.Clone())));
 
             Command<DeleteMessagesSuccess>(
                 msg => _log.Debug($"[DeleteMessagesSuccess]: Successfully cleared log after snapshot ({msg.ToString()})"));
@@ -124,13 +124,33 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void ProcessBilling(BillingAssessment command)
         {
-            //Sender.Tell(new MyAccountStatus($"Your billing request has been submitted.",AccountState.Clone(_accountState)));
+         
             if (_accountState.AccountNumber == null)
                 throw new Exception($"Actor {Self.Path.Name} is passing an empty account number.");
 
-             // Process all business rules
-            ApplyBusinessRules(command);
-       
+            var billedAmount = 0.0;
+            
+            var c = command;
+            billedAmount = c.LineItems.Aggregate(0.0, (accumulator, next) => accumulator + next.Item.Amount);
+
+            var parameters = c.LineItems.Aggregate("",
+                (working, next) => working + ";" + next.Item.Name + "=" + next.Item.Amount);
+            _log.Debug($"[ApplyBusinessRules]: {_accountState.AccountNumber}: " +
+                       $"Command {c.GetType().Name} with {c.LineItems.Count} total billed = {billedAmount} & line items: " +
+                       $"{parameters}");
+             
+           
+            var model = new ApplyBusinessRules
+            {
+                Client = Self.Path.Parent.Parent.Name,
+                PortfolioName = Self.Path.Parent.Name,
+                AccountState = (AccountState) _accountState.Clone(),
+                Command = command,
+                TotalBilledAmount = billedAmount
+            };
+
+            command.BusinessRulesHandlingRouter.Tell(model);
+            
         }
 
         private void SendParentMyState(AskToBeSupervised command)
@@ -218,50 +238,34 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             }
         }
 
-        private void ApplyBusinessRules(IDomainCommand command)
+        private void ApplyBusinessRules(BusinessRuleApplicationResultModel resultModel)
         {
             Monitor();
             /**
 			 * Here we can call Business Rules to validate and do whatever.
 			 * Then, based on the outcome generated events.
 			 * In this example, we are simply going to accept it and updated our state.
-			 */
-            var billedAmount = 0.0;
-            if (command is BillingAssessment)
-            {
-
-                var c = (BillingAssessment) command;
-                billedAmount = c.LineItems.Aggregate(0.0, (accumulator, next) => accumulator + next.Item.Amount);
-                
-                var parameters = c.LineItems.Aggregate("",
-                    (working, next) => working + ";" + next.Item.Name + "=" + next.Item.Amount);
-                _log.Debug($"[ApplyBusinessRules]: {_accountState.AccountNumber}: " +
-                           $"Command {c.GetType().Name} with {c.LineItems.Count} total billed = {billedAmount} & line items: " +
-                           $"{parameters}");
-            }
-
-            var resultModel =
-                _rulesRunner.ApplyBusinessRules(_log, Self.Path.Parent.Parent.Name,
-                    Self.Path.Parent.Name, _accountState, command);
-            _log.Debug(
-                $"[ApplyBusinessRules]: There were {resultModel.GeneratedEvents.Count} events for {command} command. And success={resultModel.Success}");
+			 */ 
             
+//            _log.Info(
+//                $"[ApplyBusinessRules]: There were {resultModel.GeneratedEvents.Count} events. And success={resultModel.Success}");
+
             if (resultModel.Success)
             {
                 /* I may want to do old vs new state comparisons for other reasons
-				 *  but ultimately we just update the state.. */
+                 *  but ultimately we just update the state.. */
                 var events = resultModel.GeneratedEvents;
 
                 foreach (var @event in events)
                     Persist(@event, s =>
                     {
                         _accountState = _accountState.ApplyEvent(@event);
-                        
-                        _log.Debug(
+
+                        _log.Info(
                             $"[ApplyBusinessRules]: Persisted event {@event.GetType().Name} on account {_accountState.AccountNumber}" +
-                            $" account balance after is {_accountState.CurrentBalance :C} ");
-                        
-                        ReportMyState(billedAmount, _accountState.CurrentBalance);
+                            $" account balance after is {_accountState.CurrentBalance:C} ");
+
+                        ReportMyState(resultModel.TotalBilledAmount, _accountState.CurrentBalance);
 
                         //Report current state to Kafka
                         Self.Tell(new PublishAccountStateToKafka());

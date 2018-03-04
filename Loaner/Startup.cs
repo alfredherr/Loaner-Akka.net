@@ -12,11 +12,13 @@ using Confluent.Kafka.Serialization;
 using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
 using Loaner.Configuration;
 using Loaner.KafkaProducer;
 using Loaner.KafkaProducer.Commands;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Nancy.Owin;
@@ -54,6 +56,10 @@ namespace Loaner
 
             DemoSystemSupervisor = DemoActorSystem.ActorOf(Props.Create<SystemSupervisor>(), "demoSupervisor");
 
+            var props = new RoundRobinPool(Environment.ProcessorCount * 3).Props(Props.Create<AccountBusinessRulesHandler>());
+            AccountBusinessRulesRouter = DemoActorSystem.ActorOf(props, $"BusinessRulesRouter");
+
+            
             var statsDServer = config.GetString("Akka.StatsDServer");
             var statsDPort = Convert.ToInt32(config.GetString("Akka.StatsDPort"));
             var statsDPrefix = config.GetString("Akka.StatsDPrefix");

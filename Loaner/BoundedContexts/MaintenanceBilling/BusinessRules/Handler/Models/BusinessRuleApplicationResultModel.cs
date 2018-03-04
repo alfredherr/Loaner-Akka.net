@@ -11,9 +11,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models
             RuleProcessedResults = new Dictionary<IAccountBusinessRule, string>();
             GeneratedEvents = new List<IDomainEvent>();
             GeneratedState = new AccountState();
-            Success = false;
+            Success = false; 
         }
 
+        public double TotalBilledAmount { get; set; } //TODO move this out of here. Needmore thoughtout solution
         public bool Success { get; set; }
         public AccountState GeneratedState { get; set; }
         public List<IDomainEvent> GeneratedEvents { get; set; }

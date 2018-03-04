@@ -12,12 +12,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels
         }
 
         [JsonConstructor]
-        public MaintenanceFee(string obligationNumber, double openingBalance)
+        public MaintenanceFee(string obligationNumber, double openingBalance,ObligationStatus status)
         {
             ObligationNumber = obligationNumber;
             CurrentBalance = openingBalance;
             Status = ObligationStatus.Active;
             Transactions = new List<FinancialTransaction>();
+            Status = status;
         }
 
         private MaintenanceFee(string obligationNumber,ObligationStatus status, double currentBalance, List<FinancialTransaction> transactions)

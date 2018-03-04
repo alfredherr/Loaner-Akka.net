@@ -17,11 +17,11 @@ namespace Loaner.API.Controllers
         {
             Get("/{portfolioName}", async args =>
             {
-                var answer = new TellMeYourPortfolioStatus("This didn't work");
+                TellMeYourPortfolioStatus answer = new TellMeYourPortfolioStatus("This didn't work");
 
-                var portfolio = ((string) args.portfolioName).ToUpper();
+                string portfolio = ((string) args.portfolioName).ToUpper();
 
-                var portfolioActor = LoanerActors.DemoActorSystem
+                Task<IActorRef> portfolioActor = LoanerActors.DemoActorSystem
                     .ActorSelection($"/user/demoSupervisor/{portfolio}")
                     .ResolveOne(TimeSpan.FromSeconds(30));
 
@@ -38,11 +38,11 @@ namespace Loaner.API.Controllers
 
             Get("/{portfolioName}/run", async args =>
             {
-                var answer = new TellMeYourPortfolioStatus("This didn't work");
+                TellMeYourPortfolioStatus answer = new TellMeYourPortfolioStatus("This didn't work");
 
-                var portfolio = ((string) args.portfolioName).ToUpper();
+                string portfolio = ((string) args.portfolioName).ToUpper();
 
-                var portfolioActor = LoanerActors.DemoActorSystem
+                Task<IActorRef> portfolioActor = LoanerActors.DemoActorSystem
                     .ActorSelection($"/user/demoSupervisor/{portfolio}")
                     .ResolveOne(TimeSpan.FromSeconds(3));
 
@@ -59,7 +59,7 @@ namespace Loaner.API.Controllers
 
             Get("/{portfolioName}/assessment", args =>
             {
-                var model = new SimulateAssessmentModel();
+                SimulateAssessmentModel model = new SimulateAssessmentModel();
                 model.LineItems = new List<InvoiceLineItem>
                 {
                     new InvoiceLineItem(new Tax(0)),
@@ -72,21 +72,21 @@ namespace Loaner.API.Controllers
 
             Post("/{portfolioName}/assessment", async args =>
             {
-                var portfolio = ((string) args.portfolioName).ToUpper();
+                string portfolio = ((string) args.portfolioName).ToUpper();
 
-                var answer = new TellMeYourPortfolioStatus("This didn't work");
+                TellMeYourPortfolioStatus answer = new TellMeYourPortfolioStatus("This didn't work");
 
-                var product = Context.ToDynamic();
+                dynamic product = Context.ToDynamic();
 
-                var message = string.Empty;
+                string message = string.Empty;
 
-                var assessment = new SimulateAssessmentModel();
+                SimulateAssessmentModel assessment = new SimulateAssessmentModel();
                 assessment.LineItems = new List<InvoiceLineItem>();
 
-                foreach (var p in product)
+                foreach (dynamic p in product)
                 {
-                    var name = (string) (p.item.name ?? string.Empty);
-                    var bucketAmount = (double) (p.item.amount ?? -1.0);
+                    string name = (string) (p.item.name ?? string.Empty);
+                    double bucketAmount = (double) (p.item.amount ?? -1.0);
                     if (bucketAmount >= 0)
                         switch (name)
                         {
@@ -110,16 +110,15 @@ namespace Loaner.API.Controllers
                         });
                 }
 
-                var portfolioActor = LoanerActors.DemoActorSystem
+                IActorRef portfolioActor = await  LoanerActors.DemoActorSystem
                     .ActorSelection($"/user/demoSupervisor/{portfolio}")
                     .ResolveOne(TimeSpan.FromSeconds(10));
 
-                if (portfolioActor.Exception != null) throw portfolioActor.Exception;
+                //if (portfolioActor.Exception != null) throw portfolioActor.Exception;
 
                 await Task.Run(() =>
                 {
                     answer = portfolioActor
-                        .Result
                         .Ask<TellMeYourPortfolioStatus>(new AssessWholePortfolio(portfolio, assessment.LineItems),
                             TimeSpan.FromSeconds(50))
                         .Result;

@@ -78,32 +78,32 @@ namespace Loaner.API.Controllers
                 return lineItems;
             });
 
-            Post("/{actorName}/assessment", async args =>
-            {
-                string account = args.actorName;
-                var assessment = this.Bind<SimulateAssessmentModel>();
-
-                try
-                {
-                    var domanCommand = new BillingAssessment(account, assessment.LineItems);
-                    var system = LoanerActors.DemoActorSystem
-                        .ActorSelection($"/user/demoSupervisor/*/{account}")
-                        .ResolveOne(TimeSpan.FromSeconds(3));
-                    if (system.Exception != null) throw system.Exception;
-                    var response = await Task.Run(
-                        () => system.Result.Ask<MyAccountStatus>(domanCommand, TimeSpan.FromSeconds(30))
-                    );
-                    return Response.AsJson(response);
-                }
-                catch (ActorNotFoundException)
-                {
-                    return new AccountStateViewModel($"{args.actorName} is not running at the moment");
-                }
-                catch (Exception e)
-                {
-                    return new AccountStateViewModel($"{args.actorName} {e.Message}");
-                }
-            });
+//            Post("/{actorName}/assessment", async args =>
+//            {
+//                string account = args.actorName;
+//                var assessment = this.Bind<SimulateAssessmentModel>();
+//
+//                try
+//                {
+//                    var domanCommand = new BillingAssessment(account, assessment.LineItems);
+//                    var system = LoanerActors.DemoActorSystem
+//                        .ActorSelection($"/user/demoSupervisor/*/{account}")
+//                        .ResolveOne(TimeSpan.FromSeconds(3));
+//                    if (system.Exception != null) throw system.Exception;
+//                    var response = await Task.Run(
+//                        () => system.Result.Ask<MyAccountStatus>(domanCommand, TimeSpan.FromSeconds(30))
+//                    );
+//                    return Response.AsJson(response);
+//                }
+//                catch (ActorNotFoundException)
+//                {
+//                    return new AccountStateViewModel($"{args.actorName} is not running at the moment");
+//                }
+//                catch (Exception e)
+//                {
+//                    return new AccountStateViewModel($"{args.actorName} {e.Message}");
+//                }
+//            });
         }
     }
 }

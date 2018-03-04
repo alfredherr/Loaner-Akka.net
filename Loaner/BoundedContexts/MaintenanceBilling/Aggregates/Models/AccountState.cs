@@ -202,22 +202,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             return newState;
         }
 
-        public static AccountState Clone(AccountState state)
-        {
-            return new AccountState(
-                state.AccountNumber
-                , state.CurrentBalance
-                , state.AccountStatus
-                , state.Obligations
-                , state.SimulatedFields
-                , state.AuditLog
-                , state.OpeningBalance,
-                state.Inventroy,
-                state.UserName,
-                state.LastPaymentAmount,
-                state.LastPaymentDate);
-        }
-
+       
         private AccountState ApplyEvent(SomeOneSaidHiToMe occurred)
         {
             return new AccountState(

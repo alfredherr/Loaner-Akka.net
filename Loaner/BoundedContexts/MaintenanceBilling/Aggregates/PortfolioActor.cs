@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Akka.Actor;
@@ -8,10 +9,12 @@ using Akka.Dispatch;
 using Akka.Event;
 using Akka.Monitoring;
 using Akka.Persistence;
+using Akka.Routing;
 using Akka.Util.Internal;
 using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 using Loaner.KafkaProducer.Commands;
@@ -20,6 +23,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {
     using static LoanerActors;
 
+    [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
     public class PortfolioActor : ReceivePersistentActor
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
@@ -27,7 +31,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private PorfolioState _porfolioState = new PorfolioState();
 
-        protected PropertyInfo NumberOfMessagesProperty =
+        private readonly PropertyInfo NumberOfMessagesProperty =
             typeof(Mailbox).GetProperty("NumberOfMessages", BindingFlags.Instance | BindingFlags.NonPublic);
 
 
@@ -53,7 +57,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             Command<PublishPortfolioStateToKafka>(cmd => PublishToKafka(cmd));
             Command<ReportDebugInfo>(cmd => ReportDebugInfo(cmd));
-            Command<ReportPortfolioState>(cmd => ReportPortfolioStateToParent());
+            Command<ReportPortfolioStateToParent>(cmd => ReportPortfolioStateToParent());
             Command<ReportMailboxSize>(cmd => ReportMailboxSize());
             
             /** Special handlers below; we can decide how to handle snapshot processin outcomes. */
@@ -75,15 +79,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         protected void ReportMailboxSize()
         {
       
-            //Context.Gauge("PortfolioMailbox", numberOfMessages);
             _log.Info($"[ReportMailboxSize]: {PersistenceId} Mailbox Size: {GetMailboxSize() :##,#}");
- 
         }
 
         private int GetMailboxSize()
         {
-            var context = Context as ActorCell;
-            if (context == null)
+            if (!(Context is ActorCell context))
                 return 0;
 
             var mailbox = context.Mailbox;
@@ -155,7 +156,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 account = new AccountUnderSupervision(cmd.AccountNumber);
 
             }
-            _log.Debug($"account.BalanceAfterLastTransaction={account.BalanceAfterLastTransaction}\t" +
+            _log.Debug($"[RegisterBalanceChange]: account.BalanceAfterLastTransaction={account.BalanceAfterLastTransaction}\t" +
                       $"cmd.AccountBalanceAfterTransaction={cmd.AccountBalanceAfterTransaction}\n" +
                       $"account.LastBilledAmount={account.LastBilledAmount}\tcmd.AmountTransacted={cmd.AmountTransacted}");
 
@@ -163,7 +164,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             account.BalanceAfterLastTransaction = cmd.AccountBalanceAfterTransaction;
 
             _porfolioState.SupervizedAccounts.AddOrSet(cmd.AccountNumber, account);
+            _porfolioState.UpdateBalance();
             
+            ApplySnapShotStrategy();
             Self.Tell(new PublishPortfolioStateToKafka());
             
         }
@@ -176,10 +179,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void AssessAllAccounts(AssessWholePortfolio cmd)
         {
             Monitor();
+
+            Console.WriteLine($"Billing Items: {cmd.Items.Aggregate("",(acc, next) => acc +" "+ next.Item.Name + " " + next.Item.Amount)}");
             foreach (var account in _porfolioState.SupervizedAccounts?.Values.ToList())
             {
-                var bill = new BillingAssessment(account.AccountNumber, cmd.Items);
+                var bill = new BillingAssessment(account.AccountNumber, cmd.Items, AccountBusinessRulesRouter);
                 account.AccountActorRef.Tell(bill);
+                //_log.Info($"[AssessAllAccounts]: Just told account {account.AccountNumber} to run assessment.");
             }
 
             Sender.Tell(new TellMeYourPortfolioStatus(
@@ -197,14 +203,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             Context.IncrementActorCreated();
 
+            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
+                TimeSpan.FromSeconds(30), Self, new ReportDebugInfo(), ActorRefs.NoSender);
+
+            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
+                TimeSpan.FromSeconds(10), Self, new ReportPortfolioStateToParent(), ActorRefs.NoSender);
+//
 //            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
-//                TimeSpan.FromSeconds(30), Self, new ReportDebugInfo(), ActorRefs.NoSender);
-
-            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
-                TimeSpan.FromSeconds(10), Self, new ReportPortfolioState(), ActorRefs.NoSender);
-
-            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
-                TimeSpan.FromSeconds(10), Self, new ReportMailboxSize(), ActorRefs.NoSender);
+//                TimeSpan.FromSeconds(10), Self, new ReportMailboxSize(), ActorRefs.NoSender);
         }
 
         private void Monitor()
@@ -249,16 +255,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             {
                 AccountCount = _porfolioState.SupervizedAccounts.Count,
                 AsOfDate = DateTime.Now,
-                PortfolioName = Self.Path.Name
+                PortfolioName = Self.Path.Name, 
+                TotalBalance =  _porfolioState.CurrentPortfolioBalance
             };
-
-            var totalBillings =
-                _porfolioState.SupervizedAccounts.Aggregate(0.0, (x, y) => x + y.Value.BalanceAfterLastTransaction);
-
-            portfolioSate.TotalBalance = (decimal) totalBillings;
-
+            
             var key = portfolioSate.PortfolioName;
-
 
             Sender.Tell(new TellMeYourPortfolioStatus(
                 $"{_porfolioState.SupervizedAccounts.Count} accounts. I was last booted up on: {_porfolioState.LastBootedOn.ToString("yyyy-MM-dd h:mm tt")}",

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
@@ -31,10 +32,22 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
+        {    switch (command)
+            {
+                case BillingAssessment billing:
+                    RunRule(billing);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+           
+        }
+        public void RunRule(BillingAssessment com)
         {
+
             //Extract parameter Dues from Command
             var duesAmount = 0.00;
-            var com = (BillingAssessment) command;
+           
             foreach (var c in com.LineItems)
                 if (c.Item.Name.Equals("Dues"))
                 {

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
@@ -32,8 +33,20 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 
         /* Rule logic goes here. */
         public void RunRule(IDomainCommand command)
+        {    switch (command)
+            {
+                case BillingAssessment billing:
+                    RunRule(billing);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+           
+        }
+        public void RunRule(BillingAssessment command)
         {
-            var conceptName = (command as BillingAssessment).LineItems.Select(x => x.Item.Name).ToDictionary(x => x, x=> x);
+ 
+            var conceptName = command.LineItems.Select(x => x.Item.Name).ToDictionary(x => x, x=> x);
 
             var matches = 
                 AccountState.Obligations

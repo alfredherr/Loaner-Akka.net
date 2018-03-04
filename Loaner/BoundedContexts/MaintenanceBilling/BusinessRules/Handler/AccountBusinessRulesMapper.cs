@@ -148,6 +148,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             {
                 var filename = BusinessRulesFilename;
                 _rulesMapperInstance = new AccountBusinessRulesMapper(filename);
+                Console.WriteLine($"[AccountBusinessRulesMapper.Initialize()] BusinessRulesFilename: {BusinessRulesFilename}");
             }
             catch (Exception e)
             {
@@ -201,8 +202,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         private void ReadInBusinessRules(string businessRulesMapFile)
         {
             var readText = File.ReadAllLines(businessRulesMapFile);
+            var line = 1;
+            Console.WriteLine($"File: {businessRulesMapFile}");
             foreach (var s in readText)
             {
+                Console.WriteLine($"Line#{line++}: {s}");
                 if (s.Trim().StartsWith("#") || s.Trim().Length == 0 || !s.Contains("|"))
                     continue;
 
