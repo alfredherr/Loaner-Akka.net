@@ -241,8 +241,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 
         private AccountState ApplyEvent(ObligationAssessedConcept occurred)
         {
+            if (!Obligations.ContainsKey(occurred.ObligationNumber))
+            {
+                Console.WriteLine(
+                    $"Account {AccountNumber} does not contain obligation {occurred.ObligationNumber}. No Action Taken.");
+                throw new Exception(
+                    $"Account {AccountNumber} does not contain obligation {occurred.ObligationNumber}. No Action Taken.");
+            }
+
             var trans = new FinancialTransaction(occurred.FinancialBucket, occurred.FinancialBucket.Amount);
-            Obligations[occurred.ObligationNumber]?.PostTransaction(trans);
+            Obligations[occurred.ObligationNumber].PostTransaction(trans);
             var newBalance = CurrentBalance + occurred.FinancialBucket.Amount;
             var newState = new AccountState(
                 AccountNumber,
@@ -252,18 +260,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                 SimulatedFields,
                 AuditLog.Add(
                     new StateLog(
-                        "ObligationAssessedConcept",         
-                        occurred.Message + " Balance After: " + ((decimal)newBalance).ToString("C"), 
+                        "ObligationAssessedConcept",
+                        occurred.Message + " Balance After: " + ((decimal) newBalance).ToString("C"),
                         occurred.UniqueGuid(),
                         occurred.OccurredOn())
-                    ),
+                ),
                 OpeningBalance,
                 Inventroy,
                 UserName,
                 LastPaymentAmount,
                 LastPaymentDate);
-
-
             return newState;
         }
 

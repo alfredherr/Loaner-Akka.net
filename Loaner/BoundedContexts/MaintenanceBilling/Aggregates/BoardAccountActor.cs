@@ -21,8 +21,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
     public class BoardAccountActor : ReceiveActor
     {
-        private static int _accounSpunUp;
-
+        
         private readonly Dictionary<PortfolioName, Dictionary<AccountNumber, AccountBoardingModel>> _accountsInPortfolio
             =
             new Dictionary<PortfolioName, Dictionary<AccountNumber, AccountBoardingModel>>();
@@ -107,18 +106,26 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void SpinUpAccountActor(SpinUpAccountActor command)
         {
             Monitor();
-            var props = Props.Create<AccountActor>();
-            var accountActor = Context.ActorOf(props, command.AccountNumber);
-            accountActor.Tell(new CreateAccount(command.AccountNumber, command.BoardingModel));
+            try
+            {
+                var props = Props.Create<AccountActor>();
+                var accountActor = Context.ActorOf(props, command.AccountNumber);
+                accountActor.Tell(new CreateAccount(command.AccountNumber, command.BoardingModel));
 
-            command.Obligations.ForEach(x => accountActor.Tell(new AddObligationToAccount(command.AccountNumber, x)));
+                command.Obligations.ForEach(
+                    x => accountActor.Tell(new AddObligationToAccount(command.AccountNumber, x)));
 
-            accountActor.Tell(new AskToBeSupervised(command.Portfolio, command.Supervisor));
+                accountActor.Tell(new AskToBeSupervised(command.Portfolio, command.Supervisor));
 
-            if (_accounSpunUp % 1000 == 0)
-                Console.WriteLine($"Boarding: {DateTime.Now}\t{_accounSpunUp} accounts processed.");
-
-            _accounSpunUp++;
+                if (Int64.Parse(command.AccountNumber) % 1000 == 0)
+                    Console.WriteLine($"Boarding: {DateTime.Now}\t{command.AccountNumber} accounts processed.");
+            }
+            catch (Exception e)
+            {
+             
+                _log.Error($"[SpinUpAccountActor]: {e.Message} {e.StackTrace}");
+                throw;
+            }
         }
 
         /* Auxiliary methods */
@@ -166,7 +173,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             }
             catch (Exception e)
             {
-                _log.Error(e.Message);
+                _log.Error($"[GetObligationsForClient]: {e.Message} {e.StackTrace}");
                 Sender.Tell(new FailedToLoadObligations(e.Message));
             }
         }
@@ -246,7 +253,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             }
             catch (Exception e)
             {
-                _log.Error($"{e}");
+                _log.Error($"[GetAccountsForClient]: {e.Message} {e.StackTrace}");
                 Sender.Tell(new FailedToLoadAccounts($"{e.Message} {e.StackTrace}"));
             }
         }

@@ -47,16 +47,23 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
             }
            
         }
-        public void RunRule(BillingAssessment command)
+
+        private void RunRule(BillingAssessment command)
         {
             //User CommandState to get list of passed in options. 
             // and COMMAND to merge the specifics of the command
-
+            var obligationToUse = AccountState.Obligations
+                .Where(x => x.Value.Status == ObligationStatus.Active).Select(x => x.Key).FirstOrDefault();
+            if (string.IsNullOrEmpty(obligationToUse))
+            {
+                _detailsGenerated = "No Active Maintenance Fee Found On Account";
+                Success = true;
+                return;
+            }
             foreach (var billLine in command.LineItems)
             {
                 _eventsGenerated.Add(new ObligationAssessedConcept(
-                        AccountState.Obligations.FirstOrDefault(x => x.Value.Status == ObligationStatus.Active)
-                            .Key,
+                        obligationToUse,
                         billLine.Item
                     )
                 );

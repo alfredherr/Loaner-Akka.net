@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using Akka.Actor;
+using Akka.Event;
 using Loaner.ActorManagement;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Exceptions;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules;
@@ -13,16 +16,55 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
     using static LoanerActors;
 
-    public class AccountBusinessRulesMapper
+    public class AccountBusinessRulesMapper : ReceiveActor
     {
         private AccountBusinessRulesMapper _rulesMapperInstance;
+
+        private readonly ILoggingAdapter _logger = Context.GetLogger();
 
         public AccountBusinessRulesMapper()
         {
             Initialize();
+            Receive<GetBusinessRulesToApply>(cmd => GetAccountBusinessRulesForCommand(cmd.ApplyBusinessRules));
         }
 
-        public AccountBusinessRulesMapper(string businessRulesMapFile)
+        private void
+            GetAccountBusinessRulesForCommand(ApplyBusinessRules cmd)
+        {
+            if (_rulesMapperInstance == null) Initialize();
+            try
+            {
+                var rules = _rulesMapperInstance.RulesInFile
+                    .Where(ruleMap =>
+                        // Look for rules associated to this command              
+                            ruleMap.Command.GetType().Name.Equals(cmd.Command.GetType().Name) &&
+                            // which also either match this account
+                            (ruleMap.AccountNumber.Equals(cmd.AccountState.AccountNumber) ||
+                             // or all accounts under this portfolio
+                             ruleMap.Portfolio.Equals(cmd.PortfolioName) && ruleMap.ForAllAccounts ||
+                             // or all accounts under all portfolios for this client
+                             ruleMap.Client.Equals(cmd.Client) && ruleMap.Portfolio.Equals("*") &&
+                             ruleMap.ForAllAccounts)
+                    )
+                    .Select(ruleMap => ruleMap.BusinessRule).ToImmutableList();
+
+                var rulesFound = new List<IAccountBusinessRule>();
+
+                rulesFound.AddRange(rules.ToList());
+                // TODO need to make this dynamic using replection
+                //And lastly add the command rule itself
+                rulesFound.Add(new BillingAssessmentRule());
+
+                Sender.Tell(new MappedBusinessRules(cmd, rulesFound));
+            }
+            catch (Exception e)
+            {
+             _logger.Error($"{e.Message} {e.StackTrace}");
+                throw;
+            }
+        }
+
+        private AccountBusinessRulesMapper(string businessRulesMapFile)
         {
             RulesInFile = new List<AccountBusinessRuleMapModel>();
             if (!File.Exists(businessRulesMapFile))
@@ -31,7 +73,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             ReadInBusinessRules(businessRulesMapFile);
         }
 
-        public AccountBusinessRulesMapper(string businessRulesMapFile, List<AccountBusinessRuleMapModel> updatedRules)
+        private AccountBusinessRulesMapper(string businessRulesMapFile, List<AccountBusinessRuleMapModel> updatedRules)
         {
             RulesInFile = new List<AccountBusinessRuleMapModel>();
             if (!File.Exists(businessRulesMapFile))
@@ -41,36 +83,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         }
 
         private List<AccountBusinessRuleMapModel> RulesInFile { get; }
-
-        public List<IAccountBusinessRule>
-            GetAccountBusinessRulesForCommand(string client, string porfolio, string accountNumber,
-                IDomainCommand command)
-        {
-            if (_rulesMapperInstance == null) Initialize();
-
-            var rules = _rulesMapperInstance.RulesInFile
-                .Where(ruleMap =>
-                    // Look for rules associated to this command              
-                        ruleMap.Command.GetType().Name.Equals(command.GetType().Name) &&
-                        // which also either match this account
-                        (ruleMap.AccountNumber.Equals(accountNumber) ||
-                         // or all accounts under this portfolio
-                         ruleMap.Portfolio.Equals(porfolio) && ruleMap.ForAllAccounts ||
-                         // or all accounts under all portfolios for this client
-                         ruleMap.Client.Equals(client) && ruleMap.Portfolio.Equals("*") && ruleMap.ForAllAccounts)
-                )
-                .Select(ruleMap => ruleMap.BusinessRule).ToImmutableList();
-
-            var rulesFound = new List<IAccountBusinessRule>();
-
-            // TODO need to make this dynamic using replection
-            //And lastly add the command rule itself
-            rulesFound.Add(new BillingAssessmentRule());
-
-            rulesFound.AddRange(rules.ToList());
-
-            return rulesFound;
-        }
 
         public List<AccountBusinessRuleMapModel> ListAllAccountBusinessRules()
         {
@@ -148,7 +160,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             {
                 var filename = BusinessRulesFilename;
                 _rulesMapperInstance = new AccountBusinessRulesMapper(filename);
-                Console.WriteLine($"[AccountBusinessRulesMapper.Initialize()] BusinessRulesFilename: {BusinessRulesFilename}");
+                Console.WriteLine(
+                    $"[AccountBusinessRulesMapper.Initialize()] BusinessRulesFilename: {BusinessRulesFilename}");
             }
             catch (Exception e)
             {

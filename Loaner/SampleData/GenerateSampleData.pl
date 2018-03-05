@@ -267,9 +267,9 @@ for(my $i = 1; $i <= $NumberOfRecords ; $i++ ){
         if($delinquent gt 0){
             $amountDelinquent = $delinquentAmount[rand @delinquentAmount];
         }
-        print CLIENT join("\t",$portfolio,$number,"Username".join('', map +(q(A)..q(Z))[rand(26)], 1..3), "246.00",$inventory[ rand @inventory ],$delinquent,$amountDelinquent,"\n");
-        print OBLIGATIONS join("\t",$obligationCounter++,$number,"Maintenance","123.00"),"\n";
-        print OBLIGATIONS join("\t",$obligationCounter++,$number,"Loan","123.00"),"\n";
+        print CLIENT join("\t",$portfolio,$number,"Username".join('', map +(q(A)..q(Z))[rand(26)], 1..3), "100.00",$inventory[ rand @inventory ],$delinquent,$amountDelinquent,"\n");
+        print OBLIGATIONS join("\t",$obligationCounter++,$number,"Maintenance","0"),"\n";
+#        print OBLIGATIONS join("\t",$obligationCounter++,$number,"Loan","0"),"\n";
         $unique{$number}++;
     }    
      $portfolio_splitter++;

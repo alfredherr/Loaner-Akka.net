@@ -17,8 +17,6 @@ namespace Loaner.ActorManagement
         public static ActorSystem DemoActorSystem;
         public static IActorRef DemoSystemSupervisor = ActorRefs.Nobody;
 
-        public static IActorRef AccountBusinessRulesRouter = ActorRefs.Nobody;
-
         public static IActorRef AccountStatePublisherActor = ActorRefs.Nobody;
         public static IActorRef FlushActor = ActorRefs.Nobody;
         public static string AccountStateKafkaTopicName;

@@ -98,11 +98,15 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void PurgeOldSnapShots(SaveSnapshotSuccess success)
         {
+            //_log.Info($"[PurgeOldSnapShots]: Account {Self.Path.Name} got SaveSnapshotSuccess " +
+            //          $"at SequenceNr {success.Metadata.SequenceNr} Current SequenceNr is {LastSequenceNr}.");
+
             var snapshotSeqNr = success.Metadata.SequenceNr;
             // delete all messages from journal and snapshot store before latests confirmed
             // snapshot, we won't need them anymore
-            DeleteMessages(snapshotSeqNr);
-            DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
+            DeleteMessages(snapshotSeqNr );
+            //DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
+            
         }
 
         private void RegisterStartup()
@@ -139,19 +143,17 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             _log.Debug($"[ApplyBusinessRules]: {_accountState.AccountNumber}: " +
                        $"Command {c.GetType().Name} with {c.LineItems.Count} total billed = {billedAmount} & line items: " +
                        $"{parameters}");
-             
-           
-            var model = new ApplyBusinessRules
-            {
-                Client = Self.Path.Parent.Parent.Name,
-                PortfolioName = Self.Path.Parent.Name,
-                AccountState = (AccountState) _accountState.Clone(),
-                Command = command,
-                TotalBilledAmount = billedAmount
-            };
+
+            var model = new ApplyBusinessRules(
+                client: Self.Path.Parent.Parent.Name,
+                portfolioName: Self.Path.Parent.Name,
+                accountState: (AccountState) _accountState.Clone(),
+                command: command,
+                totalBilledAmount: billedAmount,
+                accountBusinessMapperRouter: command.AccountBusinessMapperRouter
+            );
 
             command.BusinessRulesHandlingRouter.Tell(model);
-            
         }
 
         private void SendParentMyState(AskToBeSupervised command)
@@ -245,8 +247,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 Persist(@event, s =>
                 {
                     _accountState = _accountState.ApplyEvent(@event);
-                    _log.Debug(
-                        $"[InitiateAccount]: Applied event {@event.GetType().Name} to account {command.AccountNumber}");
+//                    _log.Debug(
+//                        $"[InitiateAccount]: Applied event {@event.GetType().Name} to account {command.AccountNumber}");
                     ApplySnapShotStrategy();
                 });
             }
@@ -294,9 +296,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             if (LastSequenceNr % TakeAccountSnapshotAt == 0)
             {
                 var clonedState = _accountState.Clone();
-                _log.Info($"[ApplySnapShotStrategy]: Account {Self.Path.Name} snapshot taken. Current SequenceNr is {LastSequenceNr}.");
-                Context.IncrementCounter("SnapShotTaken");
                 SaveSnapshot(clonedState);
+                //_log.Info($"[ApplySnapShotStrategy]: Account {Self.Path.Name} snapshot taken. Current SequenceNr is {LastSequenceNr}.");
+                Context.IncrementCounter("SnapShotTaken");
             }
         }
 

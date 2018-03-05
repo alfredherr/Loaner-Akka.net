@@ -55,11 +55,7 @@ namespace Loaner
             DemoActorSystem = ActorSystem.Create("demoSystem", config);
 
             DemoSystemSupervisor = DemoActorSystem.ActorOf(Props.Create<SystemSupervisor>(), "demoSupervisor");
-
-            var props = new RoundRobinPool(Environment.ProcessorCount * 3).Props(Props.Create<AccountBusinessRulesHandler>());
-            AccountBusinessRulesRouter = DemoActorSystem.ActorOf(props, $"BusinessRulesRouter");
-
-            
+ 
             var statsDServer = config.GetString("Akka.StatsDServer");
             var statsDPort = Convert.ToInt32(config.GetString("Akka.StatsDPort"));
             var statsDPrefix = config.GetString("Akka.StatsDPrefix");

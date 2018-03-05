@@ -142,14 +142,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void PurgeOldSnapShots(SaveSnapshotSuccess success)
         {
-            _log.Info($"[PurgeOldSnapShots]: Portfolio {Self.Path.Name} got SaveSnapshotSuccess " +
-                      $"at SequenceNr {success.Metadata.SequenceNr} Current SequenceNr is {LastSequenceNr}.");
+//            _log.Info($"[PurgeOldSnapShots]: Portfolio {Self.Path.Name} got SaveSnapshotSuccess " +
+//                      $"at SequenceNr {success.Metadata.SequenceNr} Current SequenceNr is {LastSequenceNr}.");
 
             var snapshotSeqNr = success.Metadata.SequenceNr;
             // delete all messages from journal and snapshot store before latests confirmed
             // snapshot, we won't need them anymore
-            DeleteMessages(snapshotSeqNr);
-            DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
+            DeleteMessages(snapshotSeqNr );
+            //DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
         }
 
         private void RegisterBalanceChange(RegisterMyAccountBalanceChange cmd)
@@ -208,9 +208,23 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Monitor();
 
             Console.WriteLine($"Billing Items: {cmd.Items.Aggregate("",(acc, next) => acc +" "+ next.Item.Name + " " + next.Item.Amount)}");
+
+
+            var routeesAccountBusinessRulesRouter = Environment.ProcessorCount * 10;
+            var propsAccountBusinessRulesRouter = new RoundRobinPool(routeesAccountBusinessRulesRouter).Props(Props.Create<AccountBusinessRulesHandler>());
+            var accountBusinessRulesRouter = DemoActorSystem.ActorOf(propsAccountBusinessRulesRouter, $"BusinessRulesRouter");
+            Console.WriteLine($"(AccountBusinessRulesRouter) Routees: {routeesAccountBusinessRulesRouter}");
+
+
+            var routeesAccountBusinessRulesMapper = Environment.ProcessorCount * 30;
+            var propsAccountBusinessRulesMapper = new RoundRobinPool(routeesAccountBusinessRulesMapper).Props(Props.Create<AccountBusinessRulesMapper>());
+            var accountBusinessMapperRouter = DemoActorSystem.ActorOf(propsAccountBusinessRulesMapper, $"AccountBusinessRulesMapper");
+            Console.WriteLine($"(AccountBusinessRulesMapper) Routees: {routeesAccountBusinessRulesMapper}");
+
+
             foreach (var account in _porfolioState.SupervizedAccounts?.Values.ToList())
             {
-                var bill = new BillingAssessment(account.AccountNumber, cmd.Items, AccountBusinessRulesRouter);
+                var bill = new BillingAssessment(account.AccountNumber, cmd.Items, accountBusinessRulesRouter, accountBusinessMapperRouter);
                 account.AccountActorRef.Tell(bill);
                 //_log.Info($"[AssessAllAccounts]: Just told account {account.AccountNumber} to run assessment.");
             }
@@ -364,7 +378,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             if ((LastSequenceNr % TakePortolioSnapshotAt) == 0 )
             {        
                 var clonedState = _porfolioState.Clone();
-                _log.Info($"[ApplySnapShotStrategy]: Portfolio {Self.Path.Name} snapshot taken. Current SequenceNr is {LastSequenceNr}.");
+//                _log.Info($"[ApplySnapShotStrategy]: Portfolio {Self.Path.Name} snapshot taken. Current SequenceNr is {LastSequenceNr}.");
                 Context.IncrementCounter("SnapShotTaken");
                 SaveSnapshot(clonedState);
             }
