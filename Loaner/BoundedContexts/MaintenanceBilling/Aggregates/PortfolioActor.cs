@@ -208,30 +208,44 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Monitor();
 
             Console.WriteLine($"Billing Items: {cmd.Items.Aggregate("",(acc, next) => acc +" "+ next.Item.Name + " " + next.Item.Amount)}");
-
-
-            var routeesAccountBusinessRulesRouter = Environment.ProcessorCount * 10;
-            var propsAccountBusinessRulesRouter = new RoundRobinPool(routeesAccountBusinessRulesRouter).Props(Props.Create<AccountBusinessRulesHandler>());
-            var accountBusinessRulesRouter = DemoActorSystem.ActorOf(propsAccountBusinessRulesRouter, $"BusinessRulesRouter");
-            Console.WriteLine($"(AccountBusinessRulesRouter) Routees: {routeesAccountBusinessRulesRouter}");
-
-
-            var routeesAccountBusinessRulesMapper = Environment.ProcessorCount * 30;
-            var propsAccountBusinessRulesMapper = new RoundRobinPool(routeesAccountBusinessRulesMapper).Props(Props.Create<AccountBusinessRulesMapper>());
-            var accountBusinessMapperRouter = DemoActorSystem.ActorOf(propsAccountBusinessRulesMapper, $"AccountBusinessRulesMapper");
-            Console.WriteLine($"(AccountBusinessRulesMapper) Routees: {routeesAccountBusinessRulesMapper}");
-
-
-            foreach (var account in _porfolioState.SupervizedAccounts?.Values.ToList())
+            try
             {
-                var bill = new BillingAssessment(account.AccountNumber, cmd.Items, accountBusinessRulesRouter, accountBusinessMapperRouter);
-                account.AccountActorRef.Tell(bill);
-                //_log.Info($"[AssessAllAccounts]: Just told account {account.AccountNumber} to run assessment.");
-            }
 
-            Sender.Tell(new TellMeYourPortfolioStatus(
-                $"Your request was sent to all {_porfolioState.SupervizedAccounts.Count} accounts",
-                null));
+                var routeesAccountBusinessRulesRouter = Environment.ProcessorCount * 10;
+                var propsAccountBusinessRulesRouter =
+                    new RoundRobinPool(routeesAccountBusinessRulesRouter).Props(
+                        Props.Create<AccountBusinessRulesHandler>());
+                var accountBusinessRulesRouter =
+                    DemoActorSystem.ActorOf(propsAccountBusinessRulesRouter, $"BusinessRulesRouter");
+                Console.WriteLine($"(AccountBusinessRulesRouter) Routees: {routeesAccountBusinessRulesRouter}");
+
+
+                var routeesAccountBusinessRulesMapper = Environment.ProcessorCount * 30;
+                var propsAccountBusinessRulesMapper =
+                    new RoundRobinPool(routeesAccountBusinessRulesMapper).Props(
+                        Props.Create<AccountBusinessRulesMapper>());
+                var accountBusinessMapperRouter =
+                    DemoActorSystem.ActorOf(propsAccountBusinessRulesMapper, $"AccountBusinessRulesMapper");
+                Console.WriteLine($"(AccountBusinessRulesMapper) Routees: {routeesAccountBusinessRulesMapper}");
+
+
+                foreach (var account in _porfolioState.SupervizedAccounts?.Values.ToList())
+                {
+                    var bill = new BillingAssessment(account.AccountNumber, cmd.Items, accountBusinessRulesRouter,
+                        accountBusinessMapperRouter);
+                    account.AccountActorRef.Tell(bill);
+                    //_log.Info($"[AssessAllAccounts]: Just told account {account.AccountNumber} to run assessment.");
+                }
+
+                Sender.Tell(new TellMeYourPortfolioStatus(
+                    $"Your request was sent to all {_porfolioState.SupervizedAccounts.Count} accounts",
+                    null));
+            }
+            catch (Exception e)
+            {
+                _log.Error($"[AssessAllAccounts]: {e.Message} {e.StackTrace}");
+                throw;
+            }
         }
 
 

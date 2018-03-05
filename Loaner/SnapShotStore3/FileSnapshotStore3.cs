@@ -369,7 +369,7 @@ namespace Loaner.SnapShotStore3 {
         }
 
         private void InitializeSnaphotMap () {
-            lock (_smeLock) {
+            //lock (_smeLock) {
 
                 _log.Info ("InitializeSnapshotMap() - STARTED reading the snapshot file to build map");
                 var mapReads = 0;
@@ -414,11 +414,11 @@ namespace Loaner.SnapShotStore3 {
                 _log.Info (
                     "InitializeSnapshotMap() - FINISHED reading the snapshot file to build map. Total map entries read = {0}",
                     mapReads + 1);
-            }
+            //}
         }
 
         protected override void PostStop () {
-            lock (_smeLock) {
+            //lock (_smeLock) {
                 try {
                     _log.Debug ("PostStop() - flushing and closing the file");
 
@@ -435,12 +435,12 @@ namespace Loaner.SnapShotStore3 {
                 } catch (Exception e) {
                     _log.Error ("Serious error in PostStop().\nMessage={0}. \nLocation={1}", e.Message, e.StackTrace);
                 }
-            }
+            //}
         }
 
         private void WriteSME (FileStream stream, SnapshotMapEntry sme) {
 
-            lock (_smeLock) {
+            //lock (_smeLock) {
 
                 try {
                     var pos = stream.Position;
@@ -492,7 +492,7 @@ namespace Loaner.SnapShotStore3 {
                     _log.Error ("Error writing SME, msg = {0}, location = {1}", e.Message, e.StackTrace);
                     throw e;
                 }
-            }
+            //}
         }
 
         private SnapshotMapEntry ReadSME (FileStream stream) {

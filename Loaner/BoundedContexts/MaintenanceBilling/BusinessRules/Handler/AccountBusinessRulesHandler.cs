@@ -47,7 +47,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                     reglaDeNegocio.SetAccountState(pipedState);
                     reglaDeNegocio.RunRule(rules.ApplyBusinessRules.Command);
 
-                    _logger.Debug(
+                    _logger.Info(
                         $"Found {reglaDeNegocio.GetType().Name} rule for account {rules.ApplyBusinessRules.AccountState.AccountNumber}" +
                         $" and its Success={reglaDeNegocio.RuleAppliedSuccessfuly()}");
 

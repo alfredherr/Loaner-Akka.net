@@ -129,31 +129,42 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void ProcessBilling(BillingAssessment command)
         {
-         
+
             if (_accountState.AccountNumber == null)
-                throw new Exception($"Actor {Self.Path.Name} is passing an empty account number.");
+            {
+                _log.Error($"[ProcessBilling]: Actor {Self.Path.Name} is passing an empty account number.");
+                throw new Exception($"[ProcessBilling]: Actor {Self.Path.Name} is passing an empty account number.");
+            }
 
-            var billedAmount = 0.0;
-            
-            var c = command;
-            billedAmount = c.LineItems.Aggregate(0.0, (accumulator, next) => accumulator + next.Item.Amount);
+            try
+            {
+                var billedAmount = 0.0;
 
-            var parameters = c.LineItems.Aggregate("",
-                (working, next) => working + ";" + next.Item.Name + "=" + next.Item.Amount);
-            _log.Debug($"[ApplyBusinessRules]: {_accountState.AccountNumber}: " +
-                       $"Command {c.GetType().Name} with {c.LineItems.Count} total billed = {billedAmount} & line items: " +
-                       $"{parameters}");
+                var c = command;
+                billedAmount = c.LineItems.Aggregate(0.0, (accumulator, next) => accumulator + next.Item.Amount);
 
-            var model = new ApplyBusinessRules(
-                client: Self.Path.Parent.Parent.Name,
-                portfolioName: Self.Path.Parent.Name,
-                accountState: (AccountState) _accountState.Clone(),
-                command: command,
-                totalBilledAmount: billedAmount,
-                accountBusinessMapperRouter: command.AccountBusinessMapperRouter
-            );
+                var parameters = c.LineItems.Aggregate("",
+                    (working, next) => working + ";" + next.Item.Name + "=" + next.Item.Amount);
+                _log.Debug($"[ApplyBusinessRules]: {_accountState.AccountNumber}: " +
+                           $"Command {c.GetType().Name} with {c.LineItems.Count} total billed = {billedAmount} & line items: " +
+                           $"{parameters}");
 
-            command.BusinessRulesHandlingRouter.Tell(model);
+                var model = new ApplyBusinessRules(
+                    client: Self.Path.Parent.Parent.Name,
+                    portfolioName: Self.Path.Parent.Name,
+                    accountState: (AccountState) _accountState.Clone(),
+                    command: command,
+                    totalBilledAmount: billedAmount,
+                    accountBusinessMapperRouter: command.AccountBusinessMapperRouter
+                );
+
+                command.BusinessRulesHandlingRouter.Tell(model);
+            }
+            catch (Exception e)
+            {
+                _log.Error($"[ProcessBilling]: {Self.Path.Name} {e.Message} {e.StackTrace}");
+                throw;
+            }
         }
 
         private void SendParentMyState(AskToBeSupervised command)
