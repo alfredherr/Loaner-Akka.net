@@ -236,14 +236,15 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             {
                 var state = new List<string>(); // Just need the name to kick it off?
 
-                foreach (var record in _portfolios.Keys) state.Add(record);
-
-                SaveSnapshot(state.ToArray());
-
+                foreach (var record in _portfolios.Keys)
+                {
+                    state.Add(record);
+                }
                 _log.Info(
                     $"[ApplySnapShotStrategy]: SystemSupervisor Snapshot taken of {state.Count} portfolios. LastSequenceNr is {LastSequenceNr}.");
-
                 Context.IncrementCounter("SnapShotTaken");
+
+                SaveSnapshot(state.ToArray());
             }
         }
     }

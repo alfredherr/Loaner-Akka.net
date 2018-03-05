@@ -10,8 +10,9 @@ namespace Loaner.ActorManagement
 
         public const int
             TakePortolioSnapshotAt =
-                10000; // this must be the number of records you want to load per portfolio (so it only snapshots once)
+                10_000; // this must be the number of records you want to load per portfolio (so it only snapshots once)
 
+        public const int SnapshotFlushTimer = 5_000; // milliseconds
         public const int TakeAccountSnapshotAt = 1;
         public static ActorSystem DemoActorSystem;
         public static IActorRef DemoSystemSupervisor = ActorRefs.Nobody;

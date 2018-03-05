@@ -5,8 +5,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 {
     public class AccountUnderSupervision : ICloneable {
        
-        public AccountUnderSupervision (string accountNumber) {
+        public AccountUnderSupervision (string accountNumber, double balanceAfterLastTransaction) {
             AccountNumber = accountNumber;
+            BalanceAfterLastTransaction = balanceAfterLastTransaction;
         }
 
         private AccountUnderSupervision (string accountNumber, double lastBilledAmount, double balanceAfterLastTransaction, IActorRef accountActorRef) {
@@ -14,6 +15,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             LastBilledAmount = lastBilledAmount;
             BalanceAfterLastTransaction = balanceAfterLastTransaction;
             AccountActorRef = accountActorRef;
+            //Console.WriteLine($"[AccountUnderSupervision]: BalanceAfterLastTransaction = {BalanceAfterLastTransaction }");
         }
         public string AccountNumber { get; }
 

@@ -39,8 +39,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             /*** recovery section **/
             Recover<SnapshotOffer>(offer => ProcessSnapshot(offer));
-            Recover<AccountAddedToSupervision>(command => ReplayEvent(command.AccountNumber));
-
+            Recover<AccountAddedToSupervision>(command => AddAccountToSupervision(command));
+            Recover<AccountUnderSupervisionBalanceChanged>(cmd => UpdateAccountUnderSupervisionBalance(cmd));
             /** Core Commands **/
             Command<SuperviseThisAccount>(command => ProcessSupervision(command));
             Command<StartAccounts>(command => StartAccounts());
@@ -73,6 +73,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     $"Why is account {msg.AccountState.AccountNumber} sending me an 'MyAccountStatus' message?"));
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
+
+       
 
         public override string PersistenceId => Self.Path.Name;
 
@@ -140,6 +142,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void PurgeOldSnapShots(SaveSnapshotSuccess success)
         {
+            _log.Info($"[PurgeOldSnapShots]: Portfolio {Self.Path.Name} got SaveSnapshotSuccess " +
+                      $"at SequenceNr {success.Metadata.SequenceNr} Current SequenceNr is {LastSequenceNr}.");
+
             var snapshotSeqNr = success.Metadata.SequenceNr;
             // delete all messages from journal and snapshot store before latests confirmed
             // snapshot, we won't need them anymore
@@ -149,13 +154,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void RegisterBalanceChange(RegisterMyAccountBalanceChange cmd)
         {
-            AccountUnderSupervision account = _porfolioState.SupervizedAccounts.FirstOrDefault(x => x.Key == cmd.AccountNumber).Value;
+            AccountUnderSupervision account = _porfolioState.SupervizedAccounts.FirstOrDefault(x => x.Key == cmd.AccountNumber).Value ??
+                                              new AccountUnderSupervision(cmd.AccountNumber,cmd.AccountBalanceAfterTransaction);
 
-            if(account == null)
-            {
-                account = new AccountUnderSupervision(cmd.AccountNumber);
-
-            }
             _log.Debug($"[RegisterBalanceChange]: account.BalanceAfterLastTransaction={account.BalanceAfterLastTransaction}\t" +
                       $"cmd.AccountBalanceAfterTransaction={cmd.AccountBalanceAfterTransaction}\n" +
                       $"account.LastBilledAmount={account.LastBilledAmount}\tcmd.AmountTransacted={cmd.AmountTransacted}");
@@ -163,14 +164,40 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             account.LastBilledAmount = cmd.AmountTransacted;
             account.BalanceAfterLastTransaction = cmd.AccountBalanceAfterTransaction;
 
+            var lastBal = _porfolioState.CurrentPortfolioBalance;
             _porfolioState.SupervizedAccounts.AddOrSet(cmd.AccountNumber, account);
-            _porfolioState.UpdateBalance();
+            var newBal = _porfolioState.UpdateBalance();
+
+
+//            if (decimal.Compare(lastBal,  newBal) != 0)
+//            {
+                var @event =
+                    new AccountUnderSupervisionBalanceChanged(account.AccountNumber,
+                        account.BalanceAfterLastTransaction);
+                Persist(@event, s =>
+                    {
+                        ApplySnapShotStrategy();
+//                        _log.Warning(
+//                            $"[RegisterBalanceChange]: {Self.Path.Name} OldBalance={lastBal} NewBalance={newBal} LastSequenceNr@{LastSequenceNr}");
+                    }
+                );
+//            }
             
-            ApplySnapShotStrategy();
+            //ApplySnapShotStrategy();// need to convert it into an event which is stored on the portfolio state
             Self.Tell(new PublishPortfolioStateToKafka());
             
         }
 
+        private void UpdateAccountUnderSupervisionBalance(AccountUnderSupervisionBalanceChanged cmd)
+        {
+            AccountUnderSupervision account =
+                _porfolioState.SupervizedAccounts.FirstOrDefault(x => x.Key == cmd.AccountNumber).Value ?? new AccountUnderSupervision(cmd.AccountNumber, cmd.NewAccountBalance);
+
+            account.BalanceAfterLastTransaction = cmd.NewAccountBalance;
+            _porfolioState.SupervizedAccounts.AddOrSet(cmd.AccountNumber, account);
+            _porfolioState.UpdateBalance();
+        }
+        
         private void RegisterStartup()
         {
             _porfolioState.LastBootedOn = DateTime.Now;
@@ -270,8 +297,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             Monitor();
 
-            var account = new AccountUnderSupervision(command.AccountNumber);
-            var @event = new AccountAddedToSupervision(command.AccountNumber);
+            var account = new AccountUnderSupervision(command.AccountNumber,command.CurrentAccountBalance );
+            var @event = new AccountAddedToSupervision(command.AccountNumber,(decimal) command.CurrentAccountBalance);
             Persist(@event, s =>
             {
                 account.AccountActorRef = InstantiateThisAccount(account);
@@ -281,24 +308,24 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             });
         }
 
-        private void ReplayEvent(string accountNumber)
+        private void AddAccountToSupervision(AccountAddedToSupervision account)
         {
             RecoveryCounter();
-            if (string.IsNullOrEmpty(accountNumber)) throw new Exception("Why is this blank?");
+            if (account == null) throw new Exception("Why is this blank?");
 
-            if (AccountExistInState(accountNumber))
+            if (AccountExistInState(account.AccountNumber))
             {
-                _log.Debug($"Supervisor already has {accountNumber} in state. No action taken");
+                _log.Debug($"Supervisor already has {account.AccountNumber} in state. No action taken");
                 return;
             }
 
-            var account = new AccountUnderSupervision(accountNumber);
-            account.AccountActorRef = InstantiateThisAccount(account);
-            _porfolioState.SupervizedAccounts.AddOrSet(accountNumber,account);
+            var newAccount = new AccountUnderSupervision(account.AccountNumber,0);
+            newAccount.AccountActorRef = InstantiateThisAccount(newAccount);
+            _porfolioState.SupervizedAccounts.AddOrSet(account.AccountNumber,newAccount);
 
             // TODO probably will have to ask the account for some more data, like curr bal, etc.
 
-            _log.Debug($"Replayed event on {accountNumber}");
+            _log.Debug($"Replayed event on {newAccount.AccountNumber}");
         }
 
         private bool AccountExistInState(string accountNumber)
@@ -334,13 +361,25 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         public void ApplySnapShotStrategy()
         {
-            if (LastSequenceNr % TakePortolioSnapshotAt == 0 || PersistenceId.ToUpper().Contains("PORTFOLIO"))
-            {
+            if ((LastSequenceNr % TakePortolioSnapshotAt) == 0 )
+            {        
                 var clonedState = _porfolioState.Clone();
-                SaveSnapshot(clonedState);
                 _log.Info($"[ApplySnapShotStrategy]: Portfolio {Self.Path.Name} snapshot taken. Current SequenceNr is {LastSequenceNr}.");
                 Context.IncrementCounter("SnapShotTaken");
+                SaveSnapshot(clonedState);
             }
         }
+    }
+
+    public class AccountUnderSupervisionBalanceChanged
+    {
+        public AccountUnderSupervisionBalanceChanged(string accountNumber, double newBalance)
+        {
+            AccountNumber = accountNumber;
+            NewAccountBalance = newBalance;
+        }
+
+        public string AccountNumber { get;  }
+        public double NewAccountBalance { get; }
     }
 }

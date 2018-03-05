@@ -360,7 +360,7 @@ namespace Loaner.SnapShotStore3 {
                 InitializeSnaphotMap ();
 
                 // Start the timer for flushing the files
-                FlushTimer = new Timer (FlushFiles, null, 0, 5000);
+                FlushTimer = new Timer (FlushFiles, null, 0, ActorManagement.LoanerActors.SnapshotFlushTimer);
             
             } catch (Exception e) {
                 _log.Error ("Serious error in PreStart(). Message={0}\n StackTrace={1}", e.Message, e.StackTrace);

@@ -10,11 +10,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainCommands
             _UniqueGuid = Guid.NewGuid();
         }
 
-        public SuperviseThisAccount(string portfolio, string accountNumber) : this()
+        public SuperviseThisAccount(string portfolio, string accountNumber, double currentBalance) : this()
         {
             AccountNumber = accountNumber;
             Portfolio = portfolio;
+            CurrentAccountBalance = currentBalance;
         }
+
+        public double CurrentAccountBalance { get; private set; }
 
         private Guid _UniqueGuid { get; }
         private DateTime _RequestedOn { get; }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Akka.Actor;
 using Akka.Event;
@@ -159,7 +160,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             /* Assuming this is all we have to load for an account, then we can have the account
              * send the supervisor to add it to it's list -- then it can terminate. 
              */
-            command.MyNewParent.Tell(new SuperviseThisAccount(command.Portfolio, Self.Path.Name));
+            command.MyNewParent.Tell(new SuperviseThisAccount(command.Portfolio, Self.Path.Name, _accountState.CurrentBalance));
 
             ReportMyState(0, _accountState.CurrentBalance, command.MyNewParent);
 
@@ -209,32 +210,45 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private void InitiateAccount(CreateAccount command)
         {
             Monitor();
-            if (_accountState.AccountNumber == null)
-            {
-                /**
-                 * we want to use behaviours here to make sure we don't allow the account to be created 
-                 * once it has been created -- Become AccountBoarded perhaps?
-                  */
-                var @event = new AccountCreated
-                (
-                    accountNumber: command.AccountNumber,
-                    openingBalance: command.BoardingModel.OpeningBalance,
-                    inventory: command.BoardingModel.Inventory,
-                    userName: command.BoardingModel.UserName,
-                    lastPaymentDate: command.BoardingModel.LastPaymentDate,
-                    lastPaymentAmount: command.BoardingModel.LastPaymentAmount
-                );
-                Persist(@event, s =>
-                {
-                    _accountState = _accountState.ApplyEvent(@event);
-
-                    _log.Debug($"[InitiateAccount]: Created account {command.AccountNumber}");
-                });
-            }
-            else
+            if (_accountState.AccountNumber != null)
             {
                 _log.Warning(
                     $"[InitiateAccount]: You are trying to create {command.AccountNumber}, but has already been created. No action taken.");
+                return;
+            }
+
+            /**
+             * we want to use behaviours here to make sure we don't allow the account to be created 
+             * once it has been created -- Become AccountBoarded perhaps?
+              */
+
+            List<IDomainEvent> events = new List<IDomainEvent>();
+
+            events.Add(new AccountCreated
+            (
+                accountNumber: command.AccountNumber,
+                openingBalance: command.BoardingModel.OpeningBalance,
+                inventory: command.BoardingModel.Inventory,
+                userName: command.BoardingModel.UserName,
+                lastPaymentDate: command.BoardingModel.LastPaymentDate,
+                lastPaymentAmount: command.BoardingModel.LastPaymentAmount
+            ));
+            
+            if (command.BoardingModel.OpeningBalance != 0.0)
+            {
+                events.Add(new AccountCurrentBalanceUpdated(command.AccountNumber,
+                    command.BoardingModel.OpeningBalance));
+            }
+
+            foreach (var @event in events)
+            {
+                Persist(@event, s =>
+                {
+                    _accountState = _accountState.ApplyEvent(@event);
+                    _log.Debug(
+                        $"[InitiateAccount]: Applied event {@event.GetType().Name} to account {command.AccountNumber}");
+                    ApplySnapShotStrategy();
+                });
             }
         }
 
@@ -247,8 +261,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 			 * In this example, we are simply going to accept it and updated our state.
 			 */ 
             
-//            _log.Info(
-//                $"[ApplyBusinessRules]: There were {resultModel.GeneratedEvents.Count} events. And success={resultModel.Success}");
+            _log.Debug(
+                $"[ApplyBusinessRules]: There were {resultModel.GeneratedEvents.Count} events. And success={resultModel.Success}");
 
             if (resultModel.Success)
             {
@@ -261,7 +275,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     {
                         _accountState = _accountState.ApplyEvent(@event);
 
-                        _log.Info(
+                        _log.Debug(
                             $"[ApplyBusinessRules]: Persisted event {@event.GetType().Name} on account {_accountState.AccountNumber}" +
                             $" account balance after is {_accountState.CurrentBalance:C} ");
 
@@ -280,9 +294,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             if (LastSequenceNr % TakeAccountSnapshotAt == 0)
             {
                 var clonedState = _accountState.Clone();
-                SaveSnapshot(clonedState);
-                _log.Debug($"[ApplySnapShotStrategy]: {_accountState.AccountNumber} Snapshot taken. LastSequenceNr is {LastSequenceNr}.");
+                _log.Info($"[ApplySnapShotStrategy]: Account {Self.Path.Name} snapshot taken. Current SequenceNr is {LastSequenceNr}.");
                 Context.IncrementCounter("SnapShotTaken");
+                SaveSnapshot(clonedState);
             }
         }
 

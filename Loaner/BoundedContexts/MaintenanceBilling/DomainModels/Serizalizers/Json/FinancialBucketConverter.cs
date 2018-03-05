@@ -42,6 +42,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainModels.Serizalizers.Js
                 case "Interest":
                     funancialBucket = new Interest(bucketAmount);
                     break;
+                case "Adjustment":
+                    funancialBucket = new Adjustment(bucketAmount);
+                    break;
             }
 
             serializer.Populate(jsonObject.CreateReader(), funancialBucket);

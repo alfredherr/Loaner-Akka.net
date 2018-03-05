@@ -62,7 +62,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                         var events = reglaDeNegocio.GetGeneratedEvents().ToList();
                         foreach (var @event in events) resultModel.GeneratedEvents.Add(@event);
 
-
                         // Rule output -> next rule input (Pipes & Filters approach)
                         // Replace pipedState wth the state resulting from running the rule.
                         pipedState = (AccountState) (reglaDeNegocio.GetGeneratedState()).Clone();

@@ -8,6 +8,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
             this()
         {
             Message = message;
+
             AccountNumber = accountNumber;
             CurrentBalance = newCurrentBalance;
         }

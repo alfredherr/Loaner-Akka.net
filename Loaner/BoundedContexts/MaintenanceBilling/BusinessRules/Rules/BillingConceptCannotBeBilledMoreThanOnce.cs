@@ -48,11 +48,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
         {
             var conceptName = command.LineItems.Select(x => x.Item.Name).ToDictionary(x => x, x => x);
 
+//            Console.WriteLine($"@@@@Rule BillingConceptCannotBeBilledMoreThanOnce: {command.AccountNumber}  " +
+//                              $"has Obligations: {AccountState.Obligations.Count} and matches=" +
+//                              $"{AccountState.Obligations.Any(x => x.Value.Transactions.Any(y => conceptName.ContainsKey(y.FinancialBucket.Name)))}");
+           
             var matches =
-                AccountState.Obligations
-                    .SelectMany(x => x.Value.Transactions.Select(y => conceptName.ContainsKey(y.FinancialBucket.Name)))
-                    .All(x => x);
-            if (!matches)
+                AccountState.Obligations.Any(x =>
+                    x.Value.Transactions.Any(y => conceptName.ContainsKey(y.FinancialBucket.Name)));
+            if (matches) // if we get a hit we bail
             {
                 _eventsGenerated = new List<IDomainEvent>
                 {

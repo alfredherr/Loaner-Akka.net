@@ -12,6 +12,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
         public int ScheduledCallsToInfo { get; set; }
 
         public decimal CurrentPortfolioBalance { get; private set; }
+        
+        
 
         public Dictionary<string, AccountUnderSupervision> SupervizedAccounts { get; }
 
@@ -38,11 +40,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 
         public object Clone()
         {
-
+            UpdateBalance();
             var dict = this.SupervizedAccounts.ToDictionary(
                 x => x.Key,
                 x => (AccountUnderSupervision) x.Value.Clone());
 
+            //Console.WriteLine($"[PorfolioState]: Current balance, right before cloning: {CurrentPortfolioBalance :C}");
             return new PorfolioState(
                 dict
                 , this.LastBootedOn

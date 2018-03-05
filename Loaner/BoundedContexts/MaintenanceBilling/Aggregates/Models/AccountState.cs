@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Reflection.Emit;
+using Akka.Util.Internal;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Exceptions;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
@@ -267,13 +269,25 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 
         private AccountState ApplyEvent(AccountCurrentBalanceUpdated occurred)
         {
+            var adjustmentsObligation = new MaintenanceFee("AccountAdjustments", 0, ObligationStatus.Boarding);
+            
+            if (Obligations.ContainsKey("AccountAdjustments"))
+            {
+                adjustmentsObligation = Obligations["AccountAdjustments"];
+            }
+
+            var trans = new FinancialTransaction(new Adjustment(occurred.CurrentBalance), occurred.CurrentBalance);
+
+            adjustmentsObligation.PostTransaction(trans);
+ 
+            
             return new AccountState(
                 AccountNumber,
                 occurred.CurrentBalance,
                 AccountStatus,
-                Obligations,
+                Obligations.Add(adjustmentsObligation.ObligationNumber, adjustmentsObligation),
                 SimulatedFields,
-                AuditLog.Add(new StateLog("AccountCurrentBalanceUpdated", occurred.Message, occurred.UniqueGuid(),
+                AuditLog.Add(new StateLog("AccountCurrentBalanceUpdated", "Boarding Adjustment", occurred.UniqueGuid(),
                     occurred.OccurredOn())),
                 OpeningBalance,
                 Inventroy,
@@ -368,7 +382,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                     )
                 ),
                 openingBalance: occurred.OpeningBalance,
-                currentBalance: occurred.OpeningBalance,
+                currentBalance: 0.0, //best to affect currBal explicitly with an event
                 inventory: occurred.Inventory,
                 userName: occurred.UserName,
                 lastPaymentAmount: occurred.LastPaymentAmount,
