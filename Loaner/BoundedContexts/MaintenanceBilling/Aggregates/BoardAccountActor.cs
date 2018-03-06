@@ -217,7 +217,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                             if (daysDelinquent > 0.0)
                             {
                                 lastPaymentAmount = 55.0;
-                                lastPaymentDate = DateTime.Now.AddDays(daysDelinquent);
+                                lastPaymentDate = DateTime.Now.AddDays(-1 * daysDelinquent);
                             }
 
                             var delinquentAmount = double.Parse(line[6]);

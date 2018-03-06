@@ -18,12 +18,20 @@ using Loaner.KafkaProducer;
 using Loaner.KafkaProducer.Commands;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+
 using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Nancy.Owin;
 using NLog.Extensions.Logging;
 using NLog.Web;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Cors;
 
 namespace Loaner
 {
@@ -173,6 +181,13 @@ namespace Loaner
 
             //add NLog.Web
             app.AddNLogWeb();
+
+            app.UseCors(builder => builder
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials());
+            
         }
 
 
