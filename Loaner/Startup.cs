@@ -168,7 +168,12 @@ namespace Loaner
             PortfolioStatePublisherActor =
                 DemoActorSystem.ActorOf(portfolioStatePublisherProps, "PortfolioStatePublisherActor");
         }
+        public void ConfigureServices(IServiceCollection services)
+        {
+            // Add Access-Control-Allow-Origin so that other sites can embedd content from this site
+            services.AddCors();
 
+        }
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
             var appConfig = new AppConfiguration();
@@ -179,8 +184,6 @@ namespace Loaner
             //add NLog to ASP.NET Core
             loggerFactory.AddNLog();
 
-            //add NLog.Web
-            app.AddNLogWeb();
 
             app.UseCors(builder => builder
                 .AllowAnyOrigin()
