@@ -97,9 +97,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 Persist(@event, s =>
                 {
                     _accountState = _accountState.ApplyEvent(@event);
+                    Self.Tell(new PublishAccountStateToKafka());
                     ApplySnapShotStrategy();
                     Sender.Tell(new MyAccountStatus("Payment Applied",(AccountState) _accountState.Clone()) );
+                    
                 });
+                
             }
             catch (Exception e)
             {
