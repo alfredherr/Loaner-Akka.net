@@ -170,19 +170,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             var newBal = _porfolioState.UpdateBalance();
 
 
-//            if (decimal.Compare(lastBal,  newBal) != 0)
-//            {
-            var @event =
-                new AccountUnderSupervisionBalanceChanged(account.AccountNumber,
-                    account.BalanceAfterLastTransaction);
-            Persist(@event, s =>
-                {
-                    ApplySnapShotStrategy();
-//                        _log.Warning(
-//                            $"[RegisterBalanceChange]: {Self.Path.Name} OldBalance={lastBal} NewBalance={newBal} LastSequenceNr@{LastSequenceNr}");
-                }
-            );
-//            }
+            if (decimal.Compare(lastBal, newBal) != 0)
+            {
+                var @event =
+                    new AccountUnderSupervisionBalanceChanged(account.AccountNumber,
+                        account.BalanceAfterLastTransaction);
+                Persist(@event, s => { ApplySnapShotStrategy(); }
+                );
+            }
 
             //ApplySnapShotStrategy();// need to convert it into an event which is stored on the portfolio state
             Self.Tell(new PublishPortfolioStateToKafka());
@@ -338,6 +333,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 _porfolioState.SupervizedAccounts.AddOrSet(command.AccountNumber, account);
                 ApplySnapShotStrategy();
                 Self.Tell(new PublishPortfolioStateToKafka());
+                account.AccountActorRef.Tell(new PublishAccountStateToKafka());
             });
         }
 
