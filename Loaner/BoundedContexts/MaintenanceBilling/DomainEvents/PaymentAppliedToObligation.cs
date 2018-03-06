@@ -3,15 +3,15 @@ using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
 {
-    public class ObligationSettledConcept : IDomainEvent
+    public class PaymentAppliedToObligation : IDomainEvent
     {
-        public ObligationSettledConcept()
+        public PaymentAppliedToObligation()
         {
             _UniqueGuid = Guid.NewGuid();
             _OccurredOn = DateTime.Now;
         }
 
-        public ObligationSettledConcept(string obligationNumber, IFinancialBucket bucket, double amount,
+        public PaymentAppliedToObligation(string obligationNumber, IFinancialBucket bucket, double amount,
             string message = "") : this()
         {
             ObligationNumber = obligationNumber;

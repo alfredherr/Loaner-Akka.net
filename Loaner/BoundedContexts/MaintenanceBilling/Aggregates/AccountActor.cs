@@ -11,6 +11,7 @@ using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
+using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
 using Loaner.KafkaProducer.Commands;
 using static Loaner.ActorManagement.LoanerActors;
 
@@ -35,6 +36,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Recover<ObligationAssessedConcept>(@event => ApplyPastEvent("ObligationAssessedConcept", @event));
             Recover<SuperSimpleSuperCoolDomainEventFoundByRules>(
                 @event => ApplyPastEvent("SuperSimpleSuperCoolEventFoundByRules", @event));
+            Recover<PaymentAppliedToObligation>(
+                @event => ApplyPastEvent("PaymentAppliedToObligation", @event));
 
             /**
              * Creating the account's initial state is more of a one-time thing 
@@ -50,6 +53,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 //            Command<AssessFinancialConcept>(command => ApplyBusinessRules(command));
             Command<BillingAssessment>(command => ProcessBilling(command));
             Command<BusinessRuleApplicationResultModel>(model => ApplyBusinessRules(model));
+            Command<PayAccount>(cmd => ProcessPayment(cmd));
 //            Command<CancelAccount>(command => ApplyBusinessRules(command));
             Command<AskToBeSupervised>(command => SendParentMyState(command));
             Command<PublishAccountStateToKafka>(msg => PublishToKafka(msg));
@@ -74,6 +78,34 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     $"[DeleteMessagesSuccess]: Successfully cleared log after snapshot ({msg.ToString()})"));
             CommandAny(msg =>
                 _log.Error($"[CommandAny]: Unhandled message in {Self.Path.Name} from {Sender.Path.Name}. Message:{msg.ToString()}"));
+        }
+
+        private void ProcessPayment(PayAccount cmd)
+        {
+            try
+            {
+                var luckObligation = _accountState.Obligations.FirstOrDefault(x => x.Key == "AccountAdjustments").Value;
+                if (luckObligation == null)
+                    throw new Exception($"[ProcessPayment]: Inconvibable! Why is there no obligation?");
+
+                var @event = new PaymentAppliedToObligation(
+                    luckObligation.ObligationNumber
+                    , new CreditCardPayment(cmd.AmountToPay)
+                    , cmd.AmountToPay
+                    , "CreditCard Payment Applied To Dues"
+                );
+                Persist(@event, s =>
+                {
+                    _accountState = _accountState.ApplyEvent(@event);
+                    ApplySnapShotStrategy();
+                    Sender.Tell(new MyAccountStatus("Payment Applied",(AccountState) _accountState.Clone()) );
+                });
+            }
+            catch (Exception e)
+            {
+                _log.Error($"[ProcessPayment]: {e.Message} {e.StackTrace}");
+                throw;
+            }
         }
 
 

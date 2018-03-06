@@ -109,7 +109,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                     return ApplyEvent(occurred);
                 case ObligationAssessedConcept occurred:
                     return ApplyEvent(occurred);
-                case ObligationSettledConcept occurred:
+                case PaymentAppliedToObligation occurred:
                     return ApplyEvent(occurred);
                 case AccountCreated occurred:
                     return ApplyEvent(occurred);
@@ -352,7 +352,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                 LastPaymentDate);
         }
 
-        private AccountState ApplyEvent(ObligationSettledConcept occurred)
+        private AccountState ApplyEvent(PaymentAppliedToObligation occurred)
         {
             var trans = new FinancialTransaction(occurred.FinancialBucket, occurred.Amount);
             Obligations[occurred.ObligationNumber].PostTransaction(trans);
@@ -364,7 +364,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                 Obligations,
                 SimulatedFields,
                 AuditLog.Add(new StateLog(
-                    "ObligationSettledConcept", 
+                    "PaymentAppliedToObligation", 
                     $"{occurred.Message} Balance After: {newBal :C}", 
                     occurred.UniqueGuid(),
                     occurred.OccurredOn()))

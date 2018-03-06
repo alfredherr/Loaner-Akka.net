@@ -65,19 +65,46 @@ namespace Loaner.API.Controllers
                     return new AccountStateViewModel($"{args.actorName} {e.Message}");
                 }
             });
-            Get("/{actorName}/assessment", args =>
+     
+            Post("/{actorName}/pay", async args =>
             {
-                InvoiceLineItem[] lineItems =
+                string account = args.actorName;
+                var payment = this.Bind<Payment>();
+
+                try
                 {
-                    new InvoiceLineItem(new Tax(0)),
-                    new InvoiceLineItem(new Dues(0)),
-                    new InvoiceLineItem(new Reserve(0))
-                };
-
-
-                return lineItems;
+                    var domanCommand = new PayAccount(account, payment.AmountToPay);
+                    var system = LoanerActors.DemoActorSystem
+                        .ActorSelection($"/user/demoSupervisor/*/{account}")
+                        .ResolveOne(TimeSpan.FromSeconds(3));
+                    if (system.Exception != null) throw system.Exception;
+                    var response = await Task.Run(
+                        () => system.Result.Ask<MyAccountStatus>(domanCommand, TimeSpan.FromSeconds(30))
+                    );
+                    return Response.AsJson(response);
+                }
+                catch (ActorNotFoundException)
+                {
+                    return new AccountStateViewModel($"{args.actorName} is not running at the moment");
+                }
+                catch (Exception e)
+                {
+                    return new AccountStateViewModel($"{args.actorName} {e.Message}");
+                }
             });
-
+//            
+//            Get("/{actorName}/assessment", args =>
+//            {
+//                InvoiceLineItem[] lineItems =
+//                {
+//                    new InvoiceLineItem(new Tax(0)),
+//                    new InvoiceLineItem(new Dues(0)),
+//                    new InvoiceLineItem(new Reserve(0))
+//                };
+//
+//
+//                return lineItems;
+//            });
 //            Post("/{actorName}/assessment", async args =>
 //            {
 //                string account = args.actorName;
