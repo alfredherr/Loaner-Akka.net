@@ -66,7 +66,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             var obligationsFilePath = cmd.ObligationsFilePath;
             var accountsFilePath = cmd.AccountsFilePath;
             var router = cmd.BoardingRouter;
-            
+
             Monitor();
             var supervisor = Context.Parent;
             var counter = 0;
@@ -78,7 +78,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Console.WriteLine(
                 $"There are {Environment.ProcessorCount} logical processors. Running {Environment.ProcessorCount * 4} boarding actor routees");
 
-         
+
             foreach (var portfolioDic in _accountsInPortfolio)
             {
                 var portfolio = portfolioDic.Key.Instance;
@@ -283,7 +283,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
     public class BoardClient
     {
         public BoardClient(
-              SimulateBoardingOfAccounts client
+            SimulateBoardingOfAccounts client
             , string accountsFilePath
             , string obligationsFilePath
             , IActorRef boardingRouter)

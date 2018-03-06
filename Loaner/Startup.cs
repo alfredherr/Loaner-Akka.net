@@ -18,7 +18,6 @@ using Loaner.KafkaProducer;
 using Loaner.KafkaProducer.Commands;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-
 using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -63,7 +62,7 @@ namespace Loaner
             DemoActorSystem = ActorSystem.Create("demoSystem", config);
 
             DemoSystemSupervisor = DemoActorSystem.ActorOf(Props.Create<SystemSupervisor>(), "demoSupervisor");
- 
+
             var statsDServer = config.GetString("Akka.StatsDServer");
             var statsDPort = Convert.ToInt32(config.GetString("Akka.StatsDPort"));
             var statsDPrefix = config.GetString("Akka.StatsDPrefix");
@@ -84,7 +83,6 @@ namespace Loaner
                 ));
 
             DemoSystemSupervisor.Tell(new BootUp("Starting Up"));
-            
         }
 
         private void ConfigureKafkaProducerActors(Config config)
@@ -168,12 +166,13 @@ namespace Loaner
             PortfolioStatePublisherActor =
                 DemoActorSystem.ActorOf(portfolioStatePublisherProps, "PortfolioStatePublisherActor");
         }
+
         public void ConfigureServices(IServiceCollection services)
         {
             // Add Access-Control-Allow-Origin so that other sites can embedd content from this site
             services.AddCors();
-
         }
+
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
             var appConfig = new AppConfiguration();
@@ -184,13 +183,11 @@ namespace Loaner
             //add NLog to ASP.NET Core
             loggerFactory.AddNLog();
 
-
             app.UseCors(builder => builder
                 .AllowAnyOrigin()
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials());
-            
         }
 
 
