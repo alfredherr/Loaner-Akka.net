@@ -13,8 +13,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
     {
         private readonly List<IDomainEvent> _eventsGenerated = new List<IDomainEvent>();
         private string _detailsGenerated;
-        private IAccountBusinessRule _accountBusinessRuleImplementation;
-
+       
         public BillingAssessmentRule()
         {
             

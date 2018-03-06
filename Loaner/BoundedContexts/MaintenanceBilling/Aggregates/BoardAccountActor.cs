@@ -21,7 +21,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
     public class BoardAccountActor : ReceiveActor
     {
-        
         private readonly Dictionary<PortfolioName, Dictionary<AccountNumber, AccountBoardingModel>> _accountsInPortfolio
             =
             new Dictionary<PortfolioName, Dictionary<AccountNumber, AccountBoardingModel>>();
@@ -33,8 +32,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         public BoardAccountActor()
         {
-            Receive<SimulateBoardingOfAccounts>(client => StartUpHandler(client, client.ClientAccountsFilePath,
-                client.ObligationsFilePath));
+            Receive<SimulateBoardingOfAccounts>(client => BoardingPrerequisites(client));
+            Receive<BoardClient>(client => StartUpHandler(client));
             Receive<SpinUpAccountActor>(msg => SpinUpAccountActor(msg));
 
             /* Example of custom error handling, also using messages */
@@ -54,10 +53,20 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             ReceiveAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
 
-        private void StartUpHandler(SimulateBoardingOfAccounts client
-            , string accountsFilePath
-            , string obligationsFilePath)
+        private void BoardingPrerequisites(SimulateBoardingOfAccounts cmd)
         {
+            var props = new RoundRobinPool(Environment.ProcessorCount * 3).Props(Props.Create<BoardAccountActor>());
+            var router = Context.ActorOf(props, $"Client{cmd.ClientName}Router");
+
+            Self.Tell(new BoardClient(cmd, cmd.ClientAccountsFilePath, cmd.ObligationsFilePath, router));
+        }
+
+        private void StartUpHandler(BoardClient cmd)
+        {
+            var obligationsFilePath = cmd.ObligationsFilePath;
+            var accountsFilePath = cmd.AccountsFilePath;
+            var router = cmd.BoardingRouter;
+            
             Monitor();
             var supervisor = Context.Parent;
             var counter = 0;
@@ -69,9 +78,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Console.WriteLine(
                 $"There are {Environment.ProcessorCount} logical processors. Running {Environment.ProcessorCount * 4} boarding actor routees");
 
-            var props = new RoundRobinPool(Environment.ProcessorCount * 3).Props(Props.Create<BoardAccountActor>());
-            var router = Context.ActorOf(props, $"Client{client.ClientName}Router");
-
+         
             foreach (var portfolioDic in _accountsInPortfolio)
             {
                 var portfolio = portfolioDic.Key.Instance;
@@ -118,11 +125,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 accountActor.Tell(new AskToBeSupervised(command.Portfolio, command.Supervisor));
 
                 if (Int64.Parse(command.AccountNumber) % 1000 == 0)
-                    Console.WriteLine($"Boarding: {DateTime.Now}\t{command.AccountNumber} accounts processed.");
+                    Console.WriteLine($"Boarding: {DateTime.Now}\taccount {command.AccountNumber} processed.");
             }
             catch (Exception e)
             {
-             
                 _log.Error($"[SpinUpAccountActor]: {e.Message} {e.StackTrace}");
                 throw;
             }
@@ -149,7 +155,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                             double.TryParse(line[3], out openningBalance);
 
                             var o = new MaintenanceFee(obligationNumber, openningBalance, ObligationStatus.Active);
-                            
+
                             if (_obligationsInFile.ContainsKey(accountNumber))
                             {
                                 var obligations = _obligationsInFile[accountNumber];
@@ -272,5 +278,25 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             Context.IncrementActorCreated();
         }
+    }
+
+    public class BoardClient
+    {
+        public BoardClient(
+              SimulateBoardingOfAccounts client
+            , string accountsFilePath
+            , string obligationsFilePath
+            , IActorRef boardingRouter)
+        {
+            Client = client;
+            AccountsFilePath = accountsFilePath;
+            ObligationsFilePath = obligationsFilePath;
+            BoardingRouter = boardingRouter;
+        }
+
+        public IActorRef BoardingRouter { get; private set; }
+        public SimulateBoardingOfAccounts Client { get; private set; }
+        public string AccountsFilePath { get; private set; }
+        public string ObligationsFilePath { get; private set; }
     }
 }

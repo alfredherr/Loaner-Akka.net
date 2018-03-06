@@ -41,9 +41,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             /* Commonly used commands */
             Command<TellMeYourStatus>(asking => GetMyStatus());
-            Command<TellMeAboutYou>(me =>
-                Console.WriteLine(
-                    $"About me: I am {Self.Path.Name} Msg: {me.Me} I was last booted up on: {_lastBootedOn}"));
+            Command<BootUp>(me => DoBootUp(me));
+            
             Command<TellMeYourPortfolioStatus>(msg => _log.Debug("[TellMeYourPortfolioStatus]: " + msg.Message));
             Command<string>(noMessage => { });
 
@@ -61,6 +60,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<DeleteMessagesSuccess>(
                 msg => _log.Info($"[DeleteMessagesSuccess]: Successfully cleared log after snapshot ({msg.ToString()})"));
             CommandAny(msg => _log.Error($"[CommandAny]: Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
+        }
+
+        private void DoBootUp(BootUp me)
+        {
+            _log.Info($"About me: I am {Self.Path.Name} Msg: {me} I was last booted up on: {_lastBootedOn}");
+        
+            Self.Tell(new StartPortfolios());
+            
         }
 
 
@@ -145,6 +152,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Monitor();
             var immutPortfolios = _portfolios.Keys.ToList();
             foreach (var portfolio in immutPortfolios)
+            {
                 if (_portfolios[portfolio] == null)
                 {
                     var actor = InstantiateThisPortfolio(portfolio);
@@ -154,6 +162,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 {
                     _portfolios[portfolio].Tell(new StartAccounts());
                 }
+            }
 
             GetMyStatus();
         }
@@ -162,8 +171,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             var tooMany = new Dictionary<string, string>();
             tooMany.Add("sorry", "Too many portfolios to list here");
+
             Sender.Tell(new MySystemStatus($"{_portfolios.Count} portfolio(s) started.",
                 _portfolios.Count > 999 ? tooMany : DictionaryToStringList()));
+            
         }
 
         private void ProcessSupervision(SuperviseThisPortfolio command)

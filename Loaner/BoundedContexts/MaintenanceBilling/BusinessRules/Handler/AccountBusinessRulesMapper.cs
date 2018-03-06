@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Akka.Actor;
 using Akka.Event;
+using Google.Protobuf.Reflection;
 using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Exceptions;
@@ -18,23 +19,30 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 
     public class AccountBusinessRulesMapper : ReceiveActor
     {
-        private AccountBusinessRulesMapper _rulesMapperInstance;
-
+      
         private readonly ILoggingAdapter _logger = Context.GetLogger();
 
         public AccountBusinessRulesMapper()
         {
+            Receive<BootUp>(cmd => DoBootUp(cmd));
+            Receive<ApplyBusinessRules>(cmd => GetAccountBusinessRulesForCommand(cmd));
+            ReceiveAny(msg =>
+                _logger.Error($"[ReceiveAny]: Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
+        }
+        private void DoBootUp(BootUp cmd)
+        {
             Initialize();
-            Receive<GetBusinessRulesToApply>(cmd => GetAccountBusinessRulesForCommand(cmd.ApplyBusinessRules));
+            _logger.Info($"{Self.Path.Name} booting up, Sir.");
         }
 
         private void
             GetAccountBusinessRulesForCommand(ApplyBusinessRules cmd)
         {
-            if (_rulesMapperInstance == null) Initialize();
+             _logger.Info($"[GetAccountBusinessRulesForCommand]: Getting business rules for {cmd.AccountState.AccountNumber}.");
+            if (RulesInFile == null) Initialize();
             try
             {
-                var rules = _rulesMapperInstance.RulesInFile
+                var rules = RulesInFile
                     .Where(ruleMap =>
                         // Look for rules associated to this command              
                             ruleMap.Command.GetType().Name.Equals(cmd.Command.GetType().Name) &&
@@ -55,40 +63,56 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                 //And lastly add the command rule itself
                 rulesFound.Add(new BillingAssessmentRule());
 
-                Sender.Tell(new MappedBusinessRules(cmd, rulesFound));
+                Sender.Tell(new MappedBusinessRules(cmd, rulesFound), cmd.AccountRef);
             }
             catch (Exception e)
             {
-             _logger.Error($"{e.Message} {e.StackTrace}");
+                _logger.Error($"{e.Message} {e.StackTrace}");
                 throw;
             }
         }
 
-        private AccountBusinessRulesMapper(string businessRulesMapFile)
+        private void LoadAccountBusinessRulesMapper(string businessRulesMapFile)
         {
-            RulesInFile = new List<AccountBusinessRuleMapModel>();
-            if (!File.Exists(businessRulesMapFile))
-                throw new FileNotFoundException($"I can't find {businessRulesMapFile}");
+            try
+            {
+                RulesInFile = new List<AccountBusinessRuleMapModel>();
+                if (!File.Exists(businessRulesMapFile))
+                    throw new FileNotFoundException($"I can't find {businessRulesMapFile}");
 
-            ReadInBusinessRules(businessRulesMapFile);
+                ReadInBusinessRules(businessRulesMapFile);
+            }
+            catch (Exception e)
+            {
+                _logger.Error($"{e.Message} {e.StackTrace}");
+                throw;
+            }
         }
 
-        private AccountBusinessRulesMapper(string businessRulesMapFile, List<AccountBusinessRuleMapModel> updatedRules)
+        private void LoadAccountBusinessRulesMapper(string businessRulesMapFile, List<AccountBusinessRuleMapModel> updatedRules)
         {
-            RulesInFile = new List<AccountBusinessRuleMapModel>();
-            if (!File.Exists(businessRulesMapFile))
-                throw new FileNotFoundException($"I can't find {businessRulesMapFile}");
-            WriteOutBusinessRules(businessRulesMapFile, updatedRules);
-            ReadInBusinessRules(businessRulesMapFile);
+            try
+            {
+                RulesInFile = new List<AccountBusinessRuleMapModel>();
+                if (!File.Exists(businessRulesMapFile))
+                    throw new FileNotFoundException($"I can't find {businessRulesMapFile}");
+                WriteOutBusinessRules(businessRulesMapFile, updatedRules);
+                ReadInBusinessRules(businessRulesMapFile);
+            }
+            catch (Exception e)
+            {
+                _logger.Error($"{e.Message} {e.StackTrace}");
+                throw;
+            }
         }
 
-        private List<AccountBusinessRuleMapModel> RulesInFile { get; }
+        private List<AccountBusinessRuleMapModel> RulesInFile { get; set; }
 
         public List<AccountBusinessRuleMapModel> ListAllAccountBusinessRules()
         {
-            if (_rulesMapperInstance == null) Initialize();
+            if (RulesInFile == null) Initialize();
 
-            return _rulesMapperInstance.RulesInFile;
+            return RulesInFile;
         }
 
         public List<AccountBusinessRuleMapModel> UpdateAccountBusinessRules(
@@ -96,7 +120,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         {
             UpdateAndReInitialize(updatedRules);
 
-            return _rulesMapperInstance.RulesInFile;
+            return RulesInFile;
         }
 
         public List<CommandToBusinessRuleModel> GetCommandsToBusinesRules()
@@ -133,7 +157,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.Error($"{e.Message} {e.StackTrace}");
                 throw;
             }
 
@@ -145,11 +169,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             try
             {
                 var filename = BusinessRulesFilename;
-                _rulesMapperInstance = new AccountBusinessRulesMapper(filename, updatedRules);
+                LoadAccountBusinessRulesMapper(filename, updatedRules);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.Error($"{e.Message} {e.StackTrace}");
                 throw;
             }
         }
@@ -159,13 +183,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             try
             {
                 var filename = BusinessRulesFilename;
-                _rulesMapperInstance = new AccountBusinessRulesMapper(filename);
-                Console.WriteLine(
-                    $"[AccountBusinessRulesMapper.Initialize()] BusinessRulesFilename: {BusinessRulesFilename}");
+                LoadAccountBusinessRulesMapper(filename);
+                
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.Error($"{e.Message} {e.StackTrace}");
                 throw;
             }
         }
@@ -207,7 +230,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.Error($"{e.Message} {e.StackTrace}");
                 throw;
             }
         }
@@ -216,10 +239,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         {
             var readText = File.ReadAllLines(businessRulesMapFile);
             var line = 1;
-            Console.WriteLine($"File: {businessRulesMapFile}");
             foreach (var s in readText)
             {
-                Console.WriteLine($"Line#{line++}: {s}");
                 if (s.Trim().StartsWith("#") || s.Trim().Length == 0 || !s.Contains("|"))
                     continue;
 
@@ -250,6 +271,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                     (tokens[1], parametros)
                 ));
             }
+            Console.WriteLine($"File: {businessRulesMapFile} read in.");
+
         }
     }
 }

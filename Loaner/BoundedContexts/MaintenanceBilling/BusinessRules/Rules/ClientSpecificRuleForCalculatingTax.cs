@@ -74,7 +74,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                 new TaxAppliedDuringBilling(
                     AccountState.AccountNumber,
                     AccountState.Obligations.FirstOrDefault(x => x.Value.Status == ObligationStatus.Active).Key,
-                    15.0 / 100 * duesAmount
+                    decimal.Parse(((15.0 / 100) * duesAmount).ToString())
                 )
             };
             _detailsGenerated = "THIS WORKED";

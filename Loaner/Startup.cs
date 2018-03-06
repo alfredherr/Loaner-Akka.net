@@ -75,8 +75,8 @@ namespace Loaner
                     , statsDPrefix
                 ));
 
-            DemoSystemSupervisor.Tell(new TellMeAboutYou("Starting Up"));
-            DemoSystemSupervisor.Tell(new StartPortfolios());
+            DemoSystemSupervisor.Tell(new BootUp("Starting Up"));
+            
         }
 
         private void ConfigureKafkaProducerActors(Config config)

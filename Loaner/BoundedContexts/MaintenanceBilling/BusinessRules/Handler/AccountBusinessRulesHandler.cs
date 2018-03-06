@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Akka.Actor;
 using Akka.Event;
+using Google.Protobuf.WellKnownTypes;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 
@@ -15,14 +16,31 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 
         public AccountBusinessRulesHandler()
         {
+            Receive<BootUp>(cmd => DoBootUp(cmd));
             Receive<ApplyBusinessRules>(command => GetBusinessRulesToApply(command));
             Receive<MappedBusinessRules>(command => DoBusinessLogic(command));
-           
+            ReceiveAny(msg =>
+                _logger.Error($"[ReceiveAny]: Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
+        }
+
+        private void DoBootUp(BootUp cmd)
+        {
+            _logger.Info($"{Self.Path.Name} booting up, Sir.");
         }
 
         private void GetBusinessRulesToApply(ApplyBusinessRules cmd)
         {
-            cmd.AccountBusinessMapperRouter.Tell(cmd);
+            try
+            {
+                cmd.AccountBusinessMapperRouter.Tell(cmd);
+                //_logger.Info($"[GetBusinessRulesToApply]: Getting business rules for {cmd.AccountState.AccountNumber}.");
+                //Sender.Tell($"Done, {Sender.Path.Name}. I sent it.");
+            }
+            catch (Exception e)
+            {
+                _logger.Error($"[GetBusinessRulesToApply]: {e.Message} {e.StackTrace}");
+                throw;
+            }
         }
 
         private void DoBusinessLogic(MappedBusinessRules rules)
@@ -47,7 +65,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                     reglaDeNegocio.SetAccountState(pipedState);
                     reglaDeNegocio.RunRule(rules.ApplyBusinessRules.Command);
 
-                    _logger.Info(
+                    _logger.Debug(
                         $"Found {reglaDeNegocio.GetType().Name} rule for account {rules.ApplyBusinessRules.AccountState.AccountNumber}" +
                         $" and its Success={reglaDeNegocio.RuleAppliedSuccessfuly()}");
 
@@ -68,7 +86,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 
                         resultModel.Success = true;
 
-                        _logger.Info(
+                        _logger.Debug(
                             $"Business Rule {reglaDeNegocio.GetType().Name} applied successfully to account {rules.ApplyBusinessRules.AccountState.AccountNumber}");
                     }
                     else
@@ -78,11 +96,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                         resultModel.RuleProcessedResults.Add(reglaDeNegocio,
                             $"Business Rule Failed Application. {reglaDeNegocio.GetResultDetails()}");
 
-                        _logger.Debug($"Business Rule {reglaDeNegocio.GetType().Name} " +
+                        _logger.Error($"Business Rule {reglaDeNegocio.GetType().Name} " +
                                       $"application failed on account {rules.ApplyBusinessRules.AccountState.AccountNumber} " +
                                       $"due to {reglaDeNegocio.GetResultDetails()}");
 
                         Sender.Tell(resultModel); //we stop processing any further rules.
+                        return;
                     }
                 }
             }

@@ -10,12 +10,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
             _OccurredOn = DateTime.Now;
         }
 
-        public TaxAppliedDuringBilling(double taxAmount) : this()
+        public TaxAppliedDuringBilling(decimal taxAmount) : this()
         {
             TaxAmountApplied = taxAmount;
         }
 
-        public TaxAppliedDuringBilling(string accountNumber, string obligationNumber, double taxAmount,
+        public TaxAppliedDuringBilling(string accountNumber, string obligationNumber, decimal taxAmount,
             string message = "") : this()
         {
             TaxAmountApplied = taxAmount;
@@ -29,7 +29,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.DomainEvents
         public string ObligationNumber { get; }
         private DateTime _OccurredOn { get; }
         private Guid _UniqueGuid { get; }
-        public double TaxAmountApplied { get; }
+        public decimal TaxAmountApplied { get; }
 
         public DateTime OccurredOn()
         {

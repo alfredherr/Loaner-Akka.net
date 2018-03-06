@@ -42,9 +42,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
            
         }
         public void RunRule(BillingAssessment command)
-        {
+        { 
+            
+            var uac = decimal.Compare(AccountState.CurrentBalance, 0) < 0 ? (double) AccountState.CurrentBalance : 0.0;
 
-            var uac = AccountState.CurrentBalance < 0 ? AccountState.CurrentBalance : 0.0;
             if (uac != 0.0)
             {
                 _eventsGenerated = new List<IDomainEvent>

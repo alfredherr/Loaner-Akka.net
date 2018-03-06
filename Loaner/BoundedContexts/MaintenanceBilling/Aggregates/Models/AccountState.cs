@@ -33,7 +33,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 
         private AccountState(
             string accountNumber,
-            double currentBalance,
+            decimal currentBalance,
             AccountStatus accountStatus,
             ImmutableDictionary<string, MaintenanceFee> obligations,
             ImmutableDictionary<string, string> simulation,
@@ -76,7 +76,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
         public double OpeningBalance { get; }
 
         [JsonProperty(Order = 7)]
-        public double CurrentBalance { get; }
+        public decimal CurrentBalance { get; }
 
         [JsonProperty(Order = 8)]
         [JsonConverter(typeof(StringEnumConverter))]
@@ -157,15 +157,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             var trans = new FinancialTransaction(new Tax {Amount = occurred.UacAmountApplied},
                 occurred.UacAmountApplied);
             Obligations[occurred.ObligationNumber]?.PostTransaction(trans);
+            var newBal = CurrentBalance + decimal.Parse((-1 * occurred.UacAmountApplied).ToString());
             var newState = new AccountState(
                 AccountNumber,
-                CurrentBalance + -1 * occurred.UacAmountApplied,
+                newBal,
                 AccountStatus,
                 Obligations,
                 SimulatedFields,
                 AuditLog.Add(new StateLog(
                     "UacAppliedAfterBilling", 
-                    occurred.Message + " Balance After: " + (CurrentBalance + -1 * occurred.UacAmountApplied).ToString("C"), 
+                    $"{occurred.Message} Balance After: {newBal:C}", 
                     occurred.UniqueGuid(),
                     occurred.OccurredOn())),
                 OpeningBalance,
@@ -181,8 +182,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 
         private AccountState ApplyEvent(TaxAppliedDuringBilling occurred)
         {
-            var trans = new FinancialTransaction(new Tax {Amount = occurred.TaxAmountApplied},
-                occurred.TaxAmountApplied);
+            var trans = new FinancialTransaction(new Tax {Amount = (double)occurred.TaxAmountApplied},
+                (double)occurred.TaxAmountApplied);
             Obligations[occurred.ObligationNumber]?.PostTransaction(trans);
             var newState = new AccountState(
                 AccountNumber,
@@ -251,7 +252,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
 
             var trans = new FinancialTransaction(occurred.FinancialBucket, occurred.FinancialBucket.Amount);
             Obligations[occurred.ObligationNumber].PostTransaction(trans);
-            var newBalance = CurrentBalance + occurred.FinancialBucket.Amount;
+            var newBalance = CurrentBalance + decimal.Parse(occurred.FinancialBucket.Amount.ToString());
             var newState = new AccountState(
                 AccountNumber,
                 newBalance,
@@ -289,7 +290,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
             
             return new AccountState(
                 AccountNumber,
-                occurred.CurrentBalance,
+                decimal.Parse(occurred.CurrentBalance.ToString()),
                 AccountStatus,
                 Obligations.Add(adjustmentsObligation.ObligationNumber, adjustmentsObligation),
                 SimulatedFields,
@@ -355,15 +356,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
         {
             var trans = new FinancialTransaction(occurred.FinancialBucket, occurred.Amount);
             Obligations[occurred.ObligationNumber].PostTransaction(trans);
+            decimal newBal = CurrentBalance - decimal.Parse(occurred.Amount.ToString()); 
             return new AccountState(
                 AccountNumber,
-                CurrentBalance - occurred.Amount, //CurrentBalance,
+                newBal,
                 AccountStatus,
                 Obligations,
                 SimulatedFields,
                 AuditLog.Add(new StateLog(
                     "ObligationSettledConcept", 
-                    occurred.Message + " Balance After: " + (CurrentBalance - occurred.Amount).ToString("C"), 
+                    $"{occurred.Message} Balance After: {newBal :C}", 
                     occurred.UniqueGuid(),
                     occurred.OccurredOn()))
                 , OpeningBalance,
@@ -388,7 +390,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                     )
                 ),
                 openingBalance: occurred.OpeningBalance,
-                currentBalance: 0.0, //best to affect currBal explicitly with an event
+                currentBalance: 0, //best to affect currBal explicitly with an event
                 inventory: occurred.Inventory,
                 userName: occurred.UserName,
                 lastPaymentAmount: occurred.LastPaymentAmount,

@@ -79,7 +79,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
             }
 
 
-            var calculatedTaxAmount = taxRate / 100 * duesAmount;
+            var calculatedTaxAmount = (decimal.Round((decimal)(taxRate / 100),2) * (decimal)duesAmount) ;
             var obligationUsed = AccountState.Obligations
                 .FirstOrDefault(x => x.Value.Status == ObligationStatus.Active).Key;
             _eventsGenerated = new List<IDomainEvent>

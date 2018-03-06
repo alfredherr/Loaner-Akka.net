@@ -49,7 +49,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 //            Command<SettleFinancialConcept>(command => ApplyBusinessRules(command));
 //            Command<AssessFinancialConcept>(command => ApplyBusinessRules(command));
             Command<BillingAssessment>(command => ProcessBilling(command));
-            Command<BusinessRuleApplicationResultModel>(model => ApplyBusinessRules(model) );
+            Command<BusinessRuleApplicationResultModel>(model => ApplyBusinessRules(model));
 //            Command<CancelAccount>(command => ApplyBusinessRules(command));
             Command<AskToBeSupervised>(command => SendParentMyState(command));
             Command<PublishAccountStateToKafka>(msg => PublishToKafka(msg));
@@ -66,11 +66,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 Sender.Tell(
                     new MyAccountStatus(
                         $"{Self.Path.Name} I am alive! I was last booted up on {_lastBootedOn.ToString("yyyy-MM-dd hh:mm:ss")}")));
-            Command<TellMeYourInfo>(asking => Sender.Tell(new MyAccountStatus("", (AccountState) _accountState.Clone())));
+            Command<TellMeYourInfo>(
+                asking => Sender.Tell(new MyAccountStatus("", (AccountState) _accountState.Clone())));
 
             Command<DeleteMessagesSuccess>(
-                msg => _log.Debug($"[DeleteMessagesSuccess]: Successfully cleared log after snapshot ({msg.ToString()})"));
-            CommandAny(msg => _log.Error($"[CommandAny]: Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
+                msg => _log.Debug(
+                    $"[DeleteMessagesSuccess]: Successfully cleared log after snapshot ({msg.ToString()})"));
+            CommandAny(msg =>
+                _log.Error($"[CommandAny]: Unhandled message in {Self.Path.Name} from {Sender.Path.Name}. Message:{msg.ToString()}"));
         }
 
 
@@ -104,9 +107,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             var snapshotSeqNr = success.Metadata.SequenceNr;
             // delete all messages from journal and snapshot store before latests confirmed
             // snapshot, we won't need them anymore
-            DeleteMessages(snapshotSeqNr );
+            DeleteMessages(snapshotSeqNr);
             //DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
-            
         }
 
         private void RegisterStartup()
@@ -129,8 +131,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void ProcessBilling(BillingAssessment command)
         {
-
-            if (_accountState.AccountNumber == null)
+            if (_accountState?.AccountNumber == null)
             {
                 _log.Error($"[ProcessBilling]: Actor {Self.Path.Name} is passing an empty account number.");
                 throw new Exception($"[ProcessBilling]: Actor {Self.Path.Name} is passing an empty account number.");
@@ -145,20 +146,19 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
                 var parameters = c.LineItems.Aggregate("",
                     (working, next) => working + ";" + next.Item.Name + "=" + next.Item.Amount);
-                _log.Debug($"[ApplyBusinessRules]: {_accountState.AccountNumber}: " +
-                           $"Command {c.GetType().Name} with {c.LineItems.Count} total billed = {billedAmount} & line items: " +
-                           $"{parameters}");
-
+             
                 var model = new ApplyBusinessRules(
                     client: Self.Path.Parent.Parent.Name,
                     portfolioName: Self.Path.Parent.Name,
                     accountState: (AccountState) _accountState.Clone(),
                     command: command,
                     totalBilledAmount: billedAmount,
-                    accountBusinessMapperRouter: command.AccountBusinessMapperRouter
+                    accountBusinessMapperRouter: command.AccountBusinessMapperRouter,
+                    accountRef: Self
                 );
 
                 command.BusinessRulesHandlingRouter.Tell(model);
+                //_log.Info($"[ProcessBilling]: {response}");
             }
             catch (Exception e)
             {
@@ -173,16 +173,18 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             /* Assuming this is all we have to load for an account, then we can have the account
              * send the supervisor to add it to it's list -- then it can terminate. 
              */
-            command.MyNewParent.Tell(new SuperviseThisAccount(command.Portfolio, Self.Path.Name, _accountState.CurrentBalance));
+            command.MyNewParent.Tell(new SuperviseThisAccount(command.Portfolio, Self.Path.Name,
+                (double) _accountState.CurrentBalance));
 
-            ReportMyState(0, _accountState.CurrentBalance, command.MyNewParent);
+            ReportMyState(0,(double) _accountState.CurrentBalance, command.MyNewParent);
 
             Self.Tell(new CompleteBoardingProcess());
         }
 
         private void CompleteBoardingProcess()
         {
-            Self.Tell(PoisonPill.Instance);
+            //Context.System.Scheduler.ScheduleTellOnce(TimeSpan.FromSeconds(2),Self,PoisonPill.Instance, ActorRefs.NoSender );
+            Self.Tell(PoisonPill.Instance, ActorRefs.NoSender);
         }
 
         private void ApplySnapShot(SnapshotOffer offer)
@@ -246,7 +248,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 lastPaymentDate: command.BoardingModel.LastPaymentDate,
                 lastPaymentAmount: command.BoardingModel.LastPaymentAmount
             ));
-            
+
             if (command.BoardingModel.OpeningBalance != 0.0)
             {
                 events.Add(new AccountCurrentBalanceUpdated(command.AccountNumber,
@@ -272,8 +274,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 			 * Here we can call Business Rules to validate and do whatever.
 			 * Then, based on the outcome generated events.
 			 * In this example, we are simply going to accept it and updated our state.
-			 */ 
-            
+			 */
+
             _log.Debug(
                 $"[ApplyBusinessRules]: There were {resultModel.GeneratedEvents.Count} events. And success={resultModel.Success}");
 
@@ -292,7 +294,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                             $"[ApplyBusinessRules]: Persisted event {@event.GetType().Name} on account {_accountState.AccountNumber}" +
                             $" account balance after is {_accountState.CurrentBalance:C} ");
 
-                        ReportMyState(resultModel.TotalBilledAmount, _accountState.CurrentBalance);
+                        ReportMyState(resultModel.TotalBilledAmount, (double) _accountState.CurrentBalance);
 
                         //Report current state to Kafka
                         Self.Tell(new PublishAccountStateToKafka());
