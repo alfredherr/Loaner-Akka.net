@@ -13,21 +13,21 @@
     }
 }            
  
-akka.actor.debug.lifecycle = on
-akka.actor.debug.unhandled = on
+akka.actor.debug.lifecycle = off
+akka.actor.debug.unhandled = off
 
  
-my-boarding-dispatcher {
-    type = TaskDispatcher
-    throughput = 10000
+my-dispatcher {
+
+    type = Dispatcher
+    throughput = 2000
+    throughput-deadline-time = 0ms
 }
+
 akka.actor.deployment {
  
-	/ClientRaintreeRouter {
-        dispatcher = my-boarding-dispatcher
-    }
-	/ClientRAINTREE {
-        dispatcher = my-boarding-dispatcher
+	/VILLADELMAR {
+        dispatcher = my-dispatcher
     }
 }
 
