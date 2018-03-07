@@ -372,7 +372,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             var accountActor = Context.ActorOf(Props.Create<AccountActor>(), account.AccountNumber);
 
-            account.AccountActorRef = accountActor; // is this neede?
+            account.AccountActorRef = accountActor; // is this needed?
 
             _log.Debug($"Instantiated account {accountActor.Path.Name}");
 

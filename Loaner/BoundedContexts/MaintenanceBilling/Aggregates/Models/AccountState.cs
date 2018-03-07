@@ -371,8 +371,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                 , OpeningBalance,
                 Inventroy,
                 UserName,
-                LastPaymentAmount,
-                LastPaymentDate);
+                occurred.Amount,
+                DateTime.Today);
         }
 
         private AccountState ApplyEvent(AccountCreated occurred)
