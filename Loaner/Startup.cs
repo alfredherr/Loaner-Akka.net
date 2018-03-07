@@ -170,7 +170,9 @@ namespace Loaner
         public void ConfigureServices(IServiceCollection services)
         {
             // Add Access-Control-Allow-Origin so that other sites can embedd content from this site
+            services.AddLogging();
             services.AddCors();
+
         }
 
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
@@ -178,16 +180,35 @@ namespace Loaner
             var appConfig = new AppConfiguration();
             _config.Bind(appConfig);
 
+            app.UseCors(builder =>
+            {
+                Console.WriteLine($"[DEBUG]: I allow any CORS.");
+
+                builder
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials();
+            });
+            
+//            // Shows UseCors with CorsPolicyBuilder.
+//            app.UseCors(builder =>
+//            {
+//             Console.WriteLine($"[DEBUG]: I allow CORS from http://docker09");
+//                builder.WithOrigins("http://docker09")
+//                    .AllowAnyHeader()
+//                    .AllowAnyMethod()
+//                    .AllowCredentials();
+//            });
+
+      
+            
             app.UseOwin(x => x.UseNancy(opt => opt.Bootstrapper = new DemoBootstrapper(appConfig)));
 
             //add NLog to ASP.NET Core
             loggerFactory.AddNLog();
 
-            app.UseCors(builder => builder
-                .AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials());
+
         }
 
 
