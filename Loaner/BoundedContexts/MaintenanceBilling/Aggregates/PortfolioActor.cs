@@ -212,16 +212,22 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             {
                 if (Mapper == null)
                 {
-                    Mapper = Context.ActorOf(Props.Create<AccountBusinessRulesMapper>(),
-                        $"{Self.Path.Name}AccountBusinessRulesMapper");
+                    var mapperProps = new RoundRobinPool(Environment.ProcessorCount * 3).Props(Props.Create<AccountBusinessRulesMapper>());
+                    Mapper = Context.ActorOf(mapperProps, $"{Self.Path.Name}AccountBusinessRulesMapper");
+
+//                    Mapper = Context.ActorOf(Props.Create<AccountBusinessRulesMapper>(),
+//                        $"{Self.Path.Name}AccountBusinessRulesMapper");
 
                     Mapper.Tell(new BootUp("Get up!"));
                 }
 
                 if (Handler == null)
                 {
-                    Handler = Context.ActorOf(Props.Create<AccountBusinessRulesHandler>(),
-                        $"{Self.Path.Name}AccountBusinessRulesHandler");
+                    var handlerProps = new RoundRobinPool(Environment.ProcessorCount * 3).Props(Props.Create<AccountBusinessRulesHandler>());
+                    Mapper = Context.ActorOf(handlerProps ,$"{Self.Path.Name}AccountBusinessRulesHandler");
+
+//                    Handler = Context.ActorOf(Props.Create<AccountBusinessRulesHandler>(),
+//                        $"{Self.Path.Name}AccountBusinessRulesHandler");
 
                     Handler.Tell(new BootUp("Get up!"));
                 }
