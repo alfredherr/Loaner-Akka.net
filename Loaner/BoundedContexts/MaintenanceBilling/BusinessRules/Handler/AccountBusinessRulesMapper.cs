@@ -38,7 +38,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         private void
             GetAccountBusinessRulesForCommand(ApplyBusinessRules cmd)
         {
-             _logger.Info($"[GetAccountBusinessRulesForCommand]: Getting business rules for {cmd.AccountState.AccountNumber}.");
+             //_logger.Info($"[GetAccountBusinessRulesForCommand]: Getting business rules for {cmd.AccountState.AccountNumber}.");
             if (RulesInFile == null) Initialize();
             try
             {
