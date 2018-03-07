@@ -144,10 +144,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             _log.Info($"[PurgeOldSnapShots]: Portfolio {Self.Path.Name} got SaveSnapshotSuccess " +
                       $"at SequenceNr {success.Metadata.SequenceNr} Current SequenceNr is {LastSequenceNr}.");
 
-            var snapshotSeqNr = success.Metadata.SequenceNr;
+            //var snapshotSeqNr = success.Metadata.SequenceNr;
             // delete all messages from journal and snapshot store before latests confirmed
             // snapshot, we won't need them anymore
-            DeleteMessages(snapshotSeqNr);
+            //DeleteMessages(snapshotSeqNr);
             //DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
         }
 
@@ -170,14 +170,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             var newBal = _porfolioState.UpdateBalance();
 
 
-            if (decimal.Compare(lastBal, newBal) != 0)
-            {
-                var @event =
-                    new AccountUnderSupervisionBalanceChanged(account.AccountNumber,
-                        account.BalanceAfterLastTransaction);
-                Persist(@event, s => { ApplySnapShotStrategy(); }
-                );
-            }
+//            if (decimal.Compare(lastBal, newBal) != 0)
+//            {
+//                var @event =
+//                    new AccountUnderSupervisionBalanceChanged(account.AccountNumber,
+//                        account.BalanceAfterLastTransaction);
+//                Persist(@event, s => { ApplySnapShotStrategy(); }
+//                );
+//            }
 
             //ApplySnapShotStrategy();// need to convert it into an event which is stored on the portfolio state
             Self.Tell(new PublishPortfolioStateToKafka());
