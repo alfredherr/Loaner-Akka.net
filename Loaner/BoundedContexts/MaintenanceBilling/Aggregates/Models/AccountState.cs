@@ -368,11 +368,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models
                     $"{occurred.Message} Balance After: {newBal :C}", 
                     occurred.UniqueGuid(),
                     occurred.OccurredOn()))
-                , OpeningBalance,
-                Inventroy,
-                UserName,
-                occurred.Amount,
-                DateTime.Today);
+                , OpeningBalance
+                , Inventroy
+                , UserName
+                , lastPaymentAmount: occurred.Amount
+                , lastPaymentDate: DateTime.Today);
         }
 
         private AccountState ApplyEvent(AccountCreated occurred)

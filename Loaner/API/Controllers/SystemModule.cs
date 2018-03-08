@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -39,16 +40,32 @@ namespace Loaner.API.Controllers {
                 });
                 return Response.AsJson (answer);
             });
-            Get ("/businessrules",
-                args => { return Response.AsJson (new AccountBusinessRulesMapper ().GetCommandsToBusinesRules ()); });
+            Get("/businessrules", async args =>
+            {
+                var answer = new List<CommandToBusinessRuleModel>();
+                await Task.Run(() =>
+                {
+                    answer = LoanerActors.AccountBusinessRulesMapperRouter
+                        .Ask<List<CommandToBusinessRuleModel>>(new GetCommandsToBusinesRules(),
+                            TimeSpan.FromSeconds(30))
+                        .Result;
+                });
+                return Response.AsJson(answer);
+            });
 
-            Post ("/businessrules", args => {
+            Post ("/businessrules", async args => {
                 var reader = new StreamReader (Request.Body);
                 var text = reader.ReadToEnd ();
-                var newRules = JsonConvert.DeserializeObject<AccountBusinessRuleMapModel[]> (text);
+                AccountBusinessRuleMapModel[] newRules = JsonConvert.DeserializeObject<AccountBusinessRuleMapModel[]> (text);
 
-                var proof = new AccountBusinessRulesMapper ().UpdateAccountBusinessRules (newRules.ToList ());
-
+                var proof = new List<AccountBusinessRuleMapModel>();
+                await Task.Run(() =>
+                {
+                    proof = LoanerActors.AccountBusinessRulesMapperRouter
+                        .Ask<List<AccountBusinessRuleMapModel>>(new UpdateAccountBusinessRules(newRules.ToList() ),
+                            TimeSpan.FromSeconds(30))
+                        .Result;
+                });
                 return new BusinessRulesMapModel { Message = $"Info as of: {DateTime.Now}", RulesMap = proof };
             });
 

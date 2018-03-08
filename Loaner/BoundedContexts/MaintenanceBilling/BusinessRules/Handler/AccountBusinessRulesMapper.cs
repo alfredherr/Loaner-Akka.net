@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Akka.Actor;
 using Akka.Event;
+using Akka.Routing;
 using Google.Protobuf.Reflection;
 using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
@@ -26,6 +27,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         {
             Receive<BootUp>(cmd => DoBootUp(cmd));
             Receive<ApplyBusinessRules>(cmd => GetAccountBusinessRulesForCommand(cmd));
+            Receive<GetCommandsToBusinesRules>(cmd => GetCommandsToBusinesRules() );
+            Receive<UpdateAccountBusinessRules>(cmd => UpdateAccountBusinessRules(cmd.UpdatedRules ));
             ReceiveAny(msg =>
                 _logger.Error($"[ReceiveAny]: Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
@@ -33,6 +36,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         {
             Initialize();
             _logger.Info($"{Self.Path.Name} booting up, Sir.");
+            Console.WriteLine($"Booting up AccountBusinessRulesMapper");
+           
         }
 
         private void
@@ -63,7 +68,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                 //And lastly add the command rule itself
                 rulesFound.Add(new BillingAssessmentRule());
 
-                Sender.Tell(new MappedBusinessRules(cmd, rulesFound), cmd.AccountRef);
+                AccountBusinessRulesHandlerRouter.Tell(
+                    new MappedBusinessRules(cmd, rulesFound.ToList())
+                );
+                
             }
             catch (Exception e)
             {
@@ -115,15 +123,17 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             return RulesInFile;
         }
 
-        public List<AccountBusinessRuleMapModel> UpdateAccountBusinessRules(
+        private void UpdateAccountBusinessRules(
             List<AccountBusinessRuleMapModel> updatedRules)
         {
+            Console.WriteLine($"[UpdateAccountBusinessRules] called with {updatedRules.Count} rules.");
+
             UpdateAndReInitialize(updatedRules);
 
-            return RulesInFile;
+            Sender.Tell(RulesInFile);
         }
 
-        public List<CommandToBusinessRuleModel> GetCommandsToBusinesRules()
+        public void GetCommandsToBusinesRules()
         {
             var commands = new List<CommandToBusinessRuleModel>();
 
@@ -160,8 +170,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                 _logger.Error($"{e.Message} {e.StackTrace}");
                 throw;
             }
+            
+            Console.WriteLine($"[GetCommandsToBusinesRules] called. Returning with {commands.Count} rules");
 
-            return commands;
+            Sender.Tell(commands);
         }
 
         private void UpdateAndReInitialize(List<AccountBusinessRuleMapModel> updatedRules)

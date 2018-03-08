@@ -5,6 +5,7 @@ using Akka.Actor;
 using Akka.Event;
 using Akka.Monitoring;
 using Akka.Persistence;
+using Akka.Routing;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
@@ -118,16 +119,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             var kafkaAccountModel = new AccountStateViewModel
             (
-                _accountState.AccountNumber,
-                _accountState.UserName,
-                Self.Path.Parent.Name,
-                (decimal) _accountState.CurrentBalance,
-                _accountState.AccountStatus,
-                DateTime.Now,
-                _accountState.LastPaymentDate,
-                (decimal) _accountState.LastPaymentAmount,
-                DateTime.Now.Subtract(_accountState.LastPaymentDate).Days,
-                _accountState.Inventroy
+                accountNumber: _accountState.AccountNumber,
+                userName: _accountState.UserName,
+                portfolioName: Self.Path.Parent.Name,
+                currentBalance: _accountState.CurrentBalance,
+                accountStatus: _accountState.AccountStatus,
+                asOfDate: DateTime.Now,
+                lastPaymentDate: _accountState.LastPaymentDate,
+                lastPaymentAmount: (decimal) _accountState.LastPaymentAmount,
+                daysDelinquent: DateTime.Now.Subtract(_accountState.LastPaymentDate).Days,
+                accountInventory: _accountState.Inventroy
             );
 
             AccountStatePublisherActor.Tell(new Publish(kafkaAccountModel.AccountNumber, kafkaAccountModel));
@@ -181,18 +182,18 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
                 var parameters = c.LineItems.Aggregate("",
                     (working, next) => working + ";" + next.Item.Name + "=" + next.Item.Amount);
-             
-                var model = new ApplyBusinessRules(
-                    client: Self.Path.Parent.Parent.Name,
-                    portfolioName: Self.Path.Parent.Name,
-                    accountState: (AccountState) _accountState.Clone(),
-                    command: command,
-                    totalBilledAmount: billedAmount,
-                    accountBusinessMapperRouter: command.AccountBusinessMapperRouter,
-                    accountRef: Self
-                );
 
-                command.BusinessRulesHandlingRouter.Tell(model);
+                var model =
+                    new ApplyBusinessRules(
+                        client: Self.Path.Parent.Parent.Name,
+                        portfolioName: Self.Path.Parent.Name,
+                        accountState: (AccountState) _accountState.Clone(),
+                        command: command,
+                        totalBilledAmount: billedAmount,
+                        accountRef: Self
+                    );
+
+                command.AccountBusinessMapperRouter.Tell(model);
                 //_log.Info($"[ProcessBilling]: {response}");
             }
             catch (Exception e)
@@ -208,8 +209,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             /* Assuming this is all we have to load for an account, then we can have the account
              * send the supervisor to add it to it's list -- then it can terminate. 
              */
-            command.MyNewParent.Tell(new SuperviseThisAccount(command.Portfolio, Self.Path.Name,
-                (double) _accountState.CurrentBalance));
+            command.MyNewParent.Tell(new SuperviseThisAccount(
+                command.Portfolio
+                , Self.Path.Name
+                , (double) _accountState.CurrentBalance)
+            );
 
             ReportMyState(0,(double) _accountState.CurrentBalance, command.MyNewParent);
 

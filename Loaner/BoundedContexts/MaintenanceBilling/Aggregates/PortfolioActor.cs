@@ -40,7 +40,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
              
             /*** recovery section **/
             Recover<SnapshotOffer>(offer => ProcessSnapshot(offer));
-            Recover<AccountAddedToSupervision>(command => AddAccountToSupervision(command));
+//            Recover<AccountAddedToSupervision>(command => AddAccountToSupervision(command));
             Recover<AccountUnderSupervisionBalanceChanged>(cmd => UpdateAccountUnderSupervisionBalance(cmd));
             /** Core Commands **/
             Command<SuperviseThisAccount>(command => ProcessSupervision(command));
@@ -170,16 +170,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             var newBal = _porfolioState.UpdateBalance();
 
 
-//            if (decimal.Compare(lastBal, newBal) != 0)
-//            {
-//                var @event =
-//                    new AccountUnderSupervisionBalanceChanged(account.AccountNumber,
-//                        account.BalanceAfterLastTransaction);
-//                Persist(@event, s => { ApplySnapShotStrategy(); }
-//                );
-//            }
-
-            //ApplySnapShotStrategy();// need to convert it into an event which is stored on the portfolio state
+            var @event =
+                new AccountUnderSupervisionBalanceChanged(
+                    account.AccountNumber
+                    , account.BalanceAfterLastTransaction
+                );
+            
+            Persist(@event, s => ApplySnapShotStrategy() );
+            
             Self.Tell(new PublishPortfolioStateToKafka());
         }
 
@@ -198,10 +196,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             _porfolioState.LastBootedOn = DateTime.Now;
         }
-
-        private IActorRef Mapper { get; set; }
-        private IActorRef Handler { get; set; }
-        
+ 
         private void AssessAllAccounts(AssessWholePortfolio cmd)
         {
             Monitor();
@@ -210,35 +205,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 $"Billing Items: {cmd.Items.Aggregate("", (acc, next) => acc + " " + next.Item.Name + " " + next.Item.Amount)}");
             try
             {
-                if (Mapper == null)
-                {
-                    var mapperProps = new RoundRobinPool(Environment.ProcessorCount * 3).Props(Props.Create<AccountBusinessRulesMapper>());
-                    Mapper = Context.ActorOf(mapperProps, $"{Self.Path.Name}AccountBusinessRulesMapper");
-
-//                    Mapper = Context.ActorOf(Props.Create<AccountBusinessRulesMapper>(),
-//                        $"{Self.Path.Name}AccountBusinessRulesMapper");
-
-                    Mapper.Tell(new BootUp("Get up!"));
-                }
-
-                if (Handler == null)
-                {
-                    var handlerProps = new RoundRobinPool(Environment.ProcessorCount * 3).Props(Props.Create<AccountBusinessRulesHandler>());
-                    Mapper = Context.ActorOf(handlerProps ,$"{Self.Path.Name}AccountBusinessRulesHandler");
-
-//                    Handler = Context.ActorOf(Props.Create<AccountBusinessRulesHandler>(),
-//                        $"{Self.Path.Name}AccountBusinessRulesHandler");
-
-                    Handler.Tell(new BootUp("Get up!"));
-                }
-
+                 
                 foreach (var account in _porfolioState.SupervizedAccounts?.Values.ToList())
                 {
                     var bill = new BillingAssessment(
                         accountNumber: account.AccountNumber
                         , lineItems: cmd.Items
-                        , businessRulesHandlingRouter: Handler
-                        , businessRulesMapperRouter: Mapper);
+                        , businessRulesHandlingRouter: AccountBusinessRulesHandlerRouter
+                        , businessRulesMapperRouter: AccountBusinessRulesMapperRouter);
                     account.AccountActorRef.Tell(bill);
                     //_log.Info($"[AssessAllAccounts]: Just told account {account.AccountNumber} to run assessment.");
                 }
@@ -300,10 +274,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             var immutAccounts = _porfolioState.SupervizedAccounts.Values.ToImmutableList();
 
             foreach (var account in immutAccounts)
-                if (account.AccountActorRef == null)
+            {
+                if (account.AccountActorRef == null) // Since accounts algo get instantiated when portfolio starts up/recovers
+                {
                     account.AccountActorRef = InstantiateThisAccount(account);
-                else
-                    _log.Warning($"skipped account {account}, already instantiated.");
+                }
+            }
             Sender.Tell(
                 new TellMeYourPortfolioStatus(
                     $"{_porfolioState.SupervizedAccounts.Count} accounts. I was last booted up on: {_porfolioState.LastBootedOn}",
@@ -332,7 +308,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Monitor();
 
             var account = new AccountUnderSupervision(command.AccountNumber, command.CurrentAccountBalance);
-            var @event = new AccountAddedToSupervision(command.AccountNumber, (decimal) command.CurrentAccountBalance);
+            var @event  = new AccountAddedToSupervision(command.AccountNumber, (decimal) command.CurrentAccountBalance);
             Persist(@event, s =>
             {
                 account.AccountActorRef = InstantiateThisAccount(account);
@@ -343,25 +319,25 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             });
         }
 
-        private void AddAccountToSupervision(AccountAddedToSupervision account)
-        {
-            RecoveryCounter();
-            if (account == null) throw new Exception("Why is this blank?");
-
-            if (AccountExistInState(account.AccountNumber))
-            {
-                _log.Debug($"Supervisor already has {account.AccountNumber} in state. No action taken");
-                return;
-            }
-
-            var newAccount = new AccountUnderSupervision(account.AccountNumber, 0);
-            newAccount.AccountActorRef = InstantiateThisAccount(newAccount);
-            _porfolioState.SupervizedAccounts.AddOrSet(account.AccountNumber, newAccount);
-
-            // TODO probably will have to ask the account for some more data, like curr bal, etc.
-
-            _log.Debug($"Replayed event on {newAccount.AccountNumber}");
-        }
+//        private void AddAccountToSupervision(AccountAddedToSupervision account)
+//        {
+//            RecoveryCounter();
+//            if (account == null) throw new Exception("Why is this blank?");
+//
+//            if (AccountExistInState(account.AccountNumber))
+//            {
+//                _log.Debug($"Supervisor already has {account.AccountNumber} in state. No action taken");
+//                return;
+//            }
+//
+//            var newAccount = new AccountUnderSupervision(account.AccountNumber, 0);
+//            newAccount.AccountActorRef = InstantiateThisAccount(newAccount);
+//            _porfolioState.SupervizedAccounts.AddOrSet(account.AccountNumber, newAccount);
+//
+//            // TODO probably will have to ask the account for some more data, like curr bal, etc.
+//
+//            _log.Debug($"Replayed event on {newAccount.AccountNumber}");
+//        }
 
         private bool AccountExistInState(string accountNumber)
         {

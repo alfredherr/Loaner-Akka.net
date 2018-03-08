@@ -11,14 +11,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
     public class ApplyBusinessRules : ICloneable
     {
         public ApplyBusinessRules(double totalBilledAmount, string client, string portfolioName,
-            AccountState accountState, BillingAssessment command, IActorRef accountBusinessMapperRouter, IActorRef accountRef)
+            AccountState accountState, BillingAssessment command, IActorRef accountRef)
         {
             TotalBilledAmount = totalBilledAmount;
             Client = client;
             PortfolioName = portfolioName;
             AccountState = accountState;
             Command = command;
-            AccountBusinessMapperRouter = accountBusinessMapperRouter;
             AccountRef = accountRef;
         }
 
@@ -27,7 +26,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         public string PortfolioName { get; private set; }
         public AccountState AccountState { get; private set; }
         public BillingAssessment Command { get; set; }
-        public IActorRef AccountBusinessMapperRouter { get; private set; }
+       
         public IActorRef AccountRef { get; private set; }
 
         private ApplyBusinessRules(ApplyBusinessRules abr)
@@ -37,7 +36,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             PortfolioName = abr.PortfolioName;
             AccountState = abr.AccountState;
             Command = abr.Command;
-            AccountBusinessMapperRouter = abr.AccountBusinessMapperRouter;
             AccountRef = abr.AccountRef;
         }
 
@@ -49,7 +47,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                 $"PortfolioName {PortfolioName } \n" +
                 $"AccountState {AccountState} \n" +
                 $"Command {Command} \n" +
-                $"AccountBusinessMapperRouter {AccountBusinessMapperRouter}\n" +
                 $"AccountRef {AccountRef.Path.Name}";
         }
 

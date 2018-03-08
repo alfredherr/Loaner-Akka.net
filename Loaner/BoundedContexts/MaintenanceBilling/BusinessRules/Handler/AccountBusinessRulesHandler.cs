@@ -17,8 +17,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         public AccountBusinessRulesHandler()
         {
             Receive<BootUp>(cmd => DoBootUp(cmd));
-            Receive<ApplyBusinessRules>(command => GetBusinessRulesToApply(command));
+
             Receive<MappedBusinessRules>(command => DoBusinessLogic(command));
+
             ReceiveAny(msg =>
                 _logger.Error($"[ReceiveAny]: Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
@@ -28,20 +29,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             _logger.Info($"{Self.Path.Name} booting up, Sir.");
         }
 
-        private void GetBusinessRulesToApply(ApplyBusinessRules cmd)
-        {
-            try
-            {
-                cmd.AccountBusinessMapperRouter.Tell(cmd);
-                //_logger.Info($"[GetBusinessRulesToApply]: Getting business rules for {cmd.AccountState.AccountNumber}.");
-                //Sender.Tell($"Done, {Sender.Path.Name}. I sent it.");
-            }
-            catch (Exception e)
-            {
-                _logger.Error($"[GetBusinessRulesToApply]: {e.Message} {e.StackTrace}");
-                throw;
-            }
-        }
 
         private void DoBusinessLogic(MappedBusinessRules rules)
         {
@@ -100,7 +87,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                                       $"application failed on account {rules.ApplyBusinessRules.AccountState.AccountNumber} " +
                                       $"due to {reglaDeNegocio.GetResultDetails()}");
 
-                        Sender.Tell(resultModel); //we stop processing any further rules.
+                        rules.ApplyBusinessRules.AccountRef.Tell(resultModel); //we stop processing any further rules.
                         return;
                     }
                 }
@@ -115,7 +102,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             // pass the info to the rule and call rule
             // create event of result of calling rule & apply event to state
             // return new state
-            Sender.Tell(resultModel);
+            rules.ApplyBusinessRules.AccountRef.Tell(resultModel);
         }
     }
 }

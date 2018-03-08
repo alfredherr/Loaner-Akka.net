@@ -29,10 +29,13 @@ namespace Loaner.ActorManagement
 
         public static string CommandsToRulesFilename;
         public static string BusinessRulesFilename;
+        
+        public static IActorRef AccountBusinessRulesMapperRouter = ActorRefs.Nobody;
+        public static IActorRef AccountBusinessRulesHandlerRouter = ActorRefs.Nobody;
     }
 
-    public class Test
-    {
-        public FileSnapshotStore3 store { get; set; }
-    }
+//    public class Test
+//    {
+//        public FileSnapshotStore3 store { get; set; }
+//    }
 }

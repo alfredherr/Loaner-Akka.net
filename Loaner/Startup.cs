@@ -73,8 +73,6 @@ namespace Loaner
             Console.WriteLine($"(StatsD) Port:   {statsDPort}");
             Console.WriteLine($"(StatsD) Prefix: {statsDPrefix}");
 
-            Console.WriteLine($"(Business Rules) BusinessRulesFilename: {BusinessRulesFilename}");
-            Console.WriteLine($"(Business Rules) CommandsToRulesFilename: {CommandsToRulesFilename}");
 
             ActorMonitoringExtension.RegisterMonitor(DemoActorSystem,
                 new ActorStatsDMonitor(statsDServer
@@ -83,6 +81,19 @@ namespace Loaner
                 ));
 
             DemoSystemSupervisor.Tell(new BootUp("Starting Up"));
+
+            Console.WriteLine($"(Business Rules) BusinessRulesFilename: {BusinessRulesFilename}");
+            Console.WriteLine($"(Business Rules) CommandsToRulesFilename: {CommandsToRulesFilename}");
+
+
+            AccountBusinessRulesMapperRouter = DemoActorSystem.ActorOf(Props.Create<AccountBusinessRulesMapper>(), "AccountBusinessRulesMapperRouter");
+            AccountBusinessRulesMapperRouter.Tell(new BootUp("Get up!"));
+            Console.WriteLine($"(Business Rules) AccountBusinessRulesMapperRouter spun up");
+            
+            AccountBusinessRulesHandlerRouter = DemoActorSystem.ActorOf(Props.Create<AccountBusinessRulesHandler>(),"AccountBusinessRulesHandlerRouter");
+            AccountBusinessRulesHandlerRouter.Tell(new BootUp("Get up!"));
+            Console.WriteLine($"(Business Rules) AccountBusinessRulesHandlerRouter spun up");
+
         }
 
         private void ConfigureKafkaProducerActors(Config config)
