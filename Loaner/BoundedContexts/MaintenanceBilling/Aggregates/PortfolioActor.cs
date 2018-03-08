@@ -178,7 +178,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             
             Persist(@event, s => ApplySnapShotStrategy() );
             
-            Self.Tell(new PublishPortfolioStateToKafka());
+            //Self.Tell(new PublishPortfolioStateToKafka());
         }
 
         private void UpdateAccountUnderSupervisionBalance(AccountUnderSupervisionBalanceChanged cmd)
@@ -243,9 +243,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
                 TimeSpan.FromSeconds(10), Self, new ReportPortfolioStateToParent(), ActorRefs.NoSender);
-//
-//            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
-//                TimeSpan.FromSeconds(10), Self, new ReportMailboxSize(), ActorRefs.NoSender);
+
+            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
+                TimeSpan.FromSeconds(30), Self, new PublishPortfolioStateToKafka(), ActorRefs.NoSender);
         }
 
         private void Monitor()
@@ -314,7 +314,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 account.AccountActorRef = InstantiateThisAccount(account);
                 _porfolioState.SupervizedAccounts.AddOrSet(command.AccountNumber, account);
                 ApplySnapShotStrategy();
-                Self.Tell(new PublishPortfolioStateToKafka());
+                //Self.Tell(new PublishPortfolioStateToKafka());
                 account.AccountActorRef.Tell(new PublishAccountStateToKafka());
             });
         }
