@@ -38,7 +38,7 @@ mkdir /demo/Obligations
 ```
 And use the perl script to generate new test accounts (120k in one portfolio, 10k in the other)
 ```shell
-$> GenerateSampleData.pl 130000 120000
+GenerateSampleData.pl 130000 120000
 ```
 ## Step 4
 In the project root directory (Demo) run the following script (which builds the container and runs it)
