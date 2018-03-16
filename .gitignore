@@ -1,4 +1,6 @@
 
+*.pem
+*.pfx
 demo/
 !**/packages/build/
 !*.[Cc]ache/
