@@ -17,30 +17,53 @@ Here is the list of pending [TODOs](TODO.md)
 ![alt text](https://github.com/alfredherr/Demo/blob/master/Akka%20POC.png "Diagram")
 
 
-## Running It
+## Running It Locally
+## Step 1
+Default config assumes you will be running the container mapped to /demo (on Mac or Linux).  
 ```bash
-cd AkkaNetPoC/ 
-dotnet run --project Loaner
-```
-## To run it in a cluster use Lighthouse
-```bash
-cd AkkaNetPoC/ 
-dotnet run --project Lighthouse.NetCoreApp
- ```
+mkdir /demo && chmod a+rw /demo
+``` 
+ If running on Windows, update the config file  Loaner/Configuration/HOCONConfiguration.hocon to reflect where you want to map to file system.
 
-## Setting up Monitoring (Locally)
+## Step 2
+Copy the following files into /demo dir.
+  1) Loaner/BoundedContexts/MaintenanceBilling/BusinessRules/BusinessRulesMap.txt
+  2) Loaner/BoundedContexts/MaintenanceBilling/BusinessRules/CommandToBusinessRuleMap.txt
+  3) Loaner/tools/bill_VILLADELMAR.sh
+  4) Loaner/tools/board.sh
+## Step 3
+Create an 'Obligations' directory in /demo 
+```bash
+mkdir /demo/Obligations
+```
+And use the perl script to generate new test accounts (120k in one portfolio, 10k in the other)
+```shell
+$> GenerateSampleData.pl 130000 120000
+```
+## Step 4
+In the project root directory (Demo) run the following script (which build the container and runs it)
+```bash
+devrun.sh
+```
+## Step 5
+Once the container is running, run ```board.sh``` in the /demo directory to start loading the sample accounts.
+
+# Postman Tests
+You can use [Postman](https://www.getpostman.com) (available in the *Tests* directory) to kick off the loading of accounts as well as to kick off a billing.
+
+## (Optional) Setting up Monitoring (Locally)
 ```bash
 docker run -d --name=grafana  --restart=always -p 3000:3000 -e "GF_SERVER_ROOT_URL=http://localhost" -e "GF_SECURITY_ADMIN_PASSWORD=secret"  grafana/grafana
 docker run -d --name=graphite --restart=always -p 80:80 -p 2003-2004:2003-2004 -p 2023-2024:2023-2024 -p 8125:8125/udp -p 8126:8126 hopsoft/graphite-statsd
 ```
 or just run:
 ```bash
-runMonitoring.sh
+Loaner/tools/runMonitoring.sh
 ```
 
 
 # To load new accounts
-POST to this endpoint: [http://localhost:5000/api/system/simulation](http://localhost:5000/api/system/simulation)
+POST to this endpoint: [http://localhost/api/system/simulation](http://localhost/api/system/simulation)
 
 Here is the model (note the path is relative to the source directory ‘Loaner’): 
 ```json
@@ -51,13 +74,9 @@ Here is the model (note the path is relative to the source directory ‘Loaner�
 }
 ```
 
-Use the perl script to generate new accounts 
-```shell
-$> GenerateSampleData.pl <Total_#_of_Records> <#_of_Records_Per_Portfolio>
-```
 
 # To get an undecorated list of endpoints on the service
-Simply open (GET) the root url: [http://localhost:5000](http://localhost:5000)
+Simply open (GET) the root url: [http://localhost](http://localhost)
 
 You will see the following: 
 
@@ -136,7 +155,7 @@ You will see the following:
     </body>
 
 # To load/run all the actors
-GET the following endpoint: [http://localhost:5000/api/system/run](http://localhost:5000/api/system/run)
+GET the following endpoint: [http://localhost/api/system/run](http://localhost/api/system/run)
 
 This is also how you can get the list of all portfolios, the model looks like this: 
 ```JSOn
@@ -153,7 +172,7 @@ This is also how you can get the list of all portfolios, the model looks like th
 ```
 
 # To get a list of accounts in a portfolio 
-GET this endpoint: [http://localhost:5000/api/portfolio/PortfolioUPD/](http://localhost:5000/api/portfolio/PortfolioUPD/)
+GET this endpoint: [http://localhost/api/portfolio/PortfolioUPD/](http://localhost/api/portfolio/PortfolioUPD/)
 
 This is what you’ll see ( I think I limit to 10,000): 
 ```JSOn
@@ -183,7 +202,7 @@ This is what you’ll see ( I think I limit to 10,000):
 ```
 
 # To get a list of possible commands to run for billing and the list of possible business rules 
-GET to this endpint: [http://localhost:5000/api/system/businessrules](http://localhost:5000/api/system/businessrules)
+GET to this endpint: [http://localhost/api/system/businessrules](http://localhost/api/system/businessrules)
 
 Parameters are key/value pairs. If the rule has parameters, they are listed with the key name and they datatype/description of accetable values to set. : 
 ```json
@@ -235,7 +254,7 @@ Parameters are key/value pairs. If the rule has parameters, they are listed with
 ]
 ```
 # To create associations between business rules and accounts/portfolios/clients
-POST to the following endpoint: [http://localhost:5000/api/system/businessrules](http://localhost:5000/api/system/businessrules)
+POST to the following endpoint: [http://localhost/api/system/businessrules](http://localhost/api/system/businessrules)
 
 Note that parameters mus tbe provided as single string, like so: "MinimumAmount=1.00,MaxAmount=999999". 
 
@@ -302,7 +321,7 @@ Use "NoParameters" if there are none.
 Be aware that I’m just taking what you post and removing any previous rule associations. It’s very basic at the moment.
 
 # To trigger billing
-POST to the following endpoint: [http://localhost:5000/api/portfolio/PortfolioACE/assessment](http://localhost:5000/api/portfolio/PortfolioACE/assessment
+POST to the following endpoint: [http://localhost/api/portfolio/PortfolioACE/assessment](http://localhost/api/portfolio/PortfolioACE/assessment
 )
 Using the following model (you can bill one or more ‘items’, currently these are all possible types): 
 ```json

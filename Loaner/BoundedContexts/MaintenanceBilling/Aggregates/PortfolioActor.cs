@@ -238,14 +238,15 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             Context.IncrementActorCreated();
 
-            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
-                TimeSpan.FromSeconds(30), Self, new ReportDebugInfo(), ActorRefs.NoSender);
+//            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
+//                TimeSpan.FromSeconds(30), Self, new ReportDebugInfo(), ActorRefs.NoSender);
+
+//            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
+//                TimeSpan.FromSeconds(30), Self, new ReportPortfolioStateToParent(), ActorRefs.NoSender);
 
             DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
-                TimeSpan.FromSeconds(10), Self, new ReportPortfolioStateToParent(), ActorRefs.NoSender);
-//
-//            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
-//                TimeSpan.FromSeconds(10), Self, new ReportMailboxSize(), ActorRefs.NoSender);
+                TimeSpan.FromSeconds(30), Self, new ReportMailboxSize(), ActorRefs.NoSender);
+            
         }
 
         private void Monitor()
@@ -286,6 +287,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     null));
         }
 
+        
         private void GetMyStatus()
         {
             var portfolioSate = new PortfolioStateViewModel

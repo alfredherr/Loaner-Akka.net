@@ -352,7 +352,7 @@ namespace Loaner.SnapShotStore3 {
         }
 
         protected override void PreStart () {
-        
+            
             try {
                 _log.Debug ("PreStart()");
 
