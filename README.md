@@ -41,7 +41,7 @@ And use the perl script to generate new test accounts (120k in one portfolio, 10
 $> GenerateSampleData.pl 130000 120000
 ```
 ## Step 4
-In the project root directory (Demo) run the following script (which build the container and runs it)
+In the project root directory (Demo) run the following script (which builds the container and runs it)
 ```bash
 devrun.sh
 ```
