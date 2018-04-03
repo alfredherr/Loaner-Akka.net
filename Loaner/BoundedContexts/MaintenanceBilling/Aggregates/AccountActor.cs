@@ -51,12 +51,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<CheckYoSelf>(command => RegisterStartup() /*effectively a noop */);
 
             /* Example of running comannds through business rules */
-//            Command<SettleFinancialConcept>(command => ApplyBusinessRules(command));
-//            Command<AssessFinancialConcept>(command => ApplyBusinessRules(command));
             Command<BillingAssessment>(command => ProcessBilling(command));
             Command<BusinessRuleApplicationResultModel>(model => ApplyBusinessRules(model));
             Command<PayAccount>(cmd => ProcessPayment(cmd));
-//            Command<CancelAccount>(command => ApplyBusinessRules(command));
             Command<AskToBeSupervised>(command => SendParentMyState(command));
             Command<PublishAccountStateToKafka>(msg => PublishToKafka(msg));
             Command<CompleteBoardingProcess>(msg => CompleteBoardingProcess());
@@ -67,17 +64,19 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<SaveSnapshotFailure>(
                 failure => _log.Error(
                     $"[SaveSnapshotFailure]: Actor {Self.Path.Name} was unable to save a snapshot. {failure.Cause.Message}"));
-            //Command<RecoverySuccess>(msg => this.WakeUp());
+            
             Command<TellMeYourStatus>(asking =>
                 Sender.Tell(
                     new MyAccountStatus(
-                        $"{Self.Path.Name} I am alive! I was last booted up on {_lastBootedOn.ToString("yyyy-MM-dd hh:mm:ss")}")));
+                        $"{Self.Path.Name} I am alive! I was last booted up on {_lastBootedOn:yyyy-MM-dd hh:mm:ss}")));
+            
             Command<TellMeYourInfo>(
                 asking => Sender.Tell(new MyAccountStatus("", (AccountState) _accountState.Clone())));
 
             Command<DeleteMessagesSuccess>(
                 msg => _log.Debug(
                     $"[DeleteMessagesSuccess]: Successfully cleared log after snapshot ({msg.ToString()})"));
+            
             CommandAny(msg =>
                 _log.Error($"[CommandAny]: Unhandled message in {Self.Path.Name} from {Sender.Path.Name}. Message:{msg.ToString()}"));
         }
@@ -176,13 +175,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             try
             {
-                var billedAmount = 0.0;
-
                 var c = command;
-                billedAmount = c.LineItems.Aggregate(0.0, (accumulator, next) => accumulator + next.Item.Amount);
+                var billedAmount = c.LineItems.Aggregate(0.0, (accumulator, next) => accumulator + next.Item.Amount);
 
-                var parameters = c.LineItems.Aggregate("",
-                    (working, next) => working + ";" + next.Item.Name + "=" + next.Item.Amount);
+//                var parameters = c.LineItems.Aggregate("",
+//                    (working, next) => working + ";" + next.Item.Name + "=" + next.Item.Amount);
 
                 var model =
                     new ApplyBusinessRules(
@@ -277,17 +274,19 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
              * once it has been created -- Become AccountBoarded perhaps?
               */
 
-            List<IDomainEvent> events = new List<IDomainEvent>();
+            var events = new List<IDomainEvent>
+            {
+                new AccountCreated
+                (
+                    accountNumber: command.AccountNumber,
+                    openingBalance: command.BoardingModel.OpeningBalance,
+                    inventory: command.BoardingModel.Inventory,
+                    userName: command.BoardingModel.UserName,
+                    lastPaymentDate: command.BoardingModel.LastPaymentDate,
+                    lastPaymentAmount: command.BoardingModel.LastPaymentAmount
+                )
+            };
 
-            events.Add(new AccountCreated
-            (
-                accountNumber: command.AccountNumber,
-                openingBalance: command.BoardingModel.OpeningBalance,
-                inventory: command.BoardingModel.Inventory,
-                userName: command.BoardingModel.UserName,
-                lastPaymentDate: command.BoardingModel.LastPaymentDate,
-                lastPaymentAmount: command.BoardingModel.LastPaymentAmount
-            ));
 
             if (command.BoardingModel.OpeningBalance != 0.0)
             {
@@ -319,40 +318,43 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             _log.Debug(
                 $"[ApplyBusinessRules]: There were {resultModel.GeneratedEvents.Count} events. And success={resultModel.Success}");
 
-            if (resultModel.Success)
+            if (!resultModel.Success)
             {
-                /* I may want to do old vs new state comparisons for other reasons
-                 *  but ultimately we just update the state.. */
-                var events = resultModel.GeneratedEvents;
-
-                foreach (var @event in events)
-                    Persist(@event, s =>
-                    {
-                        _accountState = _accountState.ApplyEvent(@event);
-
-                        _log.Debug(
-                            $"[ApplyBusinessRules]: Persisted event {@event.GetType().Name} on account {_accountState.AccountNumber}" +
-                            $" account balance after is {_accountState.CurrentBalance:C} ");
-
-                        ReportMyState(resultModel.TotalBilledAmount, (double) _accountState.CurrentBalance);
-
-                        //Report current state to Kafka
-                        Self.Tell(new PublishAccountStateToKafka());
-                        ApplySnapShotStrategy();
-                    });
+                return;
             }
+            
+            /* I may want to do old vs new state comparisons for other reasons
+                 *  but ultimately we just update the state.. */
+            var events = resultModel.GeneratedEvents;
+
+            foreach (var @event in events)
+                Persist(@event, s =>
+                {
+                    _accountState = _accountState.ApplyEvent(@event);
+
+                    _log.Debug(
+                        $"[ApplyBusinessRules]: Persisted event {@event.GetType().Name} on account {_accountState.AccountNumber}" +
+                        $" account balance after is {_accountState.CurrentBalance:C} ");
+
+                    //ReportMyState(resultModel.TotalBilledAmount, (double) _accountState.CurrentBalance);
+
+                    //Report current state to Kafka
+                    Self.Tell(new PublishAccountStateToKafka());
+                    ApplySnapShotStrategy();
+                });
         }
 
         /*Example of how snapshotting can be custom to the actor, in this case per 'Account' events*/
         public void ApplySnapShotStrategy()
         {
-            if (LastSequenceNr % TakeAccountSnapshotAt == 0)
+            if (LastSequenceNr % TakeAccountSnapshotAt != 0)
             {
-                var clonedState = _accountState.Clone();
-                SaveSnapshot(clonedState);
-                //_log.Info($"[ApplySnapShotStrategy]: Account {Self.Path.Name} snapshot taken. Current SequenceNr is {LastSequenceNr}.");
-                Context.IncrementCounter("SnapShotTaken");
+                return;
             }
+            var clonedState = _accountState.Clone();
+            SaveSnapshot(clonedState);
+            //_log.Info($"[ApplySnapShotStrategy]: Account {Self.Path.Name} snapshot taken. Current SequenceNr is {LastSequenceNr}.");
+            Context.IncrementCounter("SnapShotTaken");
         }
 
         private void Monitor()

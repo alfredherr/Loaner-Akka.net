@@ -40,20 +40,20 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
              
             /*** recovery section **/
             Recover<SnapshotOffer>(offer => ProcessSnapshot(offer));
-//            Recover<AccountAddedToSupervision>(command => AddAccountToSupervision(command));
             Recover<AccountUnderSupervisionBalanceChanged>(cmd => UpdateAccountUnderSupervisionBalance(cmd));
+
             /** Core Commands **/
             Command<SuperviseThisAccount>(command => ProcessSupervision(command));
             Command<StartAccounts>(command => StartAccounts());
             Command<AssessWholePortfolio>(cmd => AssessAllAccounts(cmd));
             Command<CheckYoSelf>(cmd => RegisterStartup());
+            
             /* Common comands */
             Command<TellMeYourStatus>(asking => GetMyStatus());
             Command<TellMeAboutYou>(me =>
                 Console.WriteLine(
                     $"About me: I am {Self.Path.Name} Msg: {me.Me} I was last booted up on: {_porfolioState.LastBootedOn}"));
             Command<TellMeYourPortfolioStatus>(msg => _log.Debug(msg.Message));
-            Command<string>(noMessage => { });
             Command<RegisterMyAccountBalanceChange>(cmd => RegisterBalanceChange(cmd));
 
             Command<PublishPortfolioStateToKafka>(cmd => PublishToKafka(cmd));
@@ -72,6 +72,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<MyAccountStatus>(msg =>
                 _log.Debug(
                     $"Why is account {msg.AccountState.AccountNumber} sending me an 'MyAccountStatus' message?"));
+            Command<string>(noMessage => { });
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
 
@@ -100,7 +101,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             foreach (var a in _porfolioState.SupervizedAccounts?.Values.ToList())
                 viewble.Add(a.AccountNumber, Tuple.Create(a.LastBilledAmount, a.BalanceAfterLastTransaction));
             Context.Parent.Tell(new RegisterPortolioBilling(Self.Path.Name, viewble));
-            double totalBal = viewble.Aggregate(0.0, (x, y) => x + y.Value.Item2);
+            var totalBal = viewble.Aggregate(0.0, (x, y) => x + y.Value.Item2);
 
             _log.Debug($"[ReportPortfolioStateToParent]: {Self.Path.Name} sent {Context.Parent.Path.Name} portfolio" +
                        $" billing message containing {viewble.Count:##,#} billed accounts and a balance of {totalBal:C} ");
@@ -153,7 +154,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void RegisterBalanceChange(RegisterMyAccountBalanceChange cmd)
         {
-            AccountUnderSupervision account =
+            var account =
                 _porfolioState.SupervizedAccounts.FirstOrDefault(x => x.Key == cmd.AccountNumber).Value ??
                 new AccountUnderSupervision(cmd.AccountNumber, cmd.AccountBalanceAfterTransaction);
 
@@ -165,9 +166,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             account.LastBilledAmount = cmd.AmountTransacted;
             account.BalanceAfterLastTransaction = cmd.AccountBalanceAfterTransaction;
 
-            var lastBal = _porfolioState.CurrentPortfolioBalance;
             _porfolioState.SupervizedAccounts.AddOrSet(cmd.AccountNumber, account);
-            var newBal = _porfolioState.UpdateBalance();
+            _porfolioState.UpdateBalance();
 
 
             var @event =
@@ -183,7 +183,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void UpdateAccountUnderSupervisionBalance(AccountUnderSupervisionBalanceChanged cmd)
         {
-            AccountUnderSupervision account =
+            var account =
                 _porfolioState.SupervizedAccounts.FirstOrDefault(x => x.Key == cmd.AccountNumber).Value ??
                 new AccountUnderSupervision(cmd.AccountNumber, cmd.NewAccountBalance);
 
@@ -205,14 +205,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 $"Billing Items: {cmd.Items.Aggregate("", (acc, next) => acc + " " + next.Item.Name + " " + next.Item.Amount)}");
             try
             {
-                 
                 foreach (var account in _porfolioState.SupervizedAccounts?.Values.ToList())
                 {
                     var bill = new BillingAssessment(
-                        accountNumber: account.AccountNumber
-                        , lineItems: cmd.Items
-                        , businessRulesHandlingRouter: AccountBusinessRulesHandlerRouter
-                        , businessRulesMapperRouter: AccountBusinessRulesMapperRouter);
+                              accountNumber: account.AccountNumber
+                            , lineItems: cmd.Items
+                            , businessRulesHandlingRouter: AccountBusinessRulesHandlerRouter
+                            , businessRulesMapperRouter: AccountBusinessRulesMapperRouter
+                        );
                     account.AccountActorRef.Tell(bill);
                     //_log.Info($"[AssessAllAccounts]: Just told account {account.AccountNumber} to run assessment.");
                 }
@@ -238,17 +238,17 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         {
             Context.IncrementActorCreated();
 
-//            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
-//                TimeSpan.FromSeconds(30), Self, new ReportDebugInfo(), ActorRefs.NoSender);
-
             DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
-                TimeSpan.FromSeconds(10), Self, new ReportPortfolioStateToParent(), ActorRefs.NoSender);
+                TimeSpan.FromSeconds(30), Self, new ReportDebugInfo(), ActorRefs.NoSender);
+
+//            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
+//                TimeSpan.FromSeconds(10), Self, new ReportPortfolioStateToParent(), ActorRefs.NoSender);
 
 //            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
 //                TimeSpan.FromSeconds(30), Self, new PublishPortfolioStateToKafka(), ActorRefs.NoSender);
 
-            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
-                TimeSpan.FromSeconds(30), Self, new ReportMailboxSize(), ActorRefs.NoSender);
+//            DemoActorSystem.Scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(0),
+//                TimeSpan.FromSeconds(30), Self, new ReportMailboxSize(), ActorRefs.NoSender);
             
         }
 
@@ -257,19 +257,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Context.IncrementMessagesReceived();
         }
 
-        private void RecoveryCounter()
-        {
-            Context.IncrementCounter("PortfolioRecovery");
-        }
-
-
-        private Dictionary<string, string> DictionaryToStringList()
-        {
-            var viewble = new Dictionary<string, string>();
-            foreach (var a in _porfolioState.SupervizedAccounts?.Values.ToList())
-                viewble.Add(a.AccountNumber, a.AccountActorRef?.ToString() ?? "Not Instantiated");
-            return viewble;
-        }
 
         private void StartAccounts()
         {
@@ -301,10 +288,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 TotalBalance = _porfolioState.CurrentPortfolioBalance
             };
 
-            var key = portfolioSate.PortfolioName;
-
             Sender.Tell(new TellMeYourPortfolioStatus(
-                $"{_porfolioState.SupervizedAccounts.Count} accounts. I was last booted up on: {_porfolioState.LastBootedOn.ToString("yyyy-MM-dd h:mm tt")}",
+                $"{_porfolioState.SupervizedAccounts.Count} accounts. I was last booted up on: {_porfolioState.LastBootedOn:yyyy-MM-dd h:mm tt}",
                 portfolioSate));
         }
 
@@ -324,30 +309,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             });
         }
 
-//        private void AddAccountToSupervision(AccountAddedToSupervision account)
-//        {
-//            RecoveryCounter();
-//            if (account == null) throw new Exception("Why is this blank?");
-//
-//            if (AccountExistInState(account.AccountNumber))
-//            {
-//                _log.Debug($"Supervisor already has {account.AccountNumber} in state. No action taken");
-//                return;
-//            }
-//
-//            var newAccount = new AccountUnderSupervision(account.AccountNumber, 0);
-//            newAccount.AccountActorRef = InstantiateThisAccount(newAccount);
-//            _porfolioState.SupervizedAccounts.AddOrSet(account.AccountNumber, newAccount);
-//
-//            // TODO probably will have to ask the account for some more data, like curr bal, etc.
-//
-//            _log.Debug($"Replayed event on {newAccount.AccountNumber}");
-//        }
-
-        private bool AccountExistInState(string accountNumber)
-        {
-            return _porfolioState.SupervizedAccounts.Select(x => x.Value.AccountNumber == accountNumber).Any();
-        }
 
         private IActorRef InstantiateThisAccount(AccountUnderSupervision account)
         {
@@ -377,13 +338,14 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         public void ApplySnapShotStrategy()
         {
-            if ((LastSequenceNr % TakePortolioSnapshotAt) == 0)
+            if (LastSequenceNr % TakePortolioSnapshotAt != 0)
             {
-                var clonedState = _porfolioState.Clone();
-                _log.Info($"[ApplySnapShotStrategy]: Portfolio {Self.Path.Name} snapshot taken. Current SequenceNr is {LastSequenceNr}.");
-                Context.IncrementCounter("SnapShotTaken");
-                SaveSnapshot(clonedState);
+                return;
             }
+            var clonedState = _porfolioState.Clone();
+            _log.Info($"[ApplySnapShotStrategy]: Portfolio {Self.Path.Name} snapshot taken. Current SequenceNr is {LastSequenceNr}.");
+            Context.IncrementCounter("SnapShotTaken");
+            SaveSnapshot(clonedState);
         }
     }
 }

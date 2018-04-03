@@ -117,6 +117,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         protected override void PreStart()
         {
             Context.IncrementActorCreated();
+            RegisterStartup();
         }
 
         private void Monitor()
@@ -169,8 +170,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void GetMyStatus()
         {
-            var tooMany = new Dictionary<string, string>();
-            tooMany.Add("sorry", "Too many portfolios to list here");
+            var tooMany = new Dictionary<string, string> {{"sorry", "Too many portfolios to list here"}};
 
             Sender.Tell(new MySystemStatus($"{_portfolios.Count} portfolio(s) started.",
                 _portfolios.Count > 999 ? tooMany : DictionaryToStringList()));
@@ -215,16 +215,17 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private IActorRef InstantiateThisPortfolio(string portfolioName)
         {
-            if (_portfolios.ContainsKey(portfolioName))
+            if (!_portfolios.ContainsKey(portfolioName))
             {
-                var portfolioActor = Context.ActorOf(Props.Create<PortfolioActor>(), portfolioName);
-                _portfolios[portfolioName] = portfolioActor;
-                portfolioActor.Tell(new CheckYoSelf()); // to instantiate actor
-                _log.Debug($"[InstantiateThisPortfolio]: Instantiated portfolio {portfolioActor.Path.Name}");
-                return portfolioActor;
+                throw new Exception("[InstantiateThisPortfolio]: Why are you trying to " +
+                                    "instantiate a portfolio not yet registered?");
             }
+            var portfolioActor = Context.ActorOf(Props.Create<PortfolioActor>(), portfolioName);
+            _portfolios[portfolioName] = portfolioActor;
+            portfolioActor.Tell(new CheckYoSelf()); // to instantiate actor
+            _log.Debug($"[InstantiateThisPortfolio]: Instantiated portfolio {portfolioActor.Path.Name}");
+            return portfolioActor;
 
-            throw new Exception($"[InstantiateThisPortfolio]: Why are you trying to instantiate a portfolio not yet registered?");
         }
 
         private void ProcessSnapshot(SnapshotOffer offer)
@@ -243,20 +244,23 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         public void ApplySnapShotStrategy()
         {
-            if (LastSequenceNr % LoanerActors.TakeSystemSupervisorSnapshotAt == 0)
+            if (LastSequenceNr % LoanerActors.TakeSystemSupervisorSnapshotAt != 0)
             {
-                var state = new List<string>(); // Just need the name to kick it off?
-
-                foreach (var record in _portfolios.Keys)
-                {
-                    state.Add(record);
-                }
-                _log.Info(
-                    $"[ApplySnapShotStrategy]: SystemSupervisor Snapshot taken of {state.Count} portfolios. LastSequenceNr is {LastSequenceNr}.");
-                Context.IncrementCounter("SnapShotTaken");
-
-                SaveSnapshot(state.ToArray());
+                return;
             }
+            
+            var state = new List<string>(); // Just need the name to kick it off?
+
+            foreach (var record in _portfolios.Keys)
+            {
+                state.Add(record);
+            }
+            
+            _log.Info($"[ApplySnapShotStrategy]: SystemSupervisor Snapshot " +
+                      $"taken of {state.Count} portfolios. LastSequenceNr is {LastSequenceNr}.");
+            Context.IncrementCounter("SnapShotTaken");
+
+            SaveSnapshot(state.ToArray());
         }
     }
 }

@@ -11,26 +11,18 @@ using Confluent.Kafka;
 using Confluent.Kafka.Serialization;
 using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates;
-using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
 using Loaner.Configuration;
 using Loaner.KafkaProducer;
 using Loaner.KafkaProducer.Commands;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Nancy.Owin;
 using NLog.Extensions.Logging;
 using NLog.Web;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Cors;
 
 namespace Loaner
 {
@@ -201,18 +193,6 @@ namespace Loaner
                     .AllowAnyHeader()
                     .AllowCredentials();
             });
-            
-//            // Shows UseCors with CorsPolicyBuilder.
-//            app.UseCors(builder =>
-//            {
-//             Console.WriteLine($"[DEBUG]: I allow CORS from http://docker09");
-//                builder.WithOrigins("http://docker09")
-//                    .AllowAnyHeader()
-//                    .AllowAnyMethod()
-//                    .AllowCredentials();
-//            });
-
-      
             
             app.UseOwin(x => x.UseNancy(opt => opt.Bootstrapper = new DemoBootstrapper(appConfig)));
 

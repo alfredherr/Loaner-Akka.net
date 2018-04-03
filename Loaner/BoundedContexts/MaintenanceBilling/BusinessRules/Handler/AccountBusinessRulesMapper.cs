@@ -86,13 +86,15 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             {
                 RulesInFile = new List<AccountBusinessRuleMapModel>();
                 if (!File.Exists(businessRulesMapFile))
+                {
                     throw new FileNotFoundException($"I can't find {businessRulesMapFile}");
+                }
 
                 ReadInBusinessRules(businessRulesMapFile);
             }
             catch (Exception e)
             {
-                _logger.Error($"{e.Message} {e.StackTrace}");
+                _logger.Error($"[LoadAccountBusinessRulesMapper]: {e.Message} {e.StackTrace}");
                 throw;
             }
         }
@@ -200,7 +202,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             }
             catch (Exception e)
             {
-                _logger.Error($"{e.Message} {e.StackTrace}");
+                _logger.Error($"[Initialize]: {e.Message} {e.StackTrace}");
                 throw;
             }
         }
@@ -208,12 +210,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         private void WriteOutBusinessRules(string businessRulesMapFile, List<AccountBusinessRuleMapModel> updatedRules)
         {
             var readText = File.ReadAllLines(businessRulesMapFile);
-            var outfile = new List<string>();
-            foreach (var s in readText)
-                if (s.StartsWith("#"))
-                    outfile.Add(s);
-                else
-                    outfile.Add($"#Removed on ({DateTime.Now})|{s}"); //comment out old rules
+            
+            var outfile = readText.Select(s => s.StartsWith("#") ? s : $"#Removed on ({DateTime.Now})|{s}").ToList();
+
             foreach (var update in updatedRules)
             {
                 var client = update.Client;
@@ -250,16 +249,20 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         private void ReadInBusinessRules(string businessRulesMapFile)
         {
             var readText = File.ReadAllLines(businessRulesMapFile);
-            var line = 1;
+            
             foreach (var s in readText)
             {
                 if (s.Trim().StartsWith("#") || s.Trim().Length == 0 || !s.Contains("|"))
+                {
                     continue;
+                }
 
                 var tokens = s.Split('|');
                 var dpl = tokens[0].Split('-');
                 if (tokens.Length != 4 || dpl.Length != 3)
+                {
                     throw new InvalidBusinessRulesMapFileException(businessRulesMapFile);
+                }
 
                 var all = dpl[2].Contains("*");
                 var parametros = new Dictionary<string, object>();
