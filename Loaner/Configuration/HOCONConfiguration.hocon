@@ -16,18 +16,6 @@
 akka.actor.debug.lifecycle = off
 akka.actor.debug.unhandled = off
 
- 
-my-dispatcher {
-    type = Dispatcher
-    throughput = 10000
-    throughput-deadline-time = 0ms
-}
-
-akka.actor.deployment {
- 	/VILLADELMAR {
-        dispatcher = my-dispatcher
-    }
-}
 
 akka.loglevel = INFO
 

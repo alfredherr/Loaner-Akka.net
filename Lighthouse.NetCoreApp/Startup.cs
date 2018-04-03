@@ -35,7 +35,7 @@ namespace Lighthouse.NetCoreApp
             loggerFactory.AddNLog();
 
             //add NLog.Web
-            app.AddNLogWeb();
+            //app.AddNLogWeb();
         }
 
         public void StartService()

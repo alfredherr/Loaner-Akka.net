@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
+using NLog.Web;
 
 namespace Lighthouse.NetCoreApp
 {
@@ -15,6 +16,7 @@ namespace Lighthouse.NetCoreApp
             var host = new WebHostBuilder()
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseKestrel()
+                .UseNLog()
                 .UseStartup<Startup>()
                 .UseUrls("http://*:8181")
                 .Build();

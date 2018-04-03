@@ -14,7 +14,8 @@ FROM microsoft/dotnet:runtime
 WORKDIR /app
 
 # Set timezone to Phoenix
-RUN echo "America/Phoenix" > /etc/timezone
+#RUN apt-get -y install htop
+RUN apt-get -y install tzdata && ln -sf /usr/share/zoneinfo/America/Phoenix /etc/localtime
 RUN dpkg-reconfigure -f noninteractive tzdata
 
 COPY --from=build-env /app/out ./
