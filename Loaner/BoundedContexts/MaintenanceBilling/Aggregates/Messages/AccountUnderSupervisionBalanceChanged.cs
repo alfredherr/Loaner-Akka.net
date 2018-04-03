@@ -1,4 +1,4 @@
-namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
+namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages
 {
     public class AccountUnderSupervisionBalanceChanged
     {

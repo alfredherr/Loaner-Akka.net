@@ -13,6 +13,7 @@ using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     public class SystemSupervisor : ReceivePersistentActor
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();

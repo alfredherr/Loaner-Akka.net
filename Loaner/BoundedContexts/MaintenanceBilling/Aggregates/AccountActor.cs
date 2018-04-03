@@ -5,7 +5,6 @@ using Akka.Actor;
 using Akka.Event;
 using Akka.Monitoring;
 using Akka.Persistence;
-using Akka.Routing;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler;
@@ -19,8 +18,12 @@ using static Loaner.ActorManagement.LoanerActors;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     public class AccountActor : ReceivePersistentActor
     {
+          
+        private static int _messagesReceived;
+        
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
         /* This Actor's State */
@@ -54,7 +57,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<BillingAssessment>(command => ProcessBilling(command));
             Command<BusinessRuleApplicationResultModel>(model => ApplyBusinessRules(model));
             Command<PayAccount>(cmd => ProcessPayment(cmd));
-            Command<AskToBeSupervised>(command => SendParentMyState(command));
+            Command<AskToBeSupervised>(command => GetSupervised(command));
             Command<PublishAccountStateToKafka>(msg => PublishToKafka(msg));
             Command<CompleteBoardingProcess>(msg => CompleteBoardingProcess());
 
@@ -140,10 +143,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             //_log.Info($"[PurgeOldSnapShots]: Account {Self.Path.Name} got SaveSnapshotSuccess " +
             //          $"at SequenceNr {success.Metadata.SequenceNr} Current SequenceNr is {LastSequenceNr}.");
 
-            var snapshotSeqNr = success.Metadata.SequenceNr;
+            //var snapshotSeqNr = success.Metadata.SequenceNr;
             // delete all messages from journal and snapshot store before latests confirmed
             // snapshot, we won't need them anymore
-            DeleteMessages(snapshotSeqNr);
+            //DeleteMessages(snapshotSeqNr);
             //DeleteSnapshots(new SnapshotSelectionCriteria(snapshotSeqNr - 1));
         }
 
@@ -152,18 +155,18 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             _lastBootedOn = DateTime.Now;
         }
 
-        private void ReportMyState(double transAmount, double balanceAfter, IActorRef toWhom = null)
-        {
-            if (toWhom == null)
-                toWhom = Context.Parent; // use the parent if we're not passed one.
-
-            toWhom.Tell(
-                new RegisterMyAccountBalanceChange(
-                    _accountState.AccountNumber,
-                    transAmount,
-                    balanceAfter)
-            );
-        }
+//        private void ReportMyState(double transAmount, double balanceAfter, IActorRef toWhom = null)
+//        {
+//            if (toWhom == null)
+//                toWhom = Context.Parent; // use the parent if we're not passed one.
+//
+//            toWhom.Tell(
+//                new RegisterMyAccountBalanceChange(
+//                    _accountState.AccountNumber,
+//                    transAmount,
+//                    balanceAfter)
+//            );
+//        }
 
         private void ProcessBilling(BillingAssessment command)
         {
@@ -201,7 +204,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             }
         }
 
-        private void SendParentMyState(AskToBeSupervised command)
+        private void GetSupervised(AskToBeSupervised command)
         {
             Monitor();
             /* Assuming this is all we have to load for an account, then we can have the account
@@ -213,8 +216,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 , (double) _accountState.CurrentBalance)
             );
 
-            ReportMyState(0,(double) _accountState.CurrentBalance, command.MyNewParent);
+            //ReportMyState(0,(double) _accountState.CurrentBalance, command.MyNewParent);
 
+            //Report current state to Kafka
+            Self.Tell(new PublishAccountStateToKafka());
+            
+            //before stopping
             Self.Tell(new CompleteBoardingProcess());
         }
 
@@ -249,7 +256,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     ApplySnapShotStrategy();
                     _log.Debug(
                         $"[AddObligation]: Added maintenanceFee {command.MaintenanceFee.ObligationNumber} to account {command.AccountNumber}");
-                    /* Optionally, put this command on the external notificaiton system (i.e. Kafka) */
+                    
+                    //Report current state to Kafka
+                    Self.Tell(new PublishAccountStateToKafka());
+                    
                 });
             }
             else
@@ -299,9 +309,8 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 Persist(@event, s =>
                 {
                     _accountState = _accountState.ApplyEvent(@event);
-//                    _log.Debug(
-//                        $"[InitiateAccount]: Applied event {@event.GetType().Name} to account {command.AccountNumber}");
                     ApplySnapShotStrategy();
+                    
                 });
             }
         }
@@ -340,6 +349,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
                     //Report current state to Kafka
                     Self.Tell(new PublishAccountStateToKafka());
+
+                    if (_messagesReceived++ % 10000 == 0)
+                    {
+                        _log.Info(
+                            $"AccountActor: ApplyBusinessRules()/Persist() {PersistenceId} No. Events {events.Count}.");
+                    }
+
                     ApplySnapShotStrategy();
                 });
         }
@@ -351,9 +367,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             {
                 return;
             }
+            
             var clonedState = _accountState.Clone();
+            
             SaveSnapshot(clonedState);
-            //_log.Info($"[ApplySnapShotStrategy]: Account {Self.Path.Name} snapshot taken. Current SequenceNr is {LastSequenceNr}.");
+            
             Context.IncrementCounter("SnapShotTaken");
         }
 
