@@ -50,10 +50,10 @@ akka.loggers=["Akka.Logger.NLog.NLogLogger, Akka.Logger.NLog"]
 #akka.persistence.snapshot-store.plugin = "akka.persistence.snapshot-store.sqlite"
 #akka.persistence.snapshot-store.sqlite.class = "Akka.Persistence.Sqlite.Snapshot.SqliteSnapshotStore, Akka.Persistence.Sqlite"
 #akka.persistence.snapshot-store.sqlite.plugin-dispatcher = "akka.actor.default-dispatcher"
-#akka.persistence.snapshot-store.sqlite.connection-timeout = 30s
+#akka.persistence.snapshot-store.sqlite.connection-timeout = 2000s
 #akka.persistence.snapshot-store.sqlite.table-name = snapshot_store
 #akka.persistence.snapshot-store.sqlite.auto-initialize = on
-#akka.persistence.snapshot-store.sqlite.connection-string = "Data Source=../../../akka_demo.db"
+#akka.persistence.snapshot-store.sqlite.connection-string = "Data Source=/demo/akka_demo.db.sqlite"
 
 ### Jonfile Snapshot ###
 akka.persistence.snapshot-store.jonfile.class = "Loaner.SnapShotStore3.FileSnapshotStore3, Loaner"
@@ -63,9 +63,11 @@ akka.persistence.snapshot-store.jonfile.dir = "/demo/db"
 akka.persistence.snapshot-store.jonfile.plugin-dispatcher = "akka.actor.default-dispatcher"
 akka.persistence.snapshot-store.plugin = "akka.persistence.snapshot-store.jonfile"
 akka.persistence.max-concurrent-recoveries = 50
+max-snapshot-size=400000
+
+## Akka Persistence Journal Defaults
 akka.persistence.journal-plugin.recovery-event-timeout = 1201s
 akka.persistence.journal-plugin-fallback.recovery-event-timeout = 1200s
-max-snapshot-size=400000
 
 ### Kafka Config ####
 Akka.NumAccountPublisherActor = 10 
@@ -93,6 +95,5 @@ Akka.CommandsToRulesFilename = "/demo/CommandToBusinessRuleMap.txt"
 #akka.remote.dot-netty.tcp.port = 7777
 #akka.cluster.seed-nodes = ["akka.tcp://demoSystem@lighthouse:4053"] 
 #akka.cluster.roles = [concord]
-
 
 

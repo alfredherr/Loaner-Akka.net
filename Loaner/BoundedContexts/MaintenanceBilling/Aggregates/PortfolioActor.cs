@@ -69,6 +69,23 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
 
+        protected override SupervisorStrategy SupervisorStrategy()
+        {
+            // or AllForOneStrategy
+            return new OneForOneStrategy(
+                maxNrOfRetries: 10,
+                withinTimeRange: TimeSpan.FromSeconds(30),
+//                    if (x is ArithmeticException) return Directive.Resume;
+//                    else if (x is InsanelyBadException) return Directive.Escalate;
+//                    else if (x is NotSupportedException) return Directive.Stop;
+//                    else return Directive.Restart;
+                localOnlyDecider: x =>
+                {
+                    _log.Error($"Restarting failed actor: {x.GetType()} {x}");
+                    return Directive.Restart;
+                });
+        }
+
         private void ReportMyAccountStatus(MyAccountStatus msg)
         {
             Monitor();
@@ -124,11 +141,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void PurgeOldSnapShots(SaveSnapshotSuccess success)
         {
-            Monitor();
-
             _log.Info($"[PurgeOldSnapShots]: Portfolio {Self.Path.Name} got SaveSnapshotSuccess " +
                       $"at SequenceNr {success.Metadata.SequenceNr} Current SequenceNr is {LastSequenceNr}.");
-
+            Monitor();
+            
             //var snapshotSeqNr = success.Metadata.SequenceNr;
             // delete all messages from journal and snapshot store before latests confirmed
             // snapshot, we won't need them anymore
@@ -186,7 +202,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void ReportStopwatchInfo(string methodName, long miliseconds)
         {
-            _log.Info($"PortfolioActor: {methodName} - {miliseconds}ms. Message #{_messagesReceived}");
+
+            _log.Debug($"PortfolioActor: {methodName} - {miliseconds}ms. Message #{_messagesReceived}");
+            
         }
 
         private void UpdateAccountUnderSupervisionBalance(AccountUnderSupervisionBalanceChanged cmd)
@@ -275,9 +293,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             var immutAccounts = _porfolioState.SupervizedAccounts.Values.ToImmutableList();
 
             foreach (var account in immutAccounts)
-                if (account.AccountActorRef == null
-                ) // Since accounts algo get instantiated when portfolio starts up/recovers
-                    account.AccountActorRef = InstantiateThisAccount(account);
+            {
+                // Since accounts algo get instantiated when portfolio starts up/recovers
+                if (account.AccountActorRef != null)
+                {
+                    continue;
+                }
+                account.AccountActorRef = InstantiateThisAccount(account);
+                account.AccountActorRef.Tell(new PublishAccountStateToKafka());
+            }
+
             Sender.Tell(
                 new TellMeYourPortfolioStatus(
                     $"{_porfolioState.SupervizedAccounts.Count} accounts. " +

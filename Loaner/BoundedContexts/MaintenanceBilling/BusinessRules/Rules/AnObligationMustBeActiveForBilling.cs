@@ -68,23 +68,22 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                         .Where(x => x.Value.Status == ObligationStatus.Active)
                         .Select(y => y.Value.ObligationNumber).FirstOrDefault();
 
-                if (!string.IsNullOrEmpty(maintenanceFeeToUse))
-                {
-                    foreach (var item in LineItems)
-                    {
-                        var @event =
-                            new AccountBusinessRuleValidationSuccess(maintenanceFeeToUse,
-                                "AccountBusinessRuleValidationSuccess on AnObligationMustBeActiveForBilling");
-                        _eventsGenerated.Add(@event);
-                    }
-
-                    _detailsGenerated = "THIS WORKED";
-                    Success = true;
-                }
-                else
+                if (string.IsNullOrEmpty(maintenanceFeeToUse))
                 {
                     _detailsGenerated = "No Active obligations on this account.";
+                    return;
                 }
+
+                foreach (var item in LineItems)
+                {
+                    var @event =
+                        new AccountBusinessRuleValidationSuccess(maintenanceFeeToUse,
+                            "AccountBusinessRuleValidationSuccess on AnObligationMustBeActiveForBilling");
+                    _eventsGenerated.Add(@event);
+                }
+
+                _detailsGenerated = "THIS WORKED";
+                Success = true;
             }
             catch (Exception e)
             {

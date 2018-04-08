@@ -30,6 +30,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         private AccountState _accountState = new AccountState();
 
 
+        private string ParentName = ""; //hack to  pass porfolio name to kafka upon boarding -
+        //TODO move to portfolio state maybe? Should the account know about its parent in its state? Hmm.
+
         private DateTime _lastBootedOn;
 
         public AccountActor()
@@ -84,6 +87,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 _log.Error($"[CommandAny]: Unhandled message in {Self.Path.Name} from {Sender.Path.Name}. Message:{msg.ToString()}"));
         }
 
+        protected override void PreRestart(Exception reason, object message)
+        {
+            // put message back in mailbox for re-processing after restart
+            _log.Error($"Restarting {Self.Path.Name} and reprocessing message in trasit {message.GetType()}");
+            Self.Tell(message);
+        }
+        
         private void ProcessPayment(PayAccount cmd)
         {
             try
@@ -120,11 +130,15 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void PublishToKafka(PublishAccountStateToKafka msg)
         {
+
+            
+            ParentName = Self.Path.Parent.Name.Contains("$") ? ParentName : Self.Path.Parent.Name;
+ 
             var kafkaAccountModel = new AccountStateViewModel
             (
                 accountNumber: _accountState.AccountNumber,
                 userName: _accountState.UserName,
-                portfolioName: Self.Path.Parent.Name,
+                portfolioName: ParentName, //Self.Path.Parent.Name,
                 currentBalance: _accountState.CurrentBalance,
                 accountStatus: _accountState.AccountStatus,
                 asOfDate: DateTime.Now,
@@ -216,6 +230,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 , (double) _accountState.CurrentBalance)
             );
 
+            this.ParentName = command.Portfolio;
             //ReportMyState(0,(double) _accountState.CurrentBalance, command.MyNewParent);
 
             //Report current state to Kafka
@@ -329,6 +344,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             if (!resultModel.Success)
             {
+                _log.Error($"{Self.Path.Name} Business Rule Validation Failure.");
                 return;
             }
             
