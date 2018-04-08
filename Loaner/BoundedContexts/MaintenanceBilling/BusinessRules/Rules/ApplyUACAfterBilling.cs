@@ -46,13 +46,20 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
             
             var uac = decimal.Compare(AccountState.CurrentBalance, 0) < 0 ? (double) AccountState.CurrentBalance : 0.0;
 
+            var obligationToUse = AccountState.Obligations
+                .FirstOrDefault(x => x.Value.Status == ObligationStatus.Active).Key;
+            if (string.IsNullOrEmpty(obligationToUse))
+            {
+                _detailsGenerated = $"No active obligations were found";
+                Success = false;
+            }
             if (uac != 0.0)
             {
                 _eventsGenerated = new List<IDomainEvent>
                 {
                     new UacAppliedAfterBilling(
                         AccountState.AccountNumber,
-                        AccountState.Obligations.FirstOrDefault(x => x.Value.Status == ObligationStatus.Active).Key,
+                        obligationToUse,
                         uac
                     )
                 };
@@ -64,11 +71,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                 {
                     new AccountBusinessRuleValidationSuccess(
                         AccountState.AccountNumber,
-                        $"No UAC was present @ {DateTime.Now} when applying rule 'ApplyUacAfterBilling'. No UAC action taken."
+                        $"No UAC was present on obligation {obligationToUse} @ {DateTime.Now} when applying rule 'ApplyUacAfterBilling'. No UAC action taken."
                     )
                 };
                 _detailsGenerated =
-                    $"No UAC was present @ {DateTime.Now} when applying rule 'ApplyUacAfterBilling'. No UAC action taken.";
+                    $"No UAC was present on obligation {obligationToUse} @ {DateTime.Now} when applying rule 'ApplyUacAfterBilling'. No UAC action taken.";
             }
 
             Success = true;

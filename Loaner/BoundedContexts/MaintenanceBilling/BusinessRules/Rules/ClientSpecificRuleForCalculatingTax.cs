@@ -55,7 +55,9 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                     break;
                 }
 
-            if (duesAmount <= 0.00)
+            var obligationToUse = AccountState.Obligations
+                .FirstOrDefault(x => x.Value.Status == ObligationStatus.Active).Key;
+            if (duesAmount <= 0.00 || string.IsNullOrEmpty(obligationToUse) )
             {
                 _eventsGenerated = new List<IDomainEvent>
                 {
@@ -73,7 +75,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
             {
                 new TaxAppliedDuringBilling(
                     AccountState.AccountNumber,
-                    AccountState.Obligations.FirstOrDefault(x => x.Value.Status == ObligationStatus.Active).Key,
+                    obligationToUse,
                     decimal.Parse(((15.0 / 100) * duesAmount).ToString())
                 )
             };

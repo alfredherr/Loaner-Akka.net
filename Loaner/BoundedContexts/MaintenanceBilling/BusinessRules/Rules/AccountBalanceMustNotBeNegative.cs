@@ -52,7 +52,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                     "AccountBalanceMustNotBeNegative"
                 )
             };
-            _detailsGenerated = "THIS WORKED";
+            _detailsGenerated = "THIS WILL ALWAYS WORK FOR THE DEMO";
             Success = true;
         }
 
