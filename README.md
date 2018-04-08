@@ -10,11 +10,12 @@ The goals of this POC are as follows:
 + Determine the viability of using Akka.Net in a production-like environment.
 + Identify challenges of using Event Sourcing to model state transitions.
 
+Once started, I also wanted to find an appropriate way to manage business rules. See [BusinessRules.md](Loaner/BoundedContexts/MaintenanceBilling/BusinessRules/BusinessRules.md) for details.
 ## Wanna help? 
 Here is the list of pending [TODOs](TODO.md)
 
 ## High-level Objective
-![alt text](https://github.com/alfredherr/Demo/blob/master/Akka%20POC.png "Diagram")
+![alt text](Akka%20POC.png "Diagram")
 
 
 ## Running It Locally

@@ -199,7 +199,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 //                    (working, next) => working + ";" + next.Item.Name + "=" + next.Item.Amount);
 
                 var model =
-                    new ApplyBusinessRules(
+                    new FetchAccountBusinessRules(
                         client: Self.Path.Parent.Parent.Name,
                         portfolioName: Self.Path.Parent.Name,
                         accountState: (AccountState) _accountState.Clone(),
@@ -340,7 +340,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 			 */
 
             _log.Debug(
-                $"[ApplyBusinessRules]: There were {resultModel.GeneratedEvents.Count} events. And success={resultModel.Success}");
+                $"[FetchAccountBusinessRules]: There were {resultModel.GeneratedEvents.Count} events. And success={resultModel.Success}");
 
             if (!resultModel.Success)
             {
@@ -358,7 +358,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     _accountState = _accountState.ApplyEvent(@event);
 
                     _log.Debug(
-                        $"[ApplyBusinessRules]: Persisted event {@event.GetType().Name} on account {_accountState.AccountNumber}" +
+                        $"[FetchAccountBusinessRules]: Persisted event {@event.GetType().Name} on account {_accountState.AccountNumber}" +
                         $" account balance after is {_accountState.CurrentBalance:C} ");
 
                     //ReportMyState(resultModel.TotalBilledAmount, (double) _accountState.CurrentBalance);
@@ -369,7 +369,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                     if (_messagesReceived++ % 10000 == 0)
                     {
                         _log.Info(
-                            $"AccountActor: ApplyBusinessRules()/Persist() {PersistenceId} No. Events {events.Count}.");
+                            $"AccountActor: FetchAccountBusinessRules()/Persist() {PersistenceId} No. Events {events.Count}.");
                     }
 
                     ApplySnapShotStrategy();
