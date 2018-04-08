@@ -24,7 +24,7 @@ The file contains:
 - Free-form test describing the rule
 
 
-The binding of business rules to accounts, porfolio is in [BusinessRulesMap.txt](BusinessRulesMap.txt).
+The binding of business rules to an account (or all accounts, '*') or porfolio(s) is in [BusinessRulesMap.txt](BusinessRulesMap.txt).
 
 The file contains:
 
