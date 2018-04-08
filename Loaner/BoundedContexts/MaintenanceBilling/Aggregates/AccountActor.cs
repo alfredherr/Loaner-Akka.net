@@ -87,6 +87,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
                 _log.Error($"[CommandAny]: Unhandled message in {Self.Path.Name} from {Sender.Path.Name}. Message:{msg.ToString()}"));
         }
 
+        protected override void PreRestart(Exception reason, object message)
+        {
+            // put message back in mailbox for re-processing after restart
+            _log.Error($"Restarting {Self.Path.Name} and reprocessing message in trasit {message.GetType()}");
+            Self.Tell(message);
+        }
+        
         private void ProcessPayment(PayAccount cmd)
         {
             try
@@ -337,6 +344,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
             if (!resultModel.Success)
             {
+                _log.Error($"{Self.Path.Name} Business Rule Validation Failure.");
                 return;
             }
             

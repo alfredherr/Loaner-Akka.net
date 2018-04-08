@@ -69,6 +69,23 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
         }
 
+        protected override SupervisorStrategy SupervisorStrategy()
+        {
+            // or AllForOneStrategy
+            return new OneForOneStrategy(
+                maxNrOfRetries: 10,
+                withinTimeRange: TimeSpan.FromSeconds(30),
+//                    if (x is ArithmeticException) return Directive.Resume;
+//                    else if (x is InsanelyBadException) return Directive.Escalate;
+//                    else if (x is NotSupportedException) return Directive.Stop;
+//                    else return Directive.Restart;
+                localOnlyDecider: x =>
+                {
+                    _log.Error($"Restarting failed actor: {x.GetType()} {x}");
+                    return Directive.Restart;
+                });
+        }
+
         private void ReportMyAccountStatus(MyAccountStatus msg)
         {
             Monitor();

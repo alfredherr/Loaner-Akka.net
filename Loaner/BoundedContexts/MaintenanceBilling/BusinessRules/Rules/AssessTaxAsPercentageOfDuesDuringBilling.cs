@@ -63,7 +63,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
                     break;
                 }
 
-            if (!foundAtLeastOne)
+            var obligationUsed = AccountState.Obligations
+                .FirstOrDefault(x => x.Value.Status == ObligationStatus.Active).Key;
+
+            if (!foundAtLeastOne || string.IsNullOrEmpty(obligationUsed))
             {
                 _eventsGenerated = new List<IDomainEvent>
                 {
@@ -80,8 +83,6 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Rules
 
 
             var calculatedTaxAmount = (decimal.Round((decimal)(taxRate / 100),2) * (decimal)duesAmount) ;
-            var obligationUsed = AccountState.Obligations
-                .FirstOrDefault(x => x.Value.Status == ObligationStatus.Active).Key;
             _eventsGenerated = new List<IDomainEvent>
             {
                 new TaxAppliedDuringBilling(
