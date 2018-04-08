@@ -35,12 +35,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             var resultModel =
                 new BusinessRuleApplicationResultModel
                 {
-                    TotalBilledAmount = rules.ApplyBusinessRules.TotalBilledAmount
+                    TotalBilledAmount = rules.FetchAccountBusinessRules.TotalBilledAmount
                 }; //TODO what a hack! Ha!
 
             try
             {
-                var pipedState = rules.ApplyBusinessRules.AccountState;
+                var pipedState = rules.FetchAccountBusinessRules.AccountState;
 
                 foreach (var reglaDeNegocio in rules.Rules)
                 {
@@ -50,10 +50,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                     }
 
                     reglaDeNegocio.SetAccountState(pipedState);
-                    reglaDeNegocio.RunRule(rules.ApplyBusinessRules.Command);
+                    reglaDeNegocio.RunRule(rules.FetchAccountBusinessRules.Command);
 
                     _logger.Debug(
-                        $"Found {reglaDeNegocio.GetType().Name} rule for account {rules.ApplyBusinessRules.AccountState.AccountNumber}" +
+                        $"Found {reglaDeNegocio.GetType().Name} rule for account {rules.FetchAccountBusinessRules.AccountState.AccountNumber}" +
                         $" and its Success={reglaDeNegocio.RuleAppliedSuccessfuly()}");
 
                     if (reglaDeNegocio.RuleAppliedSuccessfuly())
@@ -61,7 +61,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                         //Save the rule and results into the return model 'resultModel'.
                         resultModel.RuleProcessedResults.Add(reglaDeNegocio,
                             $"Business Rule {reglaDeNegocio.GetType().Name} applied successfully to account " +
-                            $"{rules.ApplyBusinessRules.AccountState.AccountNumber}. Details: {reglaDeNegocio.GetResultDetails()}");
+                            $"{rules.FetchAccountBusinessRules.AccountState.AccountNumber}. Details: {reglaDeNegocio.GetResultDetails()}");
 
                         //Save all the events resulting from runnin this rule.
                         var events = reglaDeNegocio.GetGeneratedEvents().ToList();
@@ -74,7 +74,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                         resultModel.Success = true;
 
                         _logger.Debug(
-                            $"Business Rule {reglaDeNegocio.GetType().Name} applied successfully to account {rules.ApplyBusinessRules.AccountState.AccountNumber}");
+                            $"Business Rule {reglaDeNegocio.GetType().Name} applied successfully to account {rules.FetchAccountBusinessRules.AccountState.AccountNumber}");
                     }
                     else
                     {
@@ -84,10 +84,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
                             $"Business Rule Failed Application. {reglaDeNegocio.GetResultDetails()}");
 
                         _logger.Error($"Business Rule {reglaDeNegocio.GetType().Name} " +
-                                      $"application failed on account {rules.ApplyBusinessRules.AccountState.AccountNumber} " +
+                                      $"application failed on account {rules.FetchAccountBusinessRules.AccountState.AccountNumber} " +
                                       $"due to {reglaDeNegocio.GetResultDetails()}");
 
-                        rules.ApplyBusinessRules.AccountRef.Tell(resultModel); //we stop processing any further rules.
+                        rules.FetchAccountBusinessRules.AccountRef.Tell(resultModel); //we stop processing any further rules.
                         return;
                     }
                 }
@@ -102,7 +102,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             // pass the info to the rule and call rule
             // create event of result of calling rule & apply event to state
             // return new state
-            rules.ApplyBusinessRules.AccountRef.Tell(resultModel);
+            rules.FetchAccountBusinessRules.AccountRef.Tell(resultModel);
         }
     }
 }

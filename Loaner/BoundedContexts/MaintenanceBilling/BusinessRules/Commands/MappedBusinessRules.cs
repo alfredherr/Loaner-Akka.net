@@ -6,13 +6,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
     public class MappedBusinessRules
     {
-        public MappedBusinessRules(ApplyBusinessRules applyBusinessRules, List<IAccountBusinessRule> rules)
+        public MappedBusinessRules(FetchAccountBusinessRules fetchAccountBusinessRules, List<IAccountBusinessRule> rules)
         {
-            ApplyBusinessRules = applyBusinessRules;
+            FetchAccountBusinessRules = fetchAccountBusinessRules;
             Rules = rules;
         }
 
-        public ApplyBusinessRules ApplyBusinessRules { get; set; }
+        public FetchAccountBusinessRules FetchAccountBusinessRules { get; set; }
         
         public List<IAccountBusinessRule> Rules { get; set; }
     }

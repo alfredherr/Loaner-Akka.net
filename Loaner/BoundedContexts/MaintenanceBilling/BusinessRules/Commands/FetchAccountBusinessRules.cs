@@ -8,9 +8,9 @@ using NLog.Web.LayoutRenderers;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
-    public class ApplyBusinessRules : ICloneable
+    public class FetchAccountBusinessRules : ICloneable
     {
-        public ApplyBusinessRules(double totalBilledAmount, string client, string portfolioName,
+        public FetchAccountBusinessRules(double totalBilledAmount, string client, string portfolioName,
             AccountState accountState, BillingAssessment command, IActorRef accountRef)
         {
             TotalBilledAmount = totalBilledAmount;
@@ -29,7 +29,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
        
         public IActorRef AccountRef { get; private set; }
 
-        private ApplyBusinessRules(ApplyBusinessRules abr)
+        private FetchAccountBusinessRules(FetchAccountBusinessRules abr)
         {
             TotalBilledAmount = abr.TotalBilledAmount;
             Client = abr.Client;
@@ -52,7 +52,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 
         public object Clone()
         {
-            return new ApplyBusinessRules(this);
+            return new FetchAccountBusinessRules(this);
         }
     }
 }

@@ -4,11 +4,11 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
 {
     public class GetBusinessRulesToApply
     {
-        public GetBusinessRulesToApply(ApplyBusinessRules applyBusinessRules)
+        public GetBusinessRulesToApply(FetchAccountBusinessRules fetchAccountBusinessRules)
         {
-            ApplyBusinessRules = applyBusinessRules;
+            FetchAccountBusinessRules = fetchAccountBusinessRules;
         }
 
-        public ApplyBusinessRules ApplyBusinessRules { get; set; }
+        public FetchAccountBusinessRules FetchAccountBusinessRules { get; set; }
     }
 }

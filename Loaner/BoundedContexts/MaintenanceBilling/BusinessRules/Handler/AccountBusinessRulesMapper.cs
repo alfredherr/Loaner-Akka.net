@@ -26,7 +26,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         public AccountBusinessRulesMapper()
         {
             Receive<BootUp>(cmd => DoBootUp(cmd));
-            Receive<ApplyBusinessRules>(cmd => GetAccountBusinessRulesForCommand(cmd));
+            Receive<FetchAccountBusinessRules>(cmd => GetAccountBusinessRulesForCommand(cmd));
             Receive<GetCommandsToBusinesRules>(cmd => GetCommandsToBusinesRules() );
             Receive<UpdateAccountBusinessRules>(cmd => UpdateAccountBusinessRules(cmd.UpdatedRules ));
             ReceiveAny(msg =>
@@ -41,7 +41,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         }
 
         private void
-            GetAccountBusinessRulesForCommand(ApplyBusinessRules cmd)
+            GetAccountBusinessRulesForCommand(FetchAccountBusinessRules cmd)
         {
              //_logger.Info($"[GetAccountBusinessRulesForCommand]: Getting business rules for {cmd.AccountState.AccountNumber}.");
             if (RulesInFile == null) Initialize();
