@@ -345,6 +345,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             if (!resultModel.Success)
             {
                 _log.Error($"{Self.Path.Name} Business Rule Validation Failure.");
+                Context.Parent.Tell(new FailedAccountBillingAssessment(Self.Path.Name, resultModel));
                 return;
             }
             

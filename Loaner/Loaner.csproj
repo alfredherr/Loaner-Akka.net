@@ -50,6 +50,7 @@
     <!--<PackageReference Include="Microsoft.NETCore.App" Version="2.0.5" />-->
     <PackageReference Include="Nancy" Version="2.0.0-clinteastwood" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="4.4.1" />
+    <PackageReference Include="StackifyMiddleware" Version="2.1.1" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ActorManagement\" />

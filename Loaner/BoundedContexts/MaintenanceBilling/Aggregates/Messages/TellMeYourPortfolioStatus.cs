@@ -1,4 +1,8 @@
-﻿using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 
 namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages
 {
@@ -24,5 +28,19 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages
 
         public string Message { get; }
         public PortfolioStateViewModel PortfolioStateViewModel { get; }
+    }
+
+    public class FailedListOfAccounts
+    {
+        public FailedListOfAccounts()
+        {
+            ListOfAccounts = ImmutableDictionary.Create<string, BusinessRuleApplicationResultModel>();
+        }
+
+        public FailedListOfAccounts(ImmutableDictionary<string, BusinessRuleApplicationResultModel> accounts)
+        {
+            ListOfAccounts = accounts;
+        }
+        public ImmutableDictionary<string, BusinessRuleApplicationResultModel> ListOfAccounts { get; private set; }
     }
 }

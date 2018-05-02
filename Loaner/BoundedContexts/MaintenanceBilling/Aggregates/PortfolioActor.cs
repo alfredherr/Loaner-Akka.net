@@ -13,6 +13,7 @@ using Akka.Util.Internal;
 using Loaner.ActorManagement;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler.Models;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainEvents;
 using Loaner.KafkaProducer.Commands;
@@ -35,6 +36,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private Stopwatch _stopWatch;
 
+        private Dictionary<string,BusinessRuleApplicationResultModel> _failedAccounts = new Dictionary<string, BusinessRuleApplicationResultModel>();
 
         public PortfolioActor()
         {
@@ -47,7 +49,10 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<StartAccounts>(command => StartAccounts());
             Command<AssessWholePortfolio>(cmd => AssessAllAccounts(cmd));
             Command<CheckYoSelf>(cmd => RegisterStartup());
+            Command<FailedAccountBillingAssessment>(cmd => _HandleFailedBillingAssessment(cmd));
+            Command<GetFailedBilledAccounts>(cmd => _GetFailedBillingAssessment());
 
+            
             /* Common comands */
             Command<TellMeYourStatus>(asking => GetMyStatus());
             Command<TellMeAboutYou>(me => AboutMe(me));
@@ -67,6 +72,16 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             Command<MyAccountStatus>(msg => ReportMyAccountStatus(msg));
             Command<string>(noMessage => { });
             CommandAny(msg => _log.Error($"Unhandled message in {Self.Path.Name}. Message:{msg.ToString()}"));
+        }
+
+        private void _GetFailedBillingAssessment()
+        {
+            Sender.Tell(_failedAccounts.ToImmutableDictionary());
+        }
+
+        private void _HandleFailedBillingAssessment(FailedAccountBillingAssessment cmd)
+        {
+            _failedAccounts.AddOrSet(cmd.AccountNumber, cmd.ApplicationResult);
         }
 
         protected override SupervisorStrategy SupervisorStrategy()
@@ -474,5 +489,22 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
         }
 
         #endregion
+    }
+
+    public class GetFailedBilledAccounts
+    {
+    }
+
+    public class FailedAccountBillingAssessment
+    {
+        public FailedAccountBillingAssessment(string accountNumber, BusinessRuleApplicationResultModel applicationResult)
+        {
+            AccountNumber = accountNumber;
+            ApplicationResult = applicationResult;
+        }
+        
+        public string AccountNumber { get; private set; }
+        public BusinessRuleApplicationResultModel ApplicationResult  { get; private set; }
+        
     }
 }

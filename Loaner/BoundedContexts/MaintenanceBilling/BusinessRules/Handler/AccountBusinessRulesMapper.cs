@@ -128,7 +128,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
         private void UpdateAccountBusinessRules(
             List<AccountBusinessRuleMapModel> updatedRules)
         {
-            Console.WriteLine($"[UpdateAccountBusinessRules] called with {updatedRules.Count} rules.");
+            Console.WriteLine($"[UpdateAccountBusinessRules] called with {updatedRules.Count} rules. Routee {Self.Path.Name}");
 
             UpdateAndReInitialize(updatedRules);
 
@@ -288,6 +288,12 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.BusinessRules.Handler
             }
             Console.WriteLine($"File: {businessRulesMapFile} read in.");
 
+        }
+
+        protected override void PreStart()
+        {
+            Console.WriteLine($"Hello from {Self.Path.Name}.");
+       
         }
     }
 }

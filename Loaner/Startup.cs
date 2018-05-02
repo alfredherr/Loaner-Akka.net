@@ -23,6 +23,7 @@ using Nancy.Owin;
 using NLog.Extensions.Logging;
 using NLog.Web;
 using Microsoft.Extensions.DependencyInjection;
+using StackifyMiddleware;
 
 namespace Loaner
 {
@@ -180,9 +181,12 @@ namespace Loaner
 
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
+            app.UseMiddleware<RequestTracerMiddleware>();
+            
             var appConfig = new AppConfiguration();
             _config.Bind(appConfig);
 
+            
             app.UseCors(builder =>
             {
                 Console.WriteLine($"[DEBUG]: I allow any CORS.");
@@ -201,7 +205,6 @@ namespace Loaner
 
 
         }
-
 
         private static Config GetConfiguration()
         {

@@ -13,6 +13,8 @@ services:
       - "7777:7777"
     volumes:
       - "/demo:/demo"
+      - "/usr/local/stackify:/usr/local/stackify"
+    pid: "host"      
     extra_hosts:
       - "loaner:127.0.0.1"
   lighthouse:

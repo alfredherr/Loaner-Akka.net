@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Loaner.ActorManagement;
 using Loaner.API.Models;
+using Loaner.BoundedContexts.MaintenanceBilling.Aggregates;
 using Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainCommands;
 using Loaner.BoundedContexts.MaintenanceBilling.DomainModels;
@@ -34,6 +35,26 @@ namespace Loaner.API.Controllers
                     return Response.AsJson(new {answer.Message, PortfolioState = answer.PortfolioStateViewModel});
                 });
                 return Response.AsJson(new {answer.Message, PortfolioState = answer.PortfolioStateViewModel});
+            });
+            Get("/{portfolioName}/failedbilling", async args =>
+            {
+                FailedListOfAccounts answer;
+
+                string portfolio = ((string) args.portfolioName).ToUpper();
+
+                Task<IActorRef> portfolioActor = LoanerActors.DemoActorSystem
+                    .ActorSelection($"/user/demoSupervisor/{portfolio}")
+                    .ResolveOne(TimeSpan.FromSeconds(30));
+
+                if (portfolioActor.Exception != null) throw portfolioActor.Exception;
+
+                await Task.Run(() =>
+                {
+                    answer = portfolioActor.Result
+                        .Ask<FailedListOfAccounts>(new GetFailedBilledAccounts(), TimeSpan.FromSeconds(150)).Result;
+                    return Response.AsJson(answer);
+                });
+                return Response.AsJson( new FailedListOfAccounts());
             });
 
             Get("/{portfolioName}/run", async args =>
