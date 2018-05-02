@@ -76,7 +76,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
 
         private void _GetFailedBillingAssessment()
         {
-            Sender.Tell(_failedAccounts.ToImmutableDictionary());
+            Sender.Tell( new FailedListOfAccounts(_failedAccounts.Values.ToList()));
         }
 
         private void _HandleFailedBillingAssessment(FailedAccountBillingAssessment cmd)
@@ -327,6 +327,7 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates
             _stopWatch.Stop();
           
             ReportStopwatchInfo("StartAccounts",_stopWatch.ElapsedMilliseconds);
+            Self.Tell(new PublishPortfolioStateToKafka());
 
         }
 

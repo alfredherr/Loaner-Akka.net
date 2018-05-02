@@ -34,13 +34,13 @@ namespace Loaner.BoundedContexts.MaintenanceBilling.Aggregates.Messages
     {
         public FailedListOfAccounts()
         {
-            ListOfAccounts = ImmutableDictionary.Create<string, BusinessRuleApplicationResultModel>();
+            ListOfAccounts = new List<BusinessRuleApplicationResultModel>();
         }
 
-        public FailedListOfAccounts(ImmutableDictionary<string, BusinessRuleApplicationResultModel> accounts)
+        public FailedListOfAccounts(List<BusinessRuleApplicationResultModel> accounts)
         {
             ListOfAccounts = accounts;
         }
-        public ImmutableDictionary<string, BusinessRuleApplicationResultModel> ListOfAccounts { get; private set; }
+        public  List<BusinessRuleApplicationResultModel> ListOfAccounts { get; private set; }
     }
 }
