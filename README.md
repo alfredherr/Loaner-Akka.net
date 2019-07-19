@@ -2,6 +2,8 @@
 [![Gitter chat](https://badges.gitter.im/ixtlesoft/Demo.png)](https://gitter.im/ixtlesoft/Demo) 
 [![Waffle.io - Columns and their card count](https://badge.waffle.io/alfredherr/Demo.svg?columns=all)](http://waffle.io/alfredherr/Demo)
 
+[Sonarqube](https://sonarcloud.io/dashboard?id=alfredherr_Demo)
+
 # PoC of Akka.Net on Docker
 This is a POC of Akka.net on .Net Core deployed on Docker.  
 
