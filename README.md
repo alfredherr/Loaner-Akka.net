@@ -71,9 +71,9 @@ POST to this endpoint: [http://localhost/api/system/simulation](http://localhost
 Here is the model (note the path is relative to the source directory ‘Loaner’): 
 ```json
 {
-	"ClientName": "Raintree",
-	"ClientAccountsFilePath": "./SampleData/Raintree.txt",
-	"ObligationsFilePath":"./SampleData/Obligations/Raintree.txt"
+	"ClientName": "Greentree",
+	"ClientAccountsFilePath": "./SampleData/Greentree.txt",
+	"ObligationsFilePath":"./SampleData/Obligations/Greentree.txt"
 }
 ```
 
@@ -266,7 +266,7 @@ Use "NoParameters" if there are none.
 ```json
 [
     {
-        "client": "ClientRaintree",
+        "client": "ClientGreentree",
         "portfolio": "PortfolioUPD",
         "accountNumber": "*",
         "forAllAccounts": true,
@@ -275,7 +275,7 @@ Use "NoParameters" if there are none.
         "businessRuleParameters": "NoParameters"
     },
     {
-        "client": "ClientRaintree",
+        "client": "ClientGreentree",
         "portfolio": "PortfolioUPD",
         "accountNumber": "*",
         "forAllAccounts": true,
@@ -284,7 +284,7 @@ Use "NoParameters" if there are none.
         "businessRuleParameters": "NoParameters"
     },
     {
-        "client": "ClientRaintree",
+        "client": "ClientGreentree",
         "portfolio": "PortfolioISR",
         "accountNumber": "*",
         "forAllAccounts": true,
@@ -293,7 +293,7 @@ Use "NoParameters" if there are none.
         "businessRuleParameters": "TaxPercentageRate=8.9"
     },
     {
-        "client": "ClientRaintree",
+        "client": "ClientGreentree",
         "portfolio": "PortfolioMGO",
         "accountNumber": "*",
         "forAllAccounts": true,
@@ -302,7 +302,7 @@ Use "NoParameters" if there are none.
         "businessRuleParameters": "MinimumAmount=1.00,MaxAmount=999999"
     },
     {
-        "client": "ClientRaintree",
+        "client": "ClientGreentree",
         "portfolio": "PortfolioMGO",
         "accountNumber": "*",
         "forAllAccounts": true,
@@ -311,7 +311,7 @@ Use "NoParameters" if there are none.
         "businessRuleParameters": "ExcludedStates=AZ,CaliforniaTaxPercentageRate=9.9"
     },
     {
-        "client": "ClientRaintree",
+        "client": "ClientGreentree",
         "portfolio": "PortfolioISR",
         "accountNumber": "*",
         "forAllAccounts": true,
