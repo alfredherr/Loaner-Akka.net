@@ -36,12 +36,12 @@ The file contains:
 Order matters.
 
 Example 
-- For all Raintree accounts under portfolio 'VILLADELMAR'
+- For all Greentree accounts under portfolio 'VILLADELMAR'
   1. when executing an BillingAssessment command, 
   1. verify that the account balance is not negative (AccountBalanceMustNotBeNegative), then
   1. verify that the account has at least one active obligaction on to which do the billing
 
 ```text
-ClientRaintree-VILLADELMAR-*|BillingAssessment|AccountBalanceMustNotBeNegative|NoParameters
-ClientRaintree-VILLADELMAR-*|BillingAssessment|AnObligationMustBeActiveForBilling|NoParameters
+Greentree-VILLADELMAR-*|BillingAssessment|AccountBalanceMustNotBeNegative|NoParameters
+Greentree-VILLADELMAR-*|BillingAssessment|AnObligationMustBeActiveForBilling|NoParameters
 ```
