@@ -6,7 +6,7 @@
 	},
 	"item": [
 		{
-			"name": "Run Simulation of Client Boarding {Raintree} MAC",
+			"name": "Run Simulation of Client Boarding {Greentree} MAC",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -17,7 +17,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"ClientName\": \"Raintree\",\n\t\"ClientAccountsFilePath\": \"./SampleData/Raintree.txt\",\n\t\"ObligationsFilePath\":\"./SampleData/Obligations/Raintree.txt\"\n}"
+					"raw": "{\n\t\"ClientName\": \"Greentree\",\n\t\"ClientAccountsFilePath\": \"./SampleData/Greentree.txt\",\n\t\"ObligationsFilePath\":\"./SampleData/Obligations/Greentree.txt\"\n}"
 				},
 				"url": {
 					"raw": "http://localhost:5000/api/system/simulation",
