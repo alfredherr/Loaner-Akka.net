@@ -2,17 +2,17 @@
 # Client-Portfolio-Account|Command|Rules|Parameters(comma separated key value pairs)
 ################################################################################################
 #Example; 
-#	For all Raintree accounts under portfolio 'VILLADELMAR'
+#	For all Greentree accounts under portfolio 'VILLADELMAR'
 #	when executing an BillingAssessment command, 
 #	verify that the account balance is not negative (AccountBalanceMustNotBeNegative), then
 #	verify that the account has at least one active obligaction on to which do the billing
-# ClientRaintree-VILLADELMAR-*|BillingAssessment|AccountBalanceMustNotBeNegative|NoParameters
-# ClientRaintree-VILLADELMAR-*|BillingAssessment|AnObligationMustBeActiveForBilling|NoParameters
+# Greentree-VILLADELMAR-*|BillingAssessment|AccountBalanceMustNotBeNegative|NoParameters
+# Greentree-VILLADELMAR-*|BillingAssessment|AnObligationMustBeActiveForBilling|NoParameters
 ################################################################################################
-#ClientRaintree-VILLADELMAR-*|BillingAssessment|AccountBalanceMustNotBeNegative|NoParameters
-ClientRaintree-VILLADELMAR-*|BillingAssessment|AnObligationMustBeActiveForBilling|NoParameters
+#Greentree-VILLADELMAR-*|BillingAssessment|AccountBalanceMustNotBeNegative|NoParameters
+Greentree-VILLADELMAR-*|BillingAssessment|AnObligationMustBeActiveForBilling|NoParameters
 ##Examples of rules with parameters
-ClientRaintree-VILLADELMAR-*|BillingAssessment|AssessTaxAsPercentageOfDuesDuringBilling|TaxPercentageRate=8.9
-ClientRaintree-VILLADELMAR-*|BillingAssessment|ApplyUacAfterBilling|MinimumAmount=1.00,MaxAmount=999999
-ClientRaintree-VILLADELMAR-*|BillingAssessment|BillingConceptCannotBeBilledMoreThanOnce|NoParameters
-#ClientRaintree-VILLADELMAR-*|BillingAssessment|ClientSpecificRuleForCalculatingTax|ExcludedStates=AZ,CaliforniaTaxPercentageRate=9.9
+Greentree-VILLADELMAR-*|BillingAssessment|AssessTaxAsPercentageOfDuesDuringBilling|TaxPercentageRate=8.9
+Greentree-VILLADELMAR-*|BillingAssessment|ApplyUacAfterBilling|MinimumAmount=1.00,MaxAmount=999999
+Greentree-VILLADELMAR-*|BillingAssessment|BillingConceptCannotBeBilledMoreThanOnce|NoParameters
+#Greentree-VILLADELMAR-*|BillingAssessment|ClientSpecificRuleForCalculatingTax|ExcludedStates=AZ,CaliforniaTaxPercentageRate=9.9
